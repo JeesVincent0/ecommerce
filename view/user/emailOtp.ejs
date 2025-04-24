@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shoppi - OTP Verification</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f9f9f9;
+        padding: 20px;
+      }
+      .container {
+        max-width: 500px;
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      }
+      .otp {
+        font-size: 32px;
+        font-weight: bold;
+        text-align: center;
+        margin: 20px 0;
+        color: #333;
+      }
+      .footer {
+        font-size: 13px;
+        text-align: center;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Welcome to <span style="color: #220094;">Shoppi</span> 🛍️</h2>
+      <p>Use the OTP below to complete your signup:</p>
+      <div class="otp"><%= otp %></div>
+      <p>This OTP is valid for 5 minutes.</p>
+      <p>If you didn’t request this, just ignore this email.</p>
+      <div class="footer">© 2025 Shoppi. All rights reserved.</div>
+    </div>
+  </body>
+</html>
