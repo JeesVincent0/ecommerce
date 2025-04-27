@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import User from '../models/userSchema.js'
 import PendingUser from '../models/userTemp.js'
 import { sendOtp } from '../utils/sendOtp.js'
+import { createToken } from './JWT.js'
 
 //@desc get page not found
 //GET /notfound
@@ -28,7 +29,7 @@ export const createNewUser = async (req, res) => {
 
         //checking the email already taken or not
         const checkemail = await User.findOne({ email: email })
-        if(checkemail) throw new Error("The email is already taken")
+        if (checkemail) throw new Error("The email is already taken")
 
         //Generating hash password
         const salt = await bcrypt.genSalt(10)
@@ -46,18 +47,18 @@ export const createNewUser = async (req, res) => {
 
         //this otp send to the user email that get from user
         const emailSend = await sendOtp(email, otp)
-        if(!emailSend) throw new Error("otp email not send")
+        if (!emailSend) throw new Error("otp email not send")
 
         //redirecting to get otp validation page
-        res.json({ success: true, redirectUrl: '/signup/otp'})
+        res.json({ success: true, redirectUrl: '/signup/otp' })
 
     } catch (error) {
-        if(error.message === 'The email is already taken') {
-            res.status(409).json({ success: false, message: 'The email is already taken'})
-        } else if(error.message === 'otp email not send') {
-            res.status(500).json({ status: false, message: 'otp email not send'})
+        if (error.message === 'The email is already taken') {
+            res.status(409).json({ success: false, message: 'The email is already taken' })
+        } else if (error.message === 'otp email not send') {
+            res.status(500).json({ status: false, message: 'otp email not send' })
         }
-        
+
     }
 }
 
@@ -71,26 +72,38 @@ export const otpPage = (req, res) => {
 //POST /signup/otp
 export const verifyOtp = async (req, res) => {
     try {
+
         const otp = req.body.otp
         const tempUser = await PendingUser.findOne({ otp })
-        if(!tempUser) throw new Error("Wrong OTP entered")
+        if (!tempUser) throw new Error("Wrong OTP entered")
 
-        
+        const newUser = new User({
+            name: tempUser.name,
+            email: tempUser.email,
+            hashPassword: tempUser.hashPassword
+        })
 
-        res.json({ success: true, redirectUrl: '/home'})
+        await newUser.save()
+
+        const deletePending = await PendingUser.findOneAndDelete({ email: tempUser.email })
+
+
+        res.json({ success: true, redirectUrl: '/home' })
 
     } catch (error) {
 
-        if(error.message === 'Wrong OTP entered') {
-            res.json({success: false, message: 'Wrong OTP entered'})
+        if (error.message === 'Wrong OTP entered') {
+            res.json({ success: false, message: 'Wrong OTP entered' })
         }
     }
 }
 
 //@desc this router is for after google login it create JWT
 export const googleCallback = (req, res) => {
+
+    //creaing token and redirecting to /home for render home page
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '10m' });
-    res.cookie('jwt', token, { httpOnly: true});
+    res.cookie('jwt', token, { httpOnly: true });
     res.redirect('/home')
 }
 
@@ -111,32 +124,29 @@ export const verifyLogin = async (req, res) => {
         console.log('email', !user)
 
         //checking user entered email is correct or wrong
-        if(!user) throw new Error("wrong email")
-        
+        if (!user) throw new Error("wrong email")
+        if (!user.isAdmin) throw new Error("wrong email")
+
         //user password checkin
         const pass = await bcrypt.compare(password, user.hashPassword)
-        if(!pass) throw new Error("wrong password")
+        if (!pass) throw new Error("wrong password")
 
-        //creating jwt and sending
-        const payload = {
-            userId: user._id,
-            userEmail: user.email
-        }
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' })
+        //creating JWT token
+        const token = createToken(user.email, '1h')
 
         res.cookie("jwt", token, { httpOnly: true })
         //if credentials are ok, then redirected to the home page
-        res.json({ success: true,  redirectUrl: '/home' })
-        
+        res.json({ success: true, redirectUrl: '/home' })
+
 
     } catch (error) {
         if (error.message === 'wrong email') {
-            return res.status(401).json({ email: false , pass: true });
-          } else if (error.message === 'wrong password') {
-            return res.status(401).json({ pass: false ,email: true});
-          } else {
+            return res.status(401).json({ email: false, pass: true });
+        } else if (error.message === 'wrong password') {
+            return res.status(401).json({ pass: false, email: true });
+        } else {
             return res.status(500).json({ success: false, message: 'Unknown error' });
-          }
+        }
     }
 }
 
@@ -157,7 +167,8 @@ export const checkmail = async (req, res) => {
         //checking email
         const user = await User.findOne({ email })
         //if email is not found throw an error
-        if(!user) throw new Error("wrong email")
+        if (!user) throw new Error("wrong email")
+        if (!user.isAdmin) throw new Error("wrong email")
 
         //generating otp for email varification
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
@@ -171,15 +182,15 @@ export const checkmail = async (req, res) => {
 
         //this otp send to the user email that get from user
         const emailSend = await sendOtp(email, otp)
-        if(!emailSend) throw new Error("otp email not send")
+        if (!emailSend) throw new Error("otp email not send")
 
         console.log('mail sended')
 
-        res.json({ success: true})
-        
+        res.json({ success: true })
+
     } catch (error) {
-        if(error.message === 'wrong email'){
-            res.status(401).json({ success: false, email: false})
+        if (error.message === 'wrong email') {
+            res.status(401).json({ success: false, email: false })
         }
     }
 }
@@ -194,27 +205,23 @@ export const checkotp = async (req, res) => {
 
         //finding pending user and OTP validation
         const user = await PendingUser.findOne({ otp })
-        
+
         //OTP not matching it will throw an error
-        if(!user) throw new Error("Wrong OTP entered")
-        
+        if (!user) throw new Error("Wrong OTP entered")
+
         //finding user original DB document for set JWT
         const orinalUser = await User.findOne({ email })
         console.log("checkotp", orinalUser)
 
-        //creating payload and token
-        const payLoad = {
-            userId: orinalUser._id,
-            userEmail: user.email
-        }
-        const token = jwt.sign(payLoad, process.env.JWT_SECRET, { expiresIn: '5m'})
+        //creating JWT token
+        const token = createToken(user.email, '5m')
 
         //sending token to browser cookie
-        res.cookie( 'jwt', token, { httpOnly: true })
-        res.json({ success: true, redirectUrl: '/createpassword'})
+        res.cookie('jwt', token, { httpOnly: true })
+        res.json({ success: true, redirectUrl: '/createpassword' })
 
     } catch (error) {
-        if(error.message === 'Wrong OTP entered') {
+        if (error.message === 'Wrong OTP entered') {
             res.status(401).json({ success: false })
         }
     }
@@ -227,19 +234,19 @@ export const getCreatePassword = (req, res) => {
 
         //checking the user details through token
         const token = req.cookies?.jwt
-        if(!token) res.redirect('/notfound')
+        if (!token) res.redirect('/notfound')
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
         //throw new error if the user details get from browser wrong
-        if(!decoded) throw new Error("something went wrong")
+        if (!decoded) throw new Error("something went wrong")
         res.render('user/newpassword')
 
     } catch (error) {
-        if(error.message === 'something went wrong') {
-            res.status(401).json({ success: false, message: "Session expired please try again!"})
+        if (error.message === 'something went wrong') {
+            res.status(401).json({ success: false, message: "Session expired please try again!" })
         }
     }
-    
+
 }
 
 //@desc creating new password
@@ -255,7 +262,7 @@ export const createNewPassword = async (req, res) => {
 
         //Retriving data from JWT Token
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        if(!decoded?.userId) throw new Error("Session expired")
+        if (!decoded?.userId) throw new Error("Session expired")
 
         const salt = await bcrypt.genSalt(10)
         const hash = await bcrypt.hash(password, salt)
@@ -263,23 +270,24 @@ export const createNewPassword = async (req, res) => {
         console.log("decodedUer", decoded.userId)
         console.log("decodedEmail", decoded.userEmail)
 
-        const changingPass = await User.updateOne({ _id: decoded.userId }, { $set: { hashPassword: hash }})
-        res.status(200).json({success: true, redirectUrl: '/home'})
+        const changingPass = await User.updateOne({ _id: decoded.userId }, { $set: { hashPassword: hash } })
+        res.status(200).json({ success: true, redirectUrl: '/home' })
 
     } catch (error) {
-        if(error.message === "Session expired") {
-            return res.status(401).json({ success: false, message: error.message})
+        if (error.message === "Session expired") {
+            return res.status(401).json({ success: false, message: error.message })
         }
     }
 }
 
+
+//this conteroller for reset the jwt
 export const logout = (req, res) => {
     res.clearCookie('jwt', {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict'
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
     })
 
     res.status(200).json({ success: true, message: 'Logged out successfully' })
-  }
-  
+}

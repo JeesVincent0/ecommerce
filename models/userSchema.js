@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
     hashPassword: { type: String},
     googleId: String,
     isActive: { type: Boolean, default: true},
+    isAdmin: { type: Boolean, default: false },
 },  { timestamps: true})
 
 const User = mongoose.model('User', userSchema)

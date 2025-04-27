@@ -10,7 +10,7 @@ import session from 'express-session';
 
 //importing local modules
 import userRoutes from './routes/userRoutes.js'
-// import adminRoutes from './routes/adminRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
 import { connectDB } from './config/dbConnection.js';
 import { endPoints, showJWT } from './middleware/gobalMiddleware.js';
 import './config/passport.js'
@@ -51,6 +51,6 @@ app.use(showJWT)
 
 //routes setup
 app.use('/', userRoutes)
-// app.use('/', adminRoutes)
+app.use('/', adminRoutes)
 
 connectDB(mongoUrl).then(() => app.listen(port, () => console.log(`Server connected port ${port}`)))

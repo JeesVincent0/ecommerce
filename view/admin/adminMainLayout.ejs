@@ -1,0 +1,57 @@
+<%- include('../partials/head') %>
+
+    <body class="bg-gray-100">
+
+        <!-- Top Navbar -->
+        <div
+            class="fixed top-0 left-0 w-full h-16 bg-[#1B1254] text-white flex items-center justify-between px-4 shadow z-50 font-bold">
+
+            <!-- Left Side: Logo and Label -->
+            <div class="flex items-center space-x-4 ml-[3%]">
+                <span class="text-4xl">SHOPPI</span>
+                <span class="mt-2">Admin</span>
+            </div>
+
+            <!-- Right Side: Search Bar -->
+             <div id="searchBarContainer">
+                
+             </div>
+
+        </div>
+
+        <!-- Left Sidebar -->
+        <div class="fixed top-16 left-0 w-[20%] h-[calc(100vh-4rem)] bg-white text-gray-800 p-4 space-y-2">
+
+            <button class="w-full text-left px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-400">
+                Profile
+            </button>
+
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" id="usersButton">
+                Users
+            </button>
+
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400">
+                Orders
+            </button>
+
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400">
+                Support
+            </button>
+
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400">
+                Settings
+            </button>
+
+        </div>
+
+
+
+        <!-- Main Content -->
+        <%- include('../partials/loader') %>
+        <%- include('../partials/adminPartials/userMainSection') %>
+        
+
+        <script src="/js/admin/users.js"></script>
+    </body>
+
+    </html>

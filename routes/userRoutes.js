@@ -6,6 +6,7 @@ import passport from 'passport'
 import { checkmail, checkotp, createNewPassword, createNewUser, forgottonPassword, getCreatePassword, getLogin, googleCallback, logout, notfound, otpPage, signUpPage, verifyLogin, verifyOtp } from '../controllers/userControllers.js'
 import { checkToken } from '../middleware/gobalMiddleware.js'
 
+//setting router to a variable
 const router = express.Router()
 
 //get page not found
