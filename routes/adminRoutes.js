@@ -1,5 +1,5 @@
 import express from 'express'
-import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch } from '../controllers/adminControllers.js'
+import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, addCategoryData, createNewCategory } from '../controllers/adminControllers.js'
 
 
 const router = express.Router()
@@ -24,6 +24,15 @@ router.get("/users/unblock", unBlockUser);
 
 //get user using search keywords
 router.get("/users/search", getUsersSearch);
+
+//get cotegory list
+// router.get("/category");
+
+//create new category
+router.post("/category", createNewCategory);
+
+//get cotegory form data
+router.get("/category/miancategory/:parent", addCategoryData);
   
 
 export default router

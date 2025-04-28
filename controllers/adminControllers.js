@@ -1,6 +1,8 @@
 import User from "../models/userSchema.js"
 import bcrypt, { hash } from 'bcrypt'
 import { createToken } from "./JWT.js"
+import Category from "../models/categorySchema.js"
+import slugify from "slugify"
 
 //@desc render admin login page
 //GET /adminlogin
@@ -135,4 +137,98 @@ export const getUsersSearch = async (req, res) => {
     const totalPages = Math.ceil(totalUsers / limit)
 
     res.json({ users, totalPages: totalPages, currentPage: page })
+}
+
+//@desc get category list
+//GET /category
+export const getCotegoryList = (req, res) => {
+
+}
+
+//@desc get add category form data
+//GET /category/miancaltegory
+export const addCategoryData = async (req, res) => {
+    try {
+        const parentCategory = req.params.parent
+
+        if (!parentCategory || parentCategory === "undefined") {
+            const categoryNames = await Category.find({ parentId: null }).select("slug _id")
+            res.json({ categoryNames, parent: true })
+        } else {
+            const categoryNames = await Category.find({ parentId: parentCategory }).select("slug _id")
+            if (!categoryNames) emptyCall()
+            res.json({ categoryNames, parent: false, child: true })
+        }
+        function emptyCall() {
+            res.json({ categoryNames, parent: false, child: false, parentCategory })
+        }
+    } catch (error) {
+        res.json({ message: "Something went wrong" })
+    }
+}
+
+//@desc create new category
+//POST /category
+export const createNewCategory = async (req, res) => {
+    try {
+        const { parentId, categoryName, categoryStatus, categoryDescription } = req.body
+        console.log(parentId, categoryName, categoryStatus, categoryDescription)
+
+        //creating slug from name
+        const slug = slugify(categoryName, { lower: true, strict: true })
+        console.log("slug success", slug)
+
+        //check if slug is already exists
+        const existingCategory = await Category.findOne({ slug })
+        if (existingCategory) throw new ("Category with same name already exist.")
+
+
+        // Find current maximum position under same parent
+        let maxPosition = 0;
+        if (parentId) {
+            const lastCategory = await Category.find({ parentId })
+                .sort({ position: -1 })
+                .limit(1);
+            if (lastCategory.length > 0) {
+                maxPosition = lastCategory[0].position;
+            }
+        } else {
+            const lastCategory = await Category.find({ parentId: null })
+                .sort({ position: -1 })
+                .limit(1);
+            if (lastCategory.length > 0) {
+                maxPosition = lastCategory[0].position;
+            }
+        }
+        console.log("creating new position success", maxPosition)
+
+        // calculating the level
+        let level = 0;
+        if (parentId) {
+            const parentCategory = await Category.findById(parentId);
+            if (parentCategory) {
+                level = parentCategory.level + 1
+            }
+        }
+        console.log("creating level", level)
+
+        //creating new category
+        const newCategory = new Category({
+            name: categoryName,
+            slug: slug,
+            parentId: parentId || null,
+            description: categoryDescription,
+            status: categoryStatus,
+            level,
+        })
+
+        await newCategory.save();
+        console.log("new category created")
+
+
+    } catch (error) {
+        if (error.message === "Category with same name already exist.") {
+            res.status(400).json({ exist: true, message: "error.message" })
+        }
+    }
 }

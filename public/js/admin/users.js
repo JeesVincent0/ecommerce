@@ -2,13 +2,25 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("usersButton").addEventListener("click", (e) => {
         e.preventDefault()
 
+        //accessing left side bar buttons
+        const categoryButton = document.getElementById("categoryButton");
         const usersButton = document.getElementById("usersButton");
         const userPage = document.getElementById("userPage");
         const searchButtonContainer = document.getElementById("searchBarContainer")
 
-        searchButtonContainer.innerHTML = "";
+        const mainUserSession = document.getElementById("mainUserSession");
+        mainUserSession.classList.remove("hidden")
 
+        //diable category list section
+        const maincategeryListSection = document.getElementById("maincategeryListSection");
+        maincategeryListSection.classList.add("hidden");
+
+        //Changing button pressing color
         usersButton.classList.add("bg-gray-400");
+        categoryButton.classList.remove("bg-gray-400");
+
+        //accessing user container for list users
+        searchButtonContainer.innerHTML = "";
         searchButtonContainer.innerHTML += `
         <div class="flex items-center space-x-2 mr-4 relative">
             <span class="hidden" id="searchSpan"></span>
@@ -100,7 +112,7 @@ function renderUsers(users) {
                 approve(email, e.target)
 
             } else {
-                
+
                 //This function invoked for unblock user
                 const success = await UnBlockUser(email);
 
