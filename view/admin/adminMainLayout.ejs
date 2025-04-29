@@ -22,10 +22,6 @@
         <!-- Left Sidebar -->
         <div class="fixed top-16 left-0 w-[20%] h-[calc(100vh-4rem)] bg-white text-gray-800 p-4 space-y-2">
 
-            <button class="w-full text-left px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-400">
-                Profile
-            </button>
-
             <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" id="usersButton">
                 Users
             </button>
@@ -34,12 +30,8 @@
                 Category
             </button>
 
-            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400">
-                Support
-            </button>
-
-            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400">
-                Settings
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="productList()" id="productsButton">
+                Products
             </button>
 
         </div>
@@ -57,11 +49,19 @@
         <div class="hidden" id="maincategeryAddSection">
             <%- include('../partials/adminPartials/addCategorySection') %>
         </div>
+        <div class="" id="maincategeryEditSection">
+        </div>
+        <div class="hidden" id="productListingSection">
+            <%- include('../partials/adminPartials/productList') %>
+        </div>
         
 
         <script src="/js/admin/users.js"></script>
         <script src="/js/admin/category.js"></script>
         <script src="/js/admin/addCategory.js"></script>
+        <script src="/js/admin/editCategory.js"></script>
+        <script src="/js/admin/products.js"></script>
+        <script src="/js/admin/mainFunction.js"></script>
     </body>
 
     </html>

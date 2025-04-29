@@ -3,6 +3,7 @@ import bcrypt, { hash } from 'bcrypt'
 import { createToken } from "./JWT.js"
 import Category from "../models/categorySchema.js"
 import slugify from "slugify"
+import Product from "../models/productSchema.js"
 
 //@desc render admin login page
 //GET /adminlogin
@@ -141,94 +142,291 @@ export const getUsersSearch = async (req, res) => {
 
 //@desc get category list
 //GET /category
-export const getCotegoryList = (req, res) => {
-
-}
-
-//@desc get add category form data
-//GET /category/miancaltegory
-export const addCategoryData = async (req, res) => {
+export const getCategoryList = async (req, res) => {
     try {
-        const parentCategory = req.params.parent
 
-        if (!parentCategory || parentCategory === "undefined") {
-            const categoryNames = await Category.find({ parentId: null }).select("slug _id")
-            res.json({ categoryNames, parent: true })
-        } else {
-            const categoryNames = await Category.find({ parentId: parentCategory }).select("slug _id")
-            if (!categoryNames) emptyCall()
-            res.json({ categoryNames, parent: false, child: true })
-        }
-        function emptyCall() {
-            res.json({ categoryNames, parent: false, child: false, parentCategory })
-        }
+        console.log("reached")
+        //getting data from query params
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 2;
+
+        //settup for get users
+        const skip = (page - 1) * limit;
+
+        const categoryList = await Category.find().select("name slug status -_id").skip(skip).limit(limit)
+        console.log(categoryList)
+
+        const totalCategory = await Category.countDocuments();
+        const totalPages = Math.ceil(totalCategory / limit)
+
+
+        res.json({ categoryList, totalPages: totalPages, page })
     } catch (error) {
-        res.json({ message: "Something went wrong" })
+
     }
 }
+
+//@desc get category neme and slug for category selection
+//GET /category/miancategory/:parentId
+export const getCategoryNames = async (req, res) => {
+    try {
+        const parentId = req.params.parentId
+        console.log(parentId)
+
+        if (parentId === "null") {
+            const category = await Category.find({ parentId: null }).select("slug")
+            res.json({ categoryNames: category, parent: true })
+        } else if (parentId) {
+            console.log("backend parentId", parentId)
+            const category = await Category.find({ parentId: parentId }).select("slug")
+            console.log(category)
+            res.json({ categoryNames: category, parent: false, child: true })
+        }
+    } catch (error) {
+
+    }
+}
+
 
 //@desc create new category
 //POST /category
 export const createNewCategory = async (req, res) => {
     try {
         const { parentId, categoryName, categoryStatus, categoryDescription } = req.body
-        console.log(parentId, categoryName, categoryStatus, categoryDescription)
 
         //creating slug from name
         const slug = slugify(categoryName, { lower: true, strict: true })
-        console.log("slug success", slug)
 
         //check if slug is already exists
         const existingCategory = await Category.findOne({ slug })
         if (existingCategory) throw new ("Category with same name already exist.")
 
-
-        // Find current maximum position under same parent
-        let maxPosition = 0;
-        if (parentId) {
-            const lastCategory = await Category.find({ parentId })
-                .sort({ position: -1 })
-                .limit(1);
-            if (lastCategory.length > 0) {
-                maxPosition = lastCategory[0].position;
-            }
-        } else {
-            const lastCategory = await Category.find({ parentId: null })
-                .sort({ position: -1 })
-                .limit(1);
-            if (lastCategory.length > 0) {
-                maxPosition = lastCategory[0].position;
-            }
-        }
-        console.log("creating new position success", maxPosition)
-
-        // calculating the level
-        let level = 0;
+        let level = 1;
         if (parentId) {
             const parentCategory = await Category.findById(parentId);
-            if (parentCategory) {
-                level = parentCategory.level + 1
+            if (!parentCategory) {
+                return res.status(400).json({ status: false, message: "Invalid parent category ID." });
             }
+            level = parentCategory.level + 1;
         }
-        console.log("creating level", level)
 
         //creating new category
         const newCategory = new Category({
             name: categoryName,
             slug: slug,
-            parentId: parentId || null,
             description: categoryDescription,
             status: categoryStatus,
+            parentId: parentId || null,
             level,
         })
 
+        await Category.updateOne({ _id: parentId }, { $set: { isChild: true } })
+
         await newCategory.save();
         console.log("new category created")
-
+        res.json({ status: true })
 
     } catch (error) {
         if (error.message === "Category with same name already exist.") {
             res.status(400).json({ exist: true, message: "error.message" })
         }
+    }
+}
+
+//@desc get category using search keywords
+//GET /category/search?key=data
+export const getCategorySearch = async (req, res) => {
+
+    console.log("reached search on category")
+    //getting data from query params
+    const keyword = req.query.key;
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+
+    //settup for get users
+    const regxKey = new RegExp(keyword, 'i')
+    const skip = (page - 1) * limit
+    const filter = { name: { $regex: regxKey } }
+
+    //getting category and count for pagination
+    const categoryList = await Category.find(filter).select("name slug status -_id").sort({ createdAt: -1 }).skip(skip).limit(limit)
+    const totalCategory = await Category.countDocuments(filter)
+    const totalPages = Math.ceil(totalCategory / limit)
+
+    res.json({ categoryList, totalPages: totalPages, page })
+
+}
+
+//@desc get data for edit category form
+//GET /category/edit
+export const editCategoryForm = async (req, res) => {
+    try {
+        const slug = req.query.slug
+        console.log(slug)
+        const category = await Category.findOne({ slug }).select("name slug description status -_id")
+        res.json({ category })
+
+    } catch (error) {
+        res.status(500).json({ message: "Something went wrong" })
+    }
+}
+
+//@desc edit category
+//PATCH /category/edit
+export const editCategory = async (req, res) => {
+    let { name, description, status, slug } = req.body
+    console.log(name, description, status, slug)
+    let tempSlug = slug
+    if (name) {
+        await Category.updateOne({ slug: tempSlug }, { $set: { name } })
+        slug = slugify(name, { lower: true, strict: true })
+        await Category.updateOne({ slug: tempSlug }, { $set: { slug } })
+    }
+    if (description) await Category.updateOne({ slug }, { $set: { description } })
+    if (status) await Category.updateOne({ slug }, { status })
+    res.json({ status: true })
+}
+
+//@desc block and unblock catogey
+//PATCH /category/block
+export const statusCategory = async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        console.log(slug)
+        const category = await Category.findOne({ slug });
+
+        if (!category) {
+            console.log("daalskhgdkjasfgjbafji")
+            return res.status(404).json({ status: false, message: "Category not found" });
+        }
+
+        // Toggle status
+        category.status = category.status === 'active' ? 'inactive' : 'active';
+        await category.save();
+
+
+
+        res.json({ status: true, message: "Category status updated" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: "Server error" });
+    }
+}
+
+//@desc get product list
+//GET /products
+export const getProducts = async (req, res) => {
+    try {
+        //getting data from query params
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 2;
+
+        //settup for get users
+        const skip = (page - 1) * limit;
+
+        const product = await Product.find().select("product_name mrp discount_price discount_percentage _id").skip(skip).limit(limit)
+
+        const totalProduct = await Product.countDocuments();
+        const totalPages = Math.ceil(totalProduct / limit)
+
+
+        res.json({ product, totalPages: totalPages, page })
+    } catch (error) {
+
+    }
+}
+
+//@desc get products by search
+//GET /products/search
+export const getProductsSearch = async (req, res) => {
+    //getting data from query params
+    const keyword = req.query.key;
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 2
+
+    console.log(keyword)
+
+    //settup for get users
+    const regxKey = new RegExp(keyword, 'i')
+    const skip = (page - 1) * limit
+    const filter = {
+        $or: [
+            { product_name: { $regex: regxKey } },
+            { tags: { $in: [regxKey] } }
+        ]
+    };
+
+    //getting category and count for pagination
+    const product = await Product.find(filter).select("product_name mrp discount_price discount_percentage _id").sort({ createdAt: -1 }).skip(skip).limit(limit)
+    const totalProduct = await Product.countDocuments(filter)
+    const totalPages = Math.ceil(totalProduct / limit)
+
+    console.log(product)
+
+    res.json({ product, totalPages: totalPages, page })
+}
+
+//@desc get child category details
+//GET /product/category
+export const getChildCategory = async (req, res) => {
+    try {
+        const categoryNames = await Category.find({ isChild: false }).select("slug -_id")
+        console.log(categoryNames)
+        res.json({ categoyNames: categoryNames, status: true })
+    } catch (error) {
+        res.status(500).json({ message: "something Went wrong", status: false })
+    }
+}
+
+//@desc add new product
+//POST /product/add
+export const addNewProduct = async (req, res) => {
+    try {
+
+        console.log(req.body);
+        console.log(req.files)
+
+        const { product_name, description, brand, mrp, discount_price, stock, tags, category_slug } = req.body;
+
+        // Store file paths
+        const imagePaths = req.files.map(file => file.path);
+
+        const categoryId = await Category.findOne({ slug: category_slug }).select("_id")
+        const discount_percentage = ((mrp - discount_price) / mrp) * 100;
+        const last_price = mrp - discount_price
+
+
+        const newProduct = new Product({
+            product_name,
+            description,
+            brand,
+            mrp,
+            discount_price,
+            discount_percentage,
+            stock,
+            tags: tags?.split(",") || [],
+            category_id: categoryId,
+            images: imagePaths,
+            last_price
+        })
+
+        await newProduct.save()
+
+        res.json({ status: true })
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+//@desc get product data for edit form
+//GET /product/:id
+export const getProductData = async (req, res) => {
+    try {
+        const _id = req.params.id
+        console.log(_id)
+        const product = await Product.findOne({_id}).select("_id product_name description brand mrp discount_price stock tags")
+        res.json({product})
+    } catch (error) {
+        console.log(error.message)
     }
 }

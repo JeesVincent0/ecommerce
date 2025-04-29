@@ -7,17 +7,30 @@ window.addEventListener("DOMContentLoaded", () => {
         const usersButton = document.getElementById("usersButton");
         const userPage = document.getElementById("userPage");
         const searchButtonContainer = document.getElementById("searchBarContainer")
+        const productsButton = document.getElementById("productsButton")
 
         const mainUserSession = document.getElementById("mainUserSession");
         mainUserSession.classList.remove("hidden")
+
+        const productListingSection = document.getElementById("productListingSection");
+        productListingSection.classList.add("hidden")
 
         //diable category list section
         const maincategeryListSection = document.getElementById("maincategeryListSection");
         maincategeryListSection.classList.add("hidden");
 
+        //disable edit category form
+        const editCategoryForm = document.getElementById("maincategeryEditSection")
+        editCategoryForm.classList.add("hidden")
+
+        //diable addcategory form section
+        const addCategorySection = document.getElementById("maincategeryAddSection")
+        addCategorySection.classList.add("hidden")
+
         //Changing button pressing color
         usersButton.classList.add("bg-gray-400");
         categoryButton.classList.remove("bg-gray-400");
+        productsButton.classList.remove("bg-gray-400")
 
         //accessing user container for list users
         searchButtonContainer.innerHTML = "";
