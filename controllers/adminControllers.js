@@ -4,6 +4,7 @@ import { createToken } from "./JWT.js"
 import Category from "../models/categorySchema.js"
 import slugify from "slugify"
 import Product from "../models/productSchema.js"
+import mongoose, { Types } from "mongoose"
 
 //@desc render admin login page
 //GET /adminlogin
@@ -422,11 +423,67 @@ export const addNewProduct = async (req, res) => {
 //GET /product/:id
 export const getProductData = async (req, res) => {
     try {
+
+        //accessing id from url
         const _id = req.params.id
-        console.log(_id)
-        const product = await Product.findOne({_id}).select("_id product_name description brand mrp discount_price stock tags")
+
+        //fing neccesory fields from product collection and category collection
+        const productObj = await Product.findOne({_id}).select("_id product_name description brand mrp discount_price stock tags category_id images")
+        const categoryId = new mongoose.Types.ObjectId(productObj.category_id)
+        const category = await Category.findOne({ _id: categoryId}).select("slug -_id")
+
+        //productObj convert to js pure object for add category slug before respoce
+        const product = productObj.toObject()
+        product.slug = category?.slug
+        
         res.json({product})
+
     } catch (error) {
         console.log(error.message)
+    }
+}
+
+//@desc edit product details
+//POST /product/edit
+export const editProduct = async (req, res) => {
+    try {
+        console.log(req.body);
+        console.log(req.files)
+
+        const { id, product_name, description, brand, mrp, discount_price, stock, tags, category_slug } = req.body;
+
+        // Store file paths
+        const imagePaths = req.files.map(file => file.path);
+
+        const categoryId = await Category.findOne({ slug: category_slug }).select("_id")
+        const discount_percentage = ((mrp - discount_price) / mrp) * 100;
+        const last_price = mrp - discount_price
+
+        const updateProduct = {
+            product_name,
+            description,
+            brand,
+            mrp,
+            discount_price,
+            discount_percentage,
+            stock,
+            tags: tags?.split(",") || [],
+            category_id: categoryId,
+            images: imagePaths,
+            last_price
+        }
+
+        const oldImagesPath = await Product.findOne({ _id:id}).select("images -_id")
+
+        const updated = await Product.findByIdAndUpdate(id, updateProduct, {new: true})
+        if(!updated) res.status(500).json({message: "Not updated something went wrong"})
+
+        
+        
+        res.json({ success: true })
+
+
+    } catch (error) {
+        
     }
 }

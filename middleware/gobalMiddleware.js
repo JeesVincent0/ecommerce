@@ -18,9 +18,8 @@ export const showJWT = (req, res, next) => {
                 next()
             }
         })
-        console.log("middleware", decoded)
+        
     }
-    console.log("checked")
     next()
 }
 

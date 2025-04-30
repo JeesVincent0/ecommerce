@@ -1,5 +1,5 @@
 import express from 'express'
-import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData } from '../controllers/adminControllers.js'
+import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct } from '../controllers/adminControllers.js'
 import { productImageUpload } from '../middleware/routerMiddleware.js'
 
 const router = express.Router()
@@ -60,5 +60,8 @@ router.post("/product/add", productImageUpload, addNewProduct);
 
 //get product data for edit form
 router.get("/product/:id", getProductData);
+
+//edit product details
+router.post("/product/edit", productImageUpload, editProduct);
 
 export default router

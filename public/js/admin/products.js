@@ -409,8 +409,11 @@ function renderEditForm(product) {
   const searchBarContainer = document.getElementById("searchBarContainer");
   searchBarContainer.innerHTML = "";
   const container = document.getElementById("categoriesContainer2");
+
+  console.log("product details for editing form", product)
+
   container.innerHTML = `
-    <form id="editProductForm" class="space-y-4" action="/product/edit" method="POST" enctype="multipart/form-data">
+    <form id="editProductForm" class="space-y-4" enctype="multipart/form-data">
   
   <!-- Hidden Product ID -->
   <input type="hidden" name="id" value="${product._id}" />
@@ -475,34 +478,165 @@ function renderEditForm(product) {
     <label class="block text-sm font-medium text-gray-700">Select Category</label>
     <select name="category_slug"
       class="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-      <option value="${product.category_slug}" selected>${product.category_slug}</option>
+      <option value="${product.slug}" selected>${product.slug}</option>
+      <div id="optiosContainer">
       <!-- Inject other category options dynamically -->
+      </div>
     </select>
   </div>
 
-  <!-- Image Upload -->
-  <div>
-    <label class="block text-sm font-medium text-gray-700">Replace Product Images (optional)</label>
-    <input type="file" name="images" multiple accept="image/*"
-      class="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+<!-- Image Upload -->
+<div>
+  <label class="block text-sm font-medium text-gray-700">Replace Product Images (optional)</label>
+  
+  <!-- File Input -->
+  <input id="imageUploadEdit" type="file" name="images" multiple accept="image/*"
+    class="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
 
-    <small class="text-gray-500 block mt-1">Max 4 images. Max 2MB each. Must be square (1:1)</small>
-    
-    <!-- Preview Current Images -->
-    <div class="mt-4 flex flex-wrap gap-4">
-      ${product.images?.map(img => `
-        <img src="/uploads/${img}" class="w-24 h-24 object-cover rounded-md border" alt="Current Image">
-      `).join('')}
-    </div>
+  <!-- Instructions -->
+  <small class="text-gray-500 block mt-1">
+    Max 4 images. Max 2MB each. Must be square (1:1)
+  </small>
+
+  <!-- Error Message -->
+  <div id="uploadError" class="text-red-500 text-sm mt-1"></div>
+
+  <!-- Preview Container -->
+  <div id="imagePreview" class="mt-4 flex flex-wrap gap-4">
+    <!-- Images will be injected here -->
   </div>
+</div>
+
 
   <!-- Submit Button -->
-  <button type="submit"
+  <button type="button" onclick="saveProduct1()"
     class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
     Update Product
   </button>
-</form>
+</form>`;
+
+const categoryCanteiner = document.getElementById("optiosContainer")
+categoryCanteiner.innerHTML = "";
 
 
-  `;
+fetch("/product/category",{
+  method: "GET",
+  headers: { "Content-Type" : "application/json" }
+})
+.then((res) => res.json())
+.then((data) => {
+  console.log(data)
+  if(data.categoyNames) {
+    let categories = Array.isArray(data.categoyNames) ? data.categoyNames : [data.categoyNames]
+    console.log(categories)
+    categories.forEach(category => {
+      if(category.slug !== product.slug) {
+        categoryCanteiner.innerHTML += `<option value="${category.slug}">${category.slug}</option>`
+      }
+    });
+  }
+})
+
+setupImageUploadValidation(product.images)
+}
+
+let selectedFiles1 = []; // Can contain both URL strings and File objects
+
+function setupImageUploadValidation(existingImages = []) {
+  const imageInput = document.getElementById("imageUploadEdit");
+  const previewContainer = document.getElementById("imagePreview");
+  const uploadError = document.getElementById("uploadError");
+
+  // Load existing images from backend
+  existingImages.forEach(url => {
+    selectedFiles1.push(url); // Just store the URL
+    renderImagePreview(url);
+  });
+
+  imageInput.addEventListener("change", function () {
+    uploadError.innerText = "";
+    const newFiles = Array.from(imageInput.files);
+
+    for (const file of newFiles) {
+      if (selectedFiles1.length >= 4) {
+        uploadError.innerText = "You can only upload up to 4 images.";
+        break;
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        uploadError.innerText = `File "${file.name}" is too large. Max 2MB allowed.`;
+        continue;
+      }
+
+      if (selectedFiles1.find(f => typeof f !== "string" && f.name === file.name && f.size === file.size)) {
+        continue;
+      }
+
+      const imageURL = URL.createObjectURL(file);
+      const img = new Image();
+      img.src = imageURL;
+
+      img.onload = () => {
+        const ratio = img.width / img.height;
+        if (ratio < 0.95 || ratio > 1.05) {
+          uploadError.innerText = `File "${file.name}" must be square (1:1).`;
+          return;
+        }
+
+        selectedFiles1.push(file);
+        renderImagePreview(imageURL, file);
+      };
+    }
+
+    imageInput.value = "";
+  });
+
+  function renderImagePreview(src, file = null) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "relative";
+
+    const imageElement = document.createElement("img");
+    imageElement.src = src;
+    imageElement.className = "w-24 h-24 object-cover rounded-lg border";
+
+    const removeBtn = document.createElement("button");
+    removeBtn.innerHTML = "&times;";
+    removeBtn.className = "absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs";
+
+    removeBtn.onclick = () => {
+      selectedFiles1 = selectedFiles1.filter(f => {
+        if (file) return f !== file; // Remove uploaded File
+        return f !== src; // Remove backend URL
+      });
+      wrapper.remove();
+    };
+
+    wrapper.appendChild(imageElement);
+    wrapper.appendChild(removeBtn);
+    previewContainer.appendChild(wrapper);
+  }
+}
+
+function saveProduct1() {
+  const form = document.getElementById("editProductForm");
+  const formData = new FormData(form);
+
+  // Append images from selectedFiles
+  selectedFiles1.forEach(file => {
+    formData.append("images", file);
+  });
+
+  fetch("/product/edit", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert("Product added successfully!");
+    selectedFiles1 = [];  // Clear after successful submit
+    loadProducts();
+  })
+  .catch(err => {
+    console.error(err);
+  });
 }
