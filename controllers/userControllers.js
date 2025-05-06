@@ -6,6 +6,12 @@ import PendingUser from '../models/userTemp.js'
 import { sendOtp } from '../utils/sendOtp.js'
 import { createToken } from './JWT.js'
 
+import Product from "../models/productSchema.js"
+import Category from "../models/categorySchema.js"
+import mongoose from 'mongoose'
+import { generateOtp } from '../utils/generateOtp.js'
+
+
 //@desc get page not found
 //GET /notfound
 export const notfound = (req, res) => {
@@ -120,12 +126,13 @@ export const verifyLogin = async (req, res) => {
         const { email, password } = req.body;
 
         //find user from DB
-        const user = await User.findOne({ email })
+        const user = await User.findOne({ email: email })
         console.log('email', !user)
 
         //checking user entered email is correct or wrong
         if (!user) throw new Error("wrong email")
-        if (!user.isAdmin) throw new Error("wrong email")
+        if (!user.isActive) throw new Error("user blocked")
+        if (user.isAdmin) throw new Error("wrong email")
 
         //user password checkin
         const pass = await bcrypt.compare(password, user.hashPassword)
@@ -144,8 +151,10 @@ export const verifyLogin = async (req, res) => {
             return res.status(401).json({ email: false, pass: true });
         } else if (error.message === 'wrong password') {
             return res.status(401).json({ pass: false, email: true });
+        } else if (error.message === 'user blocked') {
+            return res.status(400).json({ success: false, message: 'user blocked', block: true, pass: true, email: true });
         } else {
-            return res.status(500).json({ success: false, message: 'Unknown error' });
+            return res.status(500).json({ success: false, message: "Something went wrong"})
         }
     }
 }
@@ -168,17 +177,16 @@ export const checkmail = async (req, res) => {
         const user = await User.findOne({ email })
         //if email is not found throw an error
         if (!user) throw new Error("wrong email")
-        if (!user.isAdmin) throw new Error("wrong email")
+        if (user.isAdmin) throw new Error("wrong email")
 
         //generating otp for email varification
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
-        const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000)
 
         // Remove old pending if any
         const removing = await PendingUser.deleteOne({ email })
 
         //save the login details in a tepm collection
-        const saveDetails = await PendingUser.create({ email, otp, otpExpiresAt })
+        const saveDetails = await PendingUser.create({ email, otp })
 
         //this otp send to the user email that get from user
         const emailSend = await sendOtp(email, otp)
@@ -256,19 +264,15 @@ export const createNewPassword = async (req, res) => {
 
         //getting password and JWT Token
         const password = req.body.password
-        console.log('password reached', password)
         const token = req.cookies.jwt
-        console.log(token)
 
         //Retriving data from JWT Token
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        if (!decoded?.userId) throw new Error("Session expired")
+        if (!decoded?.userEmail) throw new Error("Session expired")
+        console.log("jwt created")
 
         const salt = await bcrypt.genSalt(10)
         const hash = await bcrypt.hash(password, salt)
-
-        console.log("decodedUer", decoded.userId)
-        console.log("decodedEmail", decoded.userEmail)
 
         const changingPass = await User.updateOne({ _id: decoded.userId }, { $set: { hashPassword: hash } })
         res.status(200).json({ success: true, redirectUrl: '/home' })
@@ -289,5 +293,234 @@ export const logout = (req, res) => {
         sameSite: 'strict'
     })
 
-    res.status(200).json({ success: true, message: 'Logged out successfully' })
+    res.redirect("/adminLogin")
+}
+
+//@desc filter all product and send to product listing page
+//GET /product
+export const getProducts = async (req, res) => {
+    try {
+        const { key, price, name, category, minPrice, maxPrice } = req.query;
+        const page = parseInt(req.query.page) || 1;
+        const limit = 8;
+        const skip = (page - 1) * limit;
+
+        const matchStage = {};
+
+        // Category filtering
+        if (category) {
+            const categoryDoc = await Category.findOne({ slug: category });
+            if (categoryDoc) {
+                matchStage.category_id = new mongoose.Types.ObjectId(categoryDoc._id);
+            }
+        }
+
+        // Text search
+        if (key) {
+            matchStage.$text = { $search: key };
+        }
+
+        // Price filtering
+        if (minPrice || maxPrice) {
+            matchStage.last_price = {};
+            if (minPrice) matchStage.last_price.$gte = Number(minPrice);
+            if (maxPrice) matchStage.last_price.$lte = Number(maxPrice);
+        }
+
+        // Sorting
+        const sortStage = {};
+        if (price === '1') sortStage.last_price = 1;
+        else if (price === '2') sortStage.last_price = -1;
+
+        if (name === '1') sortStage.product_name = 1;
+        else if (name === '2') sortStage.product_name = -1;
+
+        // If text search used and no custom sort, sort by text score
+        if (key && Object.keys(sortStage).length === 0) {
+            sortStage.score = { $meta: "textScore" };
+        }
+
+        // Aggregation pipeline
+        const pipeline = [
+            { $match: matchStage },
+        ];
+
+        // Project text score (if searching)
+        if (key) {
+            pipeline.push({ $addFields: { score: { $meta: "textScore" } } });
+        }
+
+        pipeline.push(
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: limit }
+        );
+
+        // Execute pipeline
+        const products = await Product.aggregate(pipeline);
+
+        // Count total products for pagination
+        const totalCount = await Product.countDocuments(matchStage);
+        const totalPages = Math.ceil(totalCount / limit);
+
+        // Response
+        res.json({ products, totalPages, page });
+
+
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+//@desc render the main product list page
+//GET /productlist
+export const listProducts = async (req, res) => {
+
+    const key = req.query.key
+    const categories = await Category.find()
+    res.render("user/productList", { categories, key })
+}
+
+//@desc get a specific product full datails and related product listing
+//GET /product/view/:id
+export const productDetail = async (req, res) => {
+    const productId = req.params.id
+
+    const product = await Product.findOne({ _id: productId })
+    const relatedProducts = await Product.find({ category_id: product.category_id }).limit(8)
+    console.log("related", relatedProducts)
+
+    res.render("user/productDetails", { product, relatedProducts })
+}
+
+//@desc render home page
+//GET /home
+export const getHome = async (req, res) => {
+    try {
+
+        const clothes = await Product.find({ category_id: "6810cb9ff606c8964af4ee71" })
+        console.log(clothes)
+        res.render("user/home")
+    } catch (error) {
+
+    }
+}
+
+// @desc for user logout, clear jwt
+//POST /userlogout
+export const userLogout = (req, res) => {
+    try {
+        res.clearCookie('jwt', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict'
+        })
+
+        res.render("user/login")
+    } catch (error) {
+        res.status(500).json({message: "something went wrong"})
+    }
+}
+
+//@desc render user profile details page
+// GET /profile
+export const renderProfile = async (req, res) => {
+    try {
+
+        //Rendering user profile section
+        res.render("user/profile")
+
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({ message: "Someting went wrong", err: error.message})
+    }
+}
+
+//@desc get user details for my profile section
+//GET /myprofile
+export const getProfile = async (req, res) => {
+    try {
+
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+        const user = await User.findOne({ email: decoded.userEmail })
+        res.json({ success: true, user: user})
+
+    } catch (error) {
+        console.log(error.message)
+        res.json({ error: error.message })
+    }
+}
+
+//@desc send otp to email for change password from profile section
+// GET /sendotp
+export const otpSend = async (req, res) => {
+    try {
+
+        //verifying jwt for get email for otp send
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const otp = generateOtp();
+        const email = decoded.userEmail;
+
+        const sendotp = await sendOtp(email, otp)
+        if(sendotp) {
+            const remove = await PendingUser.deleteOne({email})
+            const create = await PendingUser.create({email, otp})
+            console.log("successfully otp sended")
+            res.json({ success: true, message: "Otp sended successfully" });
+        }
+    } catch (error) {
+        console.log(error.toString())
+        res.json({ success: true, message: "Something went wrong"})
+    }
+}
+
+//@desc verify otp 
+// POST /otpVerify
+export const otpVerify = async (req, res) => {
+    try {
+        const otp = req.body.otp
+
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const email = decoded.userEmail;
+
+        const pendingUser = await PendingUser.findOne({ email })
+        if(pendingUser.otp === otp) {
+            res.json({ success: true })
+        } else {
+            res.json({ success: false })
+        }
+
+    } catch (error) {
+        console.log(error.toString())
+    }
+}
+
+//@desc change password from profile section
+//PATCH /changepassword
+export const passwordChange = async (req, res) => {
+    try {
+        const password = req.body.newPassword
+
+        const token = req.cookies.jwt
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        if (!decoded?.userEmail) throw new Error("Session expired")
+        const email = decoded.userEmail;
+
+        const salt = await bcrypt.genSalt(10)
+        const hash = await bcrypt.hash(password, salt)
+
+        const changingPass = await User.updateOne({ email }, { $set: { hashPassword: hash } })
+        res.json({ success: true })
+
+    } catch (error) {
+        console.log(error.toString())
+        res.json({ success: false, message: 'Something went wrong'})
+    }
 }

@@ -31,59 +31,58 @@ window.addEventListener("DOMContentLoaded", () => {
         const maincategeryListSection = document.getElementById("maincategeryListSection");
         maincategeryListSection.classList.remove("hidden");
 
-        addSearchAndButtons()
+        // addSearchAndButtons()
         loadCategory()
     })
 });
 
 //setting search bar, category edit and add button on navbar
-function addSearchAndButtons() {
+// function addSearchAndButtons() {
 
-    //Accessing navbar search div
-    const searchBarContainer = document.getElementById("searchBarContainer");
+//     //Accessing navbar search div
+//     const searchBarContainer = document.getElementById("searchBarContainer");
 
-    //setting html content
-    searchBarContainer.innerHTML = "";
-    searchBarContainer.innerHTML = `<div class="flex items-center space-x-2 mr-4 relative">
-            <span class="hidden" id="searchSpan"></span>
-             <button
-                id="addButton"  
-                onclick="addCategory()"
-                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
-            >
-                Add </button>
-            <input 
-                id="searchInput" 
-                type="text" 
-                placeholder="Search..."
-                oninput="toggleClearButton()" 
-                class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" 
-            />
+//     //setting html content
+//     searchBarContainer.innerHTML = "";
+//     searchBarContainer.innerHTML = `<div class="flex items-center space-x-2 mr-4 relative">
+//             <span class="hidden" id="searchSpan"></span>
+            //  <button
+            //     id="addButton"  
+            //     onclick="addCategory()"
+            //     class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
+            // >
+            //     Add </button>
+            // <input 
+            //     id="searchInput" 
+            //     type="text" 
+            //     placeholder="Search..."
+            //     oninput="toggleClearButton()" 
+            //     class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" 
+            // />
             
-            <!-- Clear Button -->
-            <button 
-                id="clearSearchButton" 
-                onclick="clearSearchCat()" 
-                class="absolute right-28 text-gray-500 hover:text-gray-700 hidden"
-                style="font-size: 18px;"
-            >
-                &times;
-            </button>
+            // <!-- Clear Button -->
+            // <button 
+            //     id="clearSearchButton" 
+            //     onclick="clearSearchCat()" 
+            //     class="absolute right-28 text-gray-500 hover:text-gray-700 hidden"
+            //     style="font-size: 18px;">
+            //     &times;
+            // </button>
     
-            <button  
-                onclick="categorySearch()"
-                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
-            >
-                Search
-            </button>
+            // <button  
+            //     onclick="categorySearch()"
+            //     class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
+            // >
+            //     Search
+            // </button>
                        
             
-        </div>
-    `;
-}
+//         </div>
+//     `;
+// }
 
 //this function for get category data and pagination data from server
-function loadCategory(page = 1, limit = 2) {
+function loadCategory(page = 1, limit = 5) {
 
     fetch(`/category?page=${page}&limit=${limit}`, {
         method: "GET",
@@ -102,21 +101,32 @@ function loadCategory(page = 1, limit = 2) {
 function loadCategoryList(categories) {
 
     //getting category listing section
-    const categoriesContainer = document.getElementById("categoriesContainer");
+    const categoriesContainer = document.getElementById("categorTableBody");
     categoriesContainer.innerHTML = "";
 
-    //loop through categoryies for list cards
     categories.forEach(category => {
         categoriesContainer.innerHTML += `        
-        <div class="userCard bg-white p-4 rounded-xl shadow flex flex-wrap items-center justify-between gap-4 hover:shadow-xl hover:scale-101">
-            <div class="text-base sm:text-lg font-semibold min-w-[120px]">${category.name}</div>
-            <div class="flex flex-wrap gap-2 justify-end sm:justify-start">
-              <button onclick="blockCategory('${category.slug}')" id="block" class="blockButton ${category.status === 'active' ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"} text-white text-sm px-3 py-1 rounded">
-                  ${category.status === 'active' ? "Deactive" : "Active"}
-              </button>
-              <button onclick="editCat('${category.slug}')" class="bg-gray-700 text-white text-sm px-3 py-1 rounded hover:bg-gray-800">Edit</button>
-            </div>
-        </div>`
+        <td class="py-3 px-6">${category.name}</td>
+        <td class="py-3 px-6">${category.slug}</td>
+        <td class="py-3 px-6 ${category.status === 'active' ? 'text-green-600' : 'text-red-600'}">
+          ${category.status === 'active' ? 'Active' : 'Blocked'}
+        </td>
+        <td class="py-3 px-6">
+          <button 
+            type="button"
+            class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded ml-1">
+            View
+          </button>  
+          <button 
+            type="button"
+            class="blockButton ${category.status === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
+            text-white text-sm px-3 py-1 rounded"
+            data-email="${category.slug}">
+            ${category.status === 'active' ? 'Block' : 'Unblock'}
+          </button>
+
+          ${category.isChild ? '<button type="button" class="blockButton bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded" data-slug="${category.slug}">Delete</button>' : ''}
+        </td>`
     });
 
 }

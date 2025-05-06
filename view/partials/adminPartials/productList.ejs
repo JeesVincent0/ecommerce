@@ -1,7 +1,63 @@
 <div class="ml-[20%] mt-16 p-6">
-    <h1 class="text-2xl font-bold mb-6" id="productHeading">Product List</h1>
-    <div id="categoriesContainer2" class="space-y-4">
-        <!-- categories will be loaded here using JS -->
+    <div class="container mx-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold mb-4">Product List</h2>
+            <div>
+
+                <button id="addButton" onclick="addProduct()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+                    Add </button>
+                <input id="searchInput" type="text" placeholder="Search..." oninput="toggleClearButtonProducts()"
+                    class="bg-gray-200 px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" />
+
+                <!-- Clear Button -->
+                <button id="clearSearchButton1" onclick="clearSearchProduct()"
+                    class="absolute right-28 text-gray-500 hover:text-gray-700 hidden" style="font-size: 18px;">
+                    &times;
+                </button>
+
+                <button onclick="productSearch()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+                    Search
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white rounded shadow">
+                <thead>
+                    <thead class="bg-gray-100 text-left text-sm font-semibold text-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 cursor-pointer" onclick="sortProducts('image')">Image</th>
+                            <th class="px-6 py-3 cursor-pointer" onclick="sortProducts('name')">
+                                Name <span id="sort-icon-name">⇅</span>
+                            </th>
+                            <th class="px-6 py-3 cursor-pointer" onclick="sortProducts('category')">
+                                Category <span id="sort-icon-category">⇅</span>
+                            </th>
+                            <th class="px-6 py-3 cursor-pointer" onclick="sortProducts('mrp')">
+                                MRP <span id="sort-icon-mrp">⇅</span>
+                            </th>
+                            <th class="px-6 py-3 cursor-pointer" onclick="sortProducts('lastPrice')">
+                                Last Price <span id="sort-icon-lastPrice">⇅</span>
+                            </th>
+                            <th class="px-6 py-3 cursor-pointer" onclick="sortProducts('discount')">
+                                Discount <span id="sort-icon-discount">⇅</span>
+                            </th>
+                            <th class="px-6 py-3 cursor-pointer" onclick="sortProducts('stock')">
+                                Stock <span id="sort-icon-stock">⇅</span>
+                            </th>
+                            <th class="px-6 py-3 cursor-pointer" onclick="sortProducts('isActive')">
+                                Status <span id="sort-icon-isActive">⇅</span>
+                            </th>
+                            <th class="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+
+                <tbody id="productTableBody" class="text-gray-700 text-sm">
+                    <!-- JS will dynamically insert rows here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="flex justify-center">
@@ -9,7 +65,7 @@
             <!-- Pagination buttons will be created here -->
         </div>
     </div>
-    
+
 
     <div id="confirmationContainer">
 

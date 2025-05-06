@@ -26,7 +26,7 @@ document.getElementById("login").addEventListener("click", () => {
   })
   .then((res) => res.json())
   .then((data) => {
-    if(!data.email) {
+    if(!data.email && !data.block) {
       //If email wrong, it will change the email input field
       console.log("email not matching")
       emailLabelField.innerText = "Wrong email";
@@ -38,8 +38,15 @@ document.getElementById("login").addEventListener("click", () => {
       passLabelField.innerText = "Wrong password";
       passLabelField.style.color = "red";
       passwordField.style.borderColor = "red";
+    } else if(data.block) {
+      console.log("email not matching")
+      emailLabelField.innerText = "User blocked";
+      emailLabelField.style.color = "red";
+      emailField.style.borderColor = "red";
     }
     if (data.success) {
+
+      localStorage.setItem("Token", data.token)
       window.location.href = data.redirectUrl;
     }
     

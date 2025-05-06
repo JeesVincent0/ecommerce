@@ -3,8 +3,8 @@ import express from 'express'
 import passport from 'passport'
 
 //importing local modules
-import { checkmail, checkotp, createNewPassword, createNewUser, forgottonPassword, getCreatePassword, getLogin, googleCallback, logout, notfound, otpPage, signUpPage, verifyLogin, verifyOtp } from '../controllers/userControllers.js'
-import { checkToken } from '../middleware/gobalMiddleware.js'
+import { checkmail, checkotp, createNewPassword, createNewUser, forgottonPassword, getCreatePassword,  getHome,  getLogin, getProducts, getProfile, googleCallback, listProducts, logout, notfound, otpPage, otpSend, otpVerify, passwordChange, productDetail, renderProfile, signUpPage, userLogout, verifyLogin, verifyOtp } from '../controllers/userControllers.js'
+import { redirectIfAuthenticated, verifyUserJWT } from '../middleware/routerMiddleware.js'
 
 //setting router to a variable
 const router = express.Router()
@@ -24,7 +24,7 @@ router.get('/signup/otp',otpPage)
 router.post('/signup/otp', verifyOtp)
 
 //Get login page
-router.get('/login', getLogin)
+router.get('/login', redirectIfAuthenticated, getLogin)
 
 //verify user login
 router.post('/login', verifyLogin)
@@ -42,10 +42,40 @@ router.post('/forgottonpassword/checkemail', checkmail)
 router.post('/forgottonpassword/checkotp', checkotp)
 
 //get create new password page
-router.get("/createpassword", getCreatePassword)
+router.get("/createpassword", verifyUserJWT, getCreatePassword)
 
 //create new password
 router.post("/createpassword", createNewPassword)
+
+//get user home page
+router.get("/home", verifyUserJWT, getHome);
+
+//this router is for render product list page
+router.get("/productlist", listProducts);
+
+//get products after filter
+router.get('/product', getProducts);
+
+//get spacific product details and related product
+router.get("/product/view/:id", productDetail)
+
+//get user profile
+router.get("/profile", renderProfile)
+
+//user logout
+router.get("/userlogout",userLogout)
+
+//get user details for my profile options
+router.get("/myprofile", getProfile)
+
+//send otp to mail
+router.get("/sendotp", otpSend);
+
+//verify opt from profile section
+router.post("/otpVerify", otpVerify);
+
+//change password
+router.patch("/changepassword", passwordChange);
 
 //signUp with google setup
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email']}))

@@ -1,0 +1,112 @@
+<%- include('../partials/head') %>
+
+    <body class="bg-gray-100">
+
+        <!-- Top Navbar -->
+        <div
+            class="fixed top-0 left-0 w-full h-16 bg-[#1B1254] text-white flex items-center justify-between px-4 shadow z-50 font-bold">
+
+            <div class="flex items-center space-x-4 ml-[3%]">
+                <span class="text-4xl">SHOPPI</span>
+                <a href="/home" class="text-white text-base hover:underline ml-6">Home</a>
+              </div>
+
+            <!-- Right Side: Search Bar -->
+            <div id="userSearchDiv">
+                <div class="flex items-center space-x-2 mr-4 relative">
+                    <input id="userSearch" type="text" value="<%= key %>" 
+                        oninput="toggleClearButtonProducts()"
+                        class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" />
+                
+                    <!-- Clear Button -->
+                    <button id="clearSearchButton" onclick="clearSearchProduct()"
+                        class="absolute right-28 text-gray-500 hover:text-gray-700 hidden" 
+                        style="font-size: 18px;">
+                        &times;
+                    </button>
+                
+                    <button onclick="productSearch()"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+                        Search
+                    </button>
+
+
+                </div>
+                
+            </div>
+
+        </div>
+
+        <!-- Left Sidebar -->
+        <div class="fixed  left-0 w-[20%] h-[calc(100vh-4rem)] text-gray-800 p-6 space-y-2">
+            <h1 class="text-2xl font-bold mb-6">Filter</h1>
+
+            <!-- filter product -->
+            <div class="w-full text-left px-4 py-2 rounded-lg  ">
+                <form action="" id="filterForm">
+                    <label class="block text-sm font-medium text-gray-700">Sort by:</label>
+                    <!-- for sort by price -->
+                    <select name="priceSort"
+                        class="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                        <option value="" selected>Price</option>
+                        <option value="1">Price: Low to high</option>
+                        <option value="2">Price: High to low</option>
+                    </select>
+
+                    <!-- for sort by name -->
+                    <select name="nameSort"
+                        class="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                        <option value="" selected>Name</option>
+                        <option value="1">Name: A - Z</option>
+                        <option value="2">Name: Z - A</option>
+                    </select>
+
+                    <!-- for select category -->
+                    <select name="category_slug"
+                        class="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                        <option value="" selected>Category</option>
+                        <div id="categoryOptionsUser"></div>
+                    </select>
+
+                    <div>
+                        <input type="text" class="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Min price:"
+                        name="minPrice">
+                    </div>
+                    <div>
+                        <input type="text" class="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Max price:"
+                        name="maxPrice">
+                    </div>
+
+                    <button type="button"
+                        class="text-white w-full mt-3.5 text-center px-4 py-2 rounded-lg  bg-blue-600 hover:bg-blue-700"
+                        onclick="applyFilter()" id="productsButton">
+                        Apply
+                    </button>
+                </form>
+            </div>
+
+        </div>
+        <div class="ml-[20%] mt-16 p-6">
+            <h1 class="text-2xl font-bold mb-6">Product List</h1>
+            <div id="categoriesContainer" class="space-y-4">
+                <!-- categories will be loaded here using JS -->
+                <div id="productContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
+
+                </div>
+                <div class="flex justify-center">
+                    <div id="paginationContainer" class="fixed bottom-6  w-full flex justify-center z-49">
+                        <!-- Pagination buttons will be created here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="/js/productList.js"></script>
+
+    </body>
+
+    </html>

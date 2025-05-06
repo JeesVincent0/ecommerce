@@ -5,8 +5,12 @@ const pendingUserSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   hashPassword: String,
   otp: String,
-  otpExpiresAt: Date,
-}, { timestamps: true });
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 300
+  },
+});
 
 const PendingUser = mongoose.model('PendingUser', pendingUserSchema)
 

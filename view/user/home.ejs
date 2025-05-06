@@ -1,0 +1,267 @@
+<%- include('../partials/head') %>
+
+  <body class="bg-gray-100">
+
+    <!-- Top Navbar -->
+    <div
+      class="fixed top-0 left-0 w-full h-16 bg-[#1B1254] text-white flex items-center justify-between px-4 shadow z-50 font-bold">
+
+      <!-- Left Side: Logo and Label -->
+      <div class="flex items-center space-x-4 ml-[3%]">
+        <span class="text-4xl">SHOPPI</span>
+      </div>
+
+      <!-- Right Side: Search Bar -->
+      <div id="userSearchDiv">
+        <div class="flex items-center space-x-2 mr-4 relative">
+          <input id="userSearch" type="text" placeholder="Search..." oninput="toggleClearButtonProducts()"
+            class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" />
+
+          <!-- Clear Button -->
+          <button id="clearSearchButton" onclick="clearSearchProduct()"
+            class="absolute right-28 text-gray-500 hover:text-gray-700 hidden" style="font-size: 18px;">
+            &times;
+          </button>
+
+          <button onclick="productSearch()"
+            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+            Search
+          </button>
+
+
+        </div>
+
+      </div>
+      <form action="/profile" method="GET">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+          Account
+        </button>
+      </form>
+
+    </div>
+
+    <div class="mt-16 aspect-w-16 aspect-h-4 w-full relative">
+      <a href="/target-page">
+        <img src="/images/bannerOne.avif" alt="Banner" class="w-full h-full object-cover" />
+      </a>
+
+      <!-- Overlay content aligned to right -->
+      <div class="absolute inset-0 flex flex-col items-end justify-center px-8 text-white rounded-lg text-right">
+        <h2 class="text-3xl font-bold mb-2">Style meets savings — up to 60% off!</h2>
+        <p class="text-xl mb-4">Dress better, spend less.</p>
+        <a href="/shop" class="bg-white text-black font-semibold px-5 py-2 rounded hover:bg-gray-200 transition">
+          Shop Now
+        </a>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <h1 class="ml-10 mt-10 text-2xl font-bold mb-6">Recommended Clothes</h1>
+      <div class="flex space-x-4 p-4">
+        <!-- Product Card -->
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product1.jpg" alt="Product 1" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$49.99</p>
+        </div>
+
+        <!-- Repeat for more cards -->
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+
+        <!-- Add more cards as needed -->
+      </div>
+    </div>
+
+    <div class="mt-16 aspect-w-16 aspect-h-4 w-full relative">
+      <a href="/target-page">
+        <img src="/images/bannerOne.avif" alt="Banner" class="w-full h-full object-cover" />
+      </a>
+
+      <!-- Overlay content aligned to right -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center px-8 text-white rounded-lg text-right">
+        <h2 class="text-3xl font-bold mb-2">Summer Off</h2>
+        <p class="text-xl mb-4">Get up to 60%</p>
+        <a href="/shop" class="bg-white text-black font-semibold px-5 py-2 rounded hover:bg-gray-200 transition">
+          Shop
+        </a>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <div class="flex space-x-4 p-4">
+        <!-- Product Card -->
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product1.jpg" alt="Product 1" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$49.99</p>
+        </div>
+
+        <!-- Repeat for more cards -->
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+        <div class="min-w-[200px] bg-white shadow rounded-lg p-4">
+          <img src="/images/product2.jpg" alt="Product 2" class="w-full h-40 object-cover rounded" />
+          <h3 class="mt-2 text-lg font-semibold">Product Name</h3>
+          <p class="text-gray-500">$59.99</p>
+        </div>
+
+        <!-- Add more cards as needed -->
+      </div>
+    </div>
+
+    <footer class="bg-gray-800 text-white py-4 mt-10">
+      <div class="container mx-auto text-center">
+        <p class="text-sm">&copy; <span id="year"></span> SHOPPI. All rights reserved.</p>
+      </div>
+    </footer>
+
+
+
+
+    <script src="/js/productList.js"></script>
+
+  </body>
+
+  </html>

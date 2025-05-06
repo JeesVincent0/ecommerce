@@ -1,39 +1,22 @@
 function productList() {
 
-  //Accessing left side button
-  const usersButton = document.getElementById("usersButton");
-  const categoryButton = document.getElementById("categoryButton");
-  const productsButton = document.getElementById("productsButton")
+  //hide other section
+  hideUserSection();
+  hideCategoryList();
+  hideEditCategorySection();
+  hideAddCategorySection();
+
+  //changing side button color
+  hideCategoryButton();
+  hideUserButton();
 
   const productListingSection = document.getElementById("productListingSection");
   productListingSection.classList.remove("hidden")
 
-  //diable category list section
-  const maincategeryListSection = document.getElementById("maincategeryListSection");
-  maincategeryListSection.classList.add("hidden");
-
-  //disable edit category form
-  const editCategoryForm = document.getElementById("maincategeryEditSection")
-  editCategoryForm.classList.add("hidden")
-
-  //diable addcategory form section
-  const addCategorySection = document.getElementById("maincategeryAddSection")
-  addCategorySection.classList.add("hidden")
-
-  //disable serc
-  const searchBarContainer = document.getElementById("searchBarContainer");
-  searchBarContainer.innerHTML = ""
-
-
-  //Changing button pressing color
-  usersButton.classList.remove("bg-gray-400");
-  categoryButton.classList.remove("bg-gray-400");
-  productsButton.classList.add("bg-gray-400")
-  addSearchAndButtons1()
   loadProducts()
 }
 
-function loadProducts(page = 1, limit = 2) {
+function loadProducts(page = 1, limit = 8) {
   fetch(`/products?page=${page}&limit=${limit}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" }
@@ -46,41 +29,33 @@ function loadProducts(page = 1, limit = 2) {
 }
 
 function renderProducts(products) {
+  const container = document.getElementById("productTableBody");
+  container.innerHTML = "";
 
-  //getting category listing section
-  const categoriesContainer = document.getElementById("categoriesContainer2");
-  categoriesContainer.innerHTML = "";
-
-  //loop through categoryies for list cards
   products.forEach(product => {
-    categoriesContainer.innerHTML += ` <div class="productCard bg-white p-4 rounded-xl shadow flex flex-wrap items-center justify-between gap-4 hover:shadow-xl hover:scale-101">
-  
-  <!-- Left Side: Product Info -->
-  <div class="text-base sm:text-lg font-semibold min-w-[150px]">
-    ${product.product_name} 
-    <div class="text-sm font-normal text-gray-600">
-      ₹${product.discount_price} 
-      <span class="line-through text-gray-400 text-xs">₹${product.mrp}</span>
-    </div>
-    <div class="text-xs text-green-600 font-medium">
-      ${product.discount_percentage}% Off
-    </div>
-  </div>
-
-  <!-- Right Side: Action Buttons -->
-  <div class="flex flex-wrap gap-2 justify-end sm:justify-start">
-    <button onclick="editProduct('${product._id}')" class="bg-gray-700 text-white text-sm px-3 py-1 rounded hover:bg-gray-800">
-      Edit
-    </button>
-    <button onclick="deleteProduct('${product._id}')" class="bg-red-600 text-white text-sm px-3 py-1 rounded hover:bg-red-700">
-      Delete
-    </button>
-  </div>
-
-</div>`
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td class="px-6 py-4">
+        <img src="${product.images[0]}" alt="Product" class="w-12 h-12 object-cover rounded">
+      </td>
+      <td class="px-6 py-4">${product.product_name}</td>
+      <td class="px-6 py-4">${product.category}</td>
+      <td class="px-6 py-4">₹${product.mrp}</td>
+      <td class="px-6 py-4">₹${product.last_price}</td>
+      <td class="px-6 py-4 text-green-600">${product.discount_percentage}%</td>
+      <td class="px-6 py-4">${product.stock}</td>
+      <td class="px-6 py-4 ${product.isActive ? 'text-green-600' : 'text-red-600'}">
+        ${product.isActive ? 'Active' : 'Blocked'}
+      </td>
+      <td class="px-6 py-4 space-x-1">
+        <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">View</button>
+        
+      </td>
+    `;
+    container.appendChild(row);
   });
-
 }
+
 
 function productPagination(totalPages, currentPage, callback) {
 
@@ -99,53 +74,53 @@ function productPagination(totalPages, currentPage, callback) {
   }
 }
 
-function addSearchAndButtons1() {
+// function addSearchAndButtons1() {
 
-  //Accessing navbar search div
-  const searchBarContainer = document.getElementById("searchBarContainer");
+//   //Accessing navbar search div
+//   const searchBarContainer = document.getElementById("searchBarContainer");
 
-  //setting html content
-  searchBarContainer.innerHTML = "";
-  searchBarContainer.innerHTML = `<div class="flex items-center space-x-2 mr-4 relative">
-            <span class="hidden" id="searchSpan"></span>
-             <button
-                id="addButton"  
-                onclick="addProduct()"
-                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
-            >
-                Add </button>
-            <input 
-                id="searchInput" 
-                type="text" 
-                placeholder="Search..."
-                oninput="toggleClearButtonProducts()" 
-                class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" 
-            />
+//   //setting html content
+//   searchBarContainer.innerHTML = "";
+//   searchBarContainer.innerHTML = `<div class="flex items-center space-x-2 mr-4 relative">
+//             <span class="hidden" id="searchSpan"></span>
+//              <button
+//                 id="addButton"  
+//                 onclick="addProduct()"
+//                 class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
+//             >
+//                 Add </button>
+//             <input 
+//                 id="searchInput" 
+//                 type="text" 
+//                 placeholder="Search..."
+//                 oninput="toggleClearButtonProducts()" 
+//                 class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" 
+//             />
             
-            <!-- Clear Button -->
-            <button 
-                id="clearSearchButton" 
-                onclick="clearSearchProduct()" 
-                class="absolute right-28 text-gray-500 hover:text-gray-700 hidden"
-                style="font-size: 18px;"
-            >
-                &times;
-            </button>
+//             <!-- Clear Button -->
+//             <button 
+//                 id="clearSearchButton" 
+//                 onclick="clearSearchProduct()" 
+//                 class="absolute right-28 text-gray-500 hover:text-gray-700 hidden"
+//                 style="font-size: 18px;"
+//             >
+//                 &times;
+//             </button>
     
-            <button  
-                onclick="productSearch()"
-                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
-            >
-                Search
-            </button>
+//             <button  
+//                 onclick="productSearch()"
+//                 class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
+//             >
+//                 Search
+//             </button>
                        
             
-        </div>
-    `;
-}
+//         </div>
+//     `;
+// }
 
 //this function for search bar for user search
-function productSearch(page = 1, limit = 2) {
+function productSearch(page = 1, limit = 9) {
   const searchKey = document.getElementById("searchInput").value.trim()
   console.log("category search", searchKey)
 
@@ -165,7 +140,7 @@ function productSearch(page = 1, limit = 2) {
 //this button function is for search clear button
 function toggleClearButtonProducts() {
   const searchInput = document.getElementById("searchInput");
-  const clearButton = document.getElementById("clearSearchButton");
+  const clearButton = document.getElementById("clearSearchButton1");
 
   if (searchInput.value.trim() !== "") {
     clearButton.classList.remove("hidden");
@@ -277,21 +252,21 @@ function addProduct() {
   categoryCanteiner.innerHTML = "";
 
 
-  fetch("/product/category",{
+  fetch("/product/category", {
     method: "GET",
-    headers: { "Content-Type" : "application/json" }
+    headers: { "Content-Type": "application/json" }
   })
-  .then((res) => res.json())
-  .then((data) => {
-    console.log(data)
-    if(data.categoyNames) {
-      let categories = Array.isArray(data.categoyNames) ? data.categoyNames : [data.categoyNames]
-      console.log(categories)
-      categories.forEach(category => {
-        categoryCanteiner.innerHTML += `<option value="${category.slug}">${category.slug}</option>`
-      });
-    }
-  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data)
+      if (data.categoyNames) {
+        let categories = Array.isArray(data.categoyNames) ? data.categoyNames : [data.categoyNames]
+        console.log(categories)
+        categories.forEach(category => {
+          categoryCanteiner.innerHTML += `<option value="${category.slug}">${category.slug}</option>`
+        });
+      }
+    })
   setupImageUploadValidation();
 
 }
@@ -300,7 +275,6 @@ function addProduct() {
 let selectedFiles = [];
 
 function setupImageUploadValidation() {
-  console.log(selectedFiles)
   const imageInput = document.getElementById("imageUpload");
   const previewContainer = document.getElementById("imagePreview");
   const uploadError = document.getElementById("uploadError");
@@ -309,63 +283,75 @@ function setupImageUploadValidation() {
     const newFiles = Array.from(imageInput.files);
 
     for (const file of newFiles) {
-      // Max image count
+      // Max image count check
       if (selectedFiles.length >= 4) {
         uploadError.innerText = "You can only upload up to 4 images.";
-        break;
+        return;
       }
 
-      // Size check
+      // File size check (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         uploadError.innerText = `File "${file.name}" is too large. Max 2MB allowed.`;
-        continue;
+        return;
       }
 
-      // Check if already selected
+      // Check if the file is already added
       if (selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
-        continue;
+        return;
       }
 
+      // Create a URL for the selected file
       const imageURL = URL.createObjectURL(file);
+
+      // Create an image element
       const img = new Image();
       img.src = imageURL;
 
+      // When image is loaded
       img.onload = () => {
         const ratio = img.width / img.height;
+        // Check if the image is square (aspect ratio 1:1)
         if (ratio < 0.95 || ratio > 1.05) {
           uploadError.innerText = `File "${file.name}" must be square (1:1).`;
           return;
         }
 
-        // Add to custom array
+        // Add the file to the selected files array
         selectedFiles.push(file);
 
-        // Render preview
+        // Create a preview wrapper element
         const wrapper = document.createElement("div");
         wrapper.className = "relative";
 
+        // Create the image element
         const imageElement = document.createElement("img");
         imageElement.src = imageURL;
         imageElement.className = "w-24 h-24 object-cover rounded-lg border";
 
+        // Create a remove button
         const removeBtn = document.createElement("button");
         removeBtn.innerHTML = "&times;";
         removeBtn.className = "absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs";
         removeBtn.onclick = () => {
+          // Remove the image from the selectedFiles array and remove from DOM
           selectedFiles = selectedFiles.filter(f => f !== file);
           wrapper.remove();
         };
 
+        // Append image and remove button to wrapper
         wrapper.appendChild(imageElement);
         wrapper.appendChild(removeBtn);
+
+        // Append the preview wrapper to the container
         previewContainer.appendChild(wrapper);
       };
     }
 
-    // Clear input field so user can re-select same files if needed
+    // Clear the file input field after processing
     imageInput.value = "";
   });
 }
+
 
 function saveProduct() {
   const form = document.getElementById("addProductForm");
@@ -380,15 +366,15 @@ function saveProduct() {
     method: "POST",
     body: formData
   })
-  .then(res => res.json())
-  .then(data => {
-    alert("Product added successfully!");
-    selectedFiles = [];  // Clear after successful submit
-    loadProducts();
-  })
-  .catch(err => {
-    console.error(err);
-  });
+    .then(res => res.json())
+    .then(data => {
+      alert("Product added successfully!");
+      selectedFiles = [];  // Clear after successful submit
+      loadProducts();
+    })
+    .catch(err => {
+      console.error(err);
+    });
 }
 
 function editProduct(productId) {
@@ -515,34 +501,34 @@ function renderEditForm(product) {
   </button>
 </form>`;
 
-const categoryCanteiner = document.getElementById("optiosContainer")
-categoryCanteiner.innerHTML = "";
+  const categoryCanteiner = document.getElementById("optiosContainer")
+  categoryCanteiner.innerHTML = "";
 
 
-fetch("/product/category",{
-  method: "GET",
-  headers: { "Content-Type" : "application/json" }
-})
-.then((res) => res.json())
-.then((data) => {
-  console.log(data)
-  if(data.categoyNames) {
-    let categories = Array.isArray(data.categoyNames) ? data.categoyNames : [data.categoyNames]
-    console.log(categories)
-    categories.forEach(category => {
-      if(category.slug !== product.slug) {
-        categoryCanteiner.innerHTML += `<option value="${category.slug}">${category.slug}</option>`
+  fetch("/product/category", {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data)
+      if (data.categoyNames) {
+        let categories = Array.isArray(data.categoyNames) ? data.categoyNames : [data.categoyNames]
+        console.log(categories)
+        categories.forEach(category => {
+          if (category.slug !== product.slug) {
+            categoryCanteiner.innerHTML += `<option value="${category.slug}">${category.slug}</option>`
+          }
+        });
       }
-    });
-  }
-})
+    })
 
-setupImageUploadValidation(product.images)
+  setupImageUploadValidation1(product.images)
 }
 
 let selectedFiles1 = []; // Can contain both URL strings and File objects
 
-function setupImageUploadValidation(existingImages = []) {
+function setupImageUploadValidation1(existingImages = []) {
   const imageInput = document.getElementById("imageUploadEdit");
   const previewContainer = document.getElementById("imagePreview");
   const uploadError = document.getElementById("uploadError");
@@ -630,13 +616,73 @@ function saveProduct1() {
     method: "POST",
     body: formData
   })
-  .then(res => res.json())
-  .then(data => {
-    alert("Product added successfully!");
-    selectedFiles1 = [];  // Clear after successful submit
-    loadProducts();
-  })
-  .catch(err => {
-    console.error(err);
+    .then(res => res.json())
+    .then(data => {
+      alert("Product added successfully!");
+      selectedFiles1 = [];  // Clear after successful submit
+      loadProducts();
+    })
+    .catch(err => {
+      console.error(err);
+    });
+}
+
+function deleteProduct(id) {
+
+  const result = window.confirm("Are you sure you want to delete this product?");
+
+  if (result) {
+    console.log("hello this function is for delete files", id)
+    fetch(`/product/delete/${id}`, {
+      method: "DELETE",
+    })
+      .then(res => res.json())
+      .then(data => {  // Clear after successful submit
+        loadProducts();
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+}
+
+let currentSortKey = '';
+let currentSortDirection = 'asc';
+
+function sortProducts(key) {
+  // Toggle direction if sorting the same key
+  if (currentSortKey === key) {
+    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSortKey = key;
+    currentSortDirection = 'asc';
+  }
+
+  // Sort the global products array
+  products.sort((a, b) => {
+    let valA = a[key];
+    let valB = b[key];
+
+    // Convert strings to lowercase for consistent sorting
+    if (typeof valA === 'string') valA = valA.toLowerCase();
+    if (typeof valB === 'string') valB = valB.toLowerCase();
+
+    if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+    if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Update sort icon
+  updateSortIcons(key, currentSortDirection);
+
+  // Re-render table
+  renderProducts(products);
+}
+
+function updateSortIcons(key, direction) {
+  const columns = ['name', 'category', 'mrp', 'lastPrice', 'discount', 'stock', 'isActive'];
+  columns.forEach(col => {
+    const icon = document.getElementById(`sort-icon-${col}`);
+    if (icon) icon.textContent = col === key ? (direction === 'asc' ? '▲' : '▼') : '⇅';
   });
 }

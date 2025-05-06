@@ -1,17 +1,17 @@
 import express from 'express'
-import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct } from '../controllers/adminControllers.js'
-import { productImageUpload } from '../middleware/routerMiddleware.js'
+import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct } from '../controllers/adminControllers.js'
+import { productImageUpload, redirectIfAuthenticatedAdmin, verifyAdminJWT } from '../middleware/routerMiddleware.js'
 
 const router = express.Router()
 
 //get admin login page
-router.get('/adminlogin', getAdminLogin)
+router.get('/adminlogin',redirectIfAuthenticatedAdmin, getAdminLogin)
 
 //verify admin
 router.post("/adminlogin", verifyAdminLogin)
 
 //get admin home
-router.get("/adminhome", getAdminHome)
+router.get("/adminhome",verifyAdminJWT, getAdminHome)
 
 //get admin users list
 router.get('/users', getUsers);
@@ -63,5 +63,8 @@ router.get("/product/:id", getProductData);
 
 //edit product details
 router.post("/product/edit", productImageUpload, editProduct);
+
+//product delete
+router.delete("/product/delete/:id", deleteProduct);
 
 export default router

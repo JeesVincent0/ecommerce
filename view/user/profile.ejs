@@ -1,0 +1,65 @@
+<%- include('../partials/head') %>
+
+    <body class="bg-gray-100">
+
+        <!-- Top Navbar -->
+        <div
+            class="fixed top-0 left-0 w-full h-16 bg-[#1B1254] text-white flex items-center justify-between px-4 shadow z-50 font-bold">
+
+            <div class="flex items-center space-x-4 ml-[3%]">
+                <span class="text-4xl">SHOPPI</span>
+                <a href="/home" class="text-white text-base hover:underline ml-6">Home</a>
+            </div>
+
+        </div>
+        <form action="/profile" method="GET">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+                Account
+            </button>
+        </form>
+
+        </div>
+
+        <!-- Left Sidebar -->
+        <div class="fixed top-16 left-0 w-[20%] h-[calc(100vh-4rem)] bg-white text-gray-800 p-4 space-y-2">
+
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="myProfile()"
+                id="myProfileButton">
+                My profile
+            </button>
+
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="address()"
+                id="addressButton">
+                Address
+            </button>
+
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="order()"
+                id="orderButton">
+                Products
+            </button>
+
+        </div>
+
+        <div class="ml-[20%] mt-16">
+            <div class="container mx-auto">
+                <h2 class="text-2xl font-bold mb-4 ml-6" id="heading">My Profile</h2>
+                <div class="flex items-center justify-center mb-4 ml-6">
+                    <div id="profileSecion">
+
+                    </div>
+                </div>
+
+                <div id="addressSection">
+
+                </div>
+
+
+            </div>
+        </div>
+
+
+
+        <script src="/js/user/profile.js"></script>
+    </body>
+
+    </html>

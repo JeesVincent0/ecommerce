@@ -1,70 +1,27 @@
+let currentUserPage = 1;
+
 window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("usersButton").addEventListener("click", (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        //accessing left side bar buttons
-        const categoryButton = document.getElementById("categoryButton");
-        const usersButton = document.getElementById("usersButton");
-        const userPage = document.getElementById("userPage");
-        const searchButtonContainer = document.getElementById("searchBarContainer")
-        const productsButton = document.getElementById("productsButton")
+        //hide other section
+        hideProductList();
+        hideCategoryList();
+        hideEditCategorySection();
+        hideAddCategorySection();
+
+        //change side button color
+        hideCategoryButton();
+        hideProductButton();
+
+        //add user button color
+        addUserButton()
 
         const mainUserSession = document.getElementById("mainUserSession");
         mainUserSession.classList.remove("hidden")
-
-        const productListingSection = document.getElementById("productListingSection");
-        productListingSection.classList.add("hidden")
-
-        //diable category list section
-        const maincategeryListSection = document.getElementById("maincategeryListSection");
-        maincategeryListSection.classList.add("hidden");
-
-        //disable edit category form
-        const editCategoryForm = document.getElementById("maincategeryEditSection")
-        editCategoryForm.classList.add("hidden")
-
-        //diable addcategory form section
-        const addCategorySection = document.getElementById("maincategeryAddSection")
-        addCategorySection.classList.add("hidden")
-
-        //Changing button pressing color
-        usersButton.classList.add("bg-gray-400");
-        categoryButton.classList.remove("bg-gray-400");
-        productsButton.classList.remove("bg-gray-400")
-
-        //accessing user container for list users
-        searchButtonContainer.innerHTML = "";
-        searchButtonContainer.innerHTML += `
-        <div class="flex items-center space-x-2 mr-4 relative">
-            <span class="hidden" id="searchSpan"></span>
-            <input 
-                id="searchInput" 
-                type="text" 
-                placeholder="Search..."
-                oninput="toggleClearButton()" 
-                class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" 
-            />
-            
-            <!-- Clear Button -->
-            <button 
-                id="clearSearchButton" 
-                onclick="clearSearch()" 
-                class="absolute right-28 text-gray-500 hover:text-gray-700 hidden"
-                style="font-size: 18px;"
-            >
-                &times;
-            </button>
-    
-            <button  
-                onclick="userSearch()"
-                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
-            >
-                Search
-            </button>
-        </div>
-    `;
-
+        
         loadUsers()
+        const userPage = document.getElementById("userPage");
         userPage.classList.remove("hidden");
 
     })
@@ -72,7 +29,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
 //this function will collect users from server
-function loadUsers(page = 1, limit = 2) {
+function loadUsers(page = 1, limit = 9) {
+    currentUserPage = page;
 
     fetch(`/users?page=${page}&limit=${limit}`, {
         method: "GET",
@@ -80,8 +38,6 @@ function loadUsers(page = 1, limit = 2) {
     })
         .then((res) => res.json())
         .then((data) => {
-
-            //after getting users, invoke function for render user card and pagination bar
             renderUsers(data.users);
             renderPagination(data.totalPages, page, loadUsers);
         })
@@ -91,93 +47,95 @@ function loadUsers(page = 1, limit = 2) {
 }
 
 
+
 //this function for render user cards in the mainsession
 function renderUsers(users) {
-    const container = document.getElementById("userListContainer");
-    container.innerHTML = "";
+    const container = document.getElementById("userTableBody");
+    container.innerHTML = ""; // Clear all rows
 
-    //loop through each user for render user cards for users
     users.forEach(user => {
-        container.innerHTML += `
-        <div class="userCard bg-white p-4 rounded-xl shadow flex flex-wrap items-center justify-between gap-4 hover:shadow-xl hover:scale-101">
-            <span id="userEmail" class="userEmail hidden">${user.email}</span>
-            <div class="text-base sm:text-lg font-semibold min-w-[120px]">${user.name}</div>
-            <div class="flex flex-wrap gap-2 justify-end sm:justify-start">
-              <button id="block" class="blockButton ${user.isActive ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"} text-white text-sm px-3 py-1 rounded">
-                  ${user.isActive ? "Block" : "Unblock"}
-              </button>
-              <!-- <button class="bg-gray-700 text-white text-sm px-3 py-1 rounded hover:bg-gray-800">Check Activity</button> -->
-            </div>
-        </div>`;
+        const row = document.createElement("tr");
+        row.className = "border-b border-gray-200 hover:bg-gray-100";
+
+        row.innerHTML = `
+        <td class="py-3 px-6">${user.name}</td>
+        <td class="py-3 px-6">${user.email}</td>
+        <td class="py-3 px-6 ${user.isActive ? 'text-green-600' : 'text-red-600'}">
+          ${user.isActive ? 'Active' : 'Blocked'}
+        </td>
+        <td class="py-3 px-6">
+          <button 
+            type="button"
+            class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded ml-1">
+            View
+          </button>  
+          <button 
+            type="button"
+            class="blockButton ${user.isActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
+            text-white text-sm px-3 py-1 rounded"
+            data-email="${user.email}">
+            ${user.isActive ? 'Block' : 'Unblock'}
+          </button>
+          
+        </td>
+      `;
+
+        container.appendChild(row);
     });
 
-    //After adding all users, NOW add event listeners only ONCE
+    // Attach event listeners to block/unblock buttons
     document.querySelectorAll(".blockButton").forEach(button => {
         button.addEventListener("click", async (e) => {
-            const userCard = e.target.closest(".userCard");
-            const email = userCard.querySelector(".userEmail").textContent.trim();
-            console.log("Email:", email);
+            const email = e.target.dataset.email;
+            const isBlocked = e.target.textContent.trim() === "Block";
 
-            const isBlocked = e.target.textContent === "Block";
             if (isBlocked) {
-
-                //approve function will ivoke for admin confirmation for user block
-                approve(email, e.target)
-
+                // Ask for confirmation before blocking
+                approve(email, e.target); // define this function elsewhere
             } else {
-
-                //This function invoked for unblock user
-                const success = await UnBlockUser(email);
-
+                const success = await UnBlockUser(email); // define this function elsewhere
                 if (success) {
-                    //after unblocking the user bock/unblock button color and value will change
-                    e.target.textContent = "Block";
-                    e.target.classList.remove("bg-blue-600", "hover:bg-blue-700");
-                    e.target.classList.add("bg-red-600", "hover:bg-red-700");
+                    loadUsers(currentUserPage); // Refresh same page
                 }
             }
         });
     });
 }
 
+
 //before blocking a pop will come for get confirmation from admin
 function approve(email, buttonElement) {
     const confirmationContainer = document.getElementById("confirmationContainer");
-    confirmationContainer.innerHTML = "";
     confirmationContainer.innerHTML = `
         <div id="blockModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
             <div class="bg-white p-6 rounded-xl shadow-lg w-96">
                 <h3 class="text-xl font-semibold mb-4">Are you sure?</h3>
                 <p class="mb-4">Do you want to block this user?</p>
                 <div class="flex justify-between">
-                    <button onclick="closePopUp()" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-sm">Cancel</button>
-                    <button onclick="confirmBlock('${email}')" class="px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 text-sm" data-button-id="${buttonElement.id}">Yes, Block</button>
+                    <button id="cancelBlockBtn" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-sm">Cancel</button>
+                    <button id="confirmBlockBtn" class="px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 text-sm">Yes, Block</button>
                 </div>
             </div>
-        </div>`;
+        </div>
+    `;
+
+    // Add listeners after element is in DOM
+    document.getElementById("cancelBlockBtn").addEventListener("click", closePopUp);
+
+    document.getElementById("confirmBlockBtn").addEventListener("click", async () => {
+        const success = await blockUser(email);
+        if (success) {
+            loadUsers(currentUserPage); // Reload the current page
+            closePopUp();
+        }
+    });
+
 }
 
 //if the admin reject the confirmation/after blocking the pop will disapear
 function closePopUp() {
     const confirmationContainer = document.getElementById("confirmationContainer");
     confirmationContainer.innerHTML = "";
-}
-
-async function confirmBlock(email) {
-    const success = await blockUser(email);
-    if (success) {
-        const buttons = document.querySelectorAll(".blockButton");
-        buttons.forEach(button => {
-            const userCard = button.closest(".userCard");
-            const userEmail = userCard.querySelector(".userEmail").textContent.trim();
-            if (userEmail === email) {
-                button.textContent = "Unblock";
-                button.classList.remove("bg-red-600", "hover:bg-red-700");
-                button.classList.add("bg-blue-600", "hover:bg-blue-700");
-            }
-        });
-    }
-    closePopUp();
 }
 
 //this function is for render pagination bar
@@ -235,7 +193,7 @@ async function UnBlockUser(email) {
 
 
 //this function for search bar for user search
-function userSearch(page = 1, limit = 2) {
+function userSearch(page = 1, limit = 9) {
     const searchKey = document.getElementById("searchInput").value.trim()
     console.log("user search", searchKey)
 
@@ -269,4 +227,23 @@ function clearSearch() {
     searchInput.value = "";
     toggleClearButton();
     loadUsers()
+}
+
+
+let sortDirection = [true, true];
+function sortTable(colIndex) {
+  const tbody = document.getElementById("userTableBody");
+  const rows = Array.from(tbody.rows);
+
+  rows.sort((a, b) => {
+    const cellA = a.cells[colIndex].innerText.toLowerCase();
+    const cellB = b.cells[colIndex].innerText.toLowerCase();
+    if (cellA < cellB) return sortDirection[colIndex] ? -1 : 1;
+    if (cellA > cellB) return sortDirection[colIndex] ? 1 : -1;
+    return 0;
+  });
+
+  sortDirection[colIndex] = !sortDirection[colIndex];
+  tbody.innerHTML = "";
+  rows.forEach(row => tbody.appendChild(row));
 }

@@ -5,6 +5,8 @@ import Category from "../models/categorySchema.js"
 import slugify from "slugify"
 import Product from "../models/productSchema.js"
 import mongoose, { Types } from "mongoose"
+import path from "path"
+import fs from 'fs'
 
 //@desc render admin login page
 //GET /adminlogin
@@ -36,6 +38,7 @@ export const verifyAdminLogin = async (req, res) => {
         res.json({ success: true, redirectUrl: "/adminhome", email: true, password: true })
 
     } catch (error) {
+        console.log(error.message)
         if (error.message === "Wrong email") {
             res.status(401).json({ email: false })
         } else if (error.message === "Wrong password") {
@@ -149,12 +152,12 @@ export const getCategoryList = async (req, res) => {
         console.log("reached")
         //getting data from query params
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 2;
+        const limit = parseInt(req.query.limit) || 5;
 
         //settup for get users
         const skip = (page - 1) * limit;
 
-        const categoryList = await Category.find().select("name slug status -_id").skip(skip).limit(limit)
+        const categoryList = await Category.find().sort({ createdAt: -1}).select("name slug status -_id isChild").skip(skip).limit(limit)
         console.log(categoryList)
 
         const totalCategory = await Category.countDocuments();
@@ -220,10 +223,11 @@ export const createNewCategory = async (req, res) => {
             parentId: parentId || null,
             level,
         })
-
-        await Category.updateOne({ _id: parentId }, { $set: { isChild: true } })
-
         await newCategory.save();
+        const newCategoryId = await Category.findOne({ slug: slug}).select("_id")
+
+        await Category.updateOne({ _id: newCategoryId }, { $set: { isChild: true } })
+        
         console.log("new category created")
         res.json({ status: true })
 
@@ -305,8 +309,6 @@ export const statusCategory = async (req, res) => {
         category.status = category.status === 'active' ? 'inactive' : 'active';
         await category.save();
 
-
-
         res.json({ status: true, message: "Category status updated" });
     } catch (error) {
         console.error(error);
@@ -325,7 +327,7 @@ export const getProducts = async (req, res) => {
         //settup for get users
         const skip = (page - 1) * limit;
 
-        const product = await Product.find().select("product_name mrp discount_price discount_percentage _id").skip(skip).limit(limit)
+        const product = await Product.find().sort({ createdAt: -1}).select("product_name mrp discount_price discount_percentage _id images stock last_price").skip(skip).limit(limit)
 
         const totalProduct = await Product.countDocuments();
         const totalPages = Math.ceil(totalProduct / limit)
@@ -358,7 +360,7 @@ export const getProductsSearch = async (req, res) => {
     };
 
     //getting category and count for pagination
-    const product = await Product.find(filter).select("product_name mrp discount_price discount_percentage _id").sort({ createdAt: -1 }).skip(skip).limit(limit)
+    const product = await Product.find(filter).select("product_name mrp discount_price discount_percentage _id images stock last_price").sort({ createdAt: -1 }).skip(skip).limit(limit)
     const totalProduct = await Product.countDocuments(filter)
     const totalPages = Math.ceil(totalProduct / limit)
 
@@ -393,7 +395,7 @@ export const addNewProduct = async (req, res) => {
         const imagePaths = req.files.map(file => file.path);
 
         const categoryId = await Category.findOne({ slug: category_slug }).select("_id")
-        const discount_percentage = ((mrp - discount_price) / mrp) * 100;
+        const discount_percentage = Math.floor(((mrp - discount_price) / mrp) * 100);
         const last_price = mrp - discount_price
 
 
@@ -428,15 +430,15 @@ export const getProductData = async (req, res) => {
         const _id = req.params.id
 
         //fing neccesory fields from product collection and category collection
-        const productObj = await Product.findOne({_id}).select("_id product_name description brand mrp discount_price stock tags category_id images")
+        const productObj = await Product.findOne({ _id }).select("_id product_name description brand mrp discount_price stock tags category_id images")
         const categoryId = new mongoose.Types.ObjectId(productObj.category_id)
-        const category = await Category.findOne({ _id: categoryId}).select("slug -_id")
+        const category = await Category.findOne({ _id: categoryId }).select("slug -_id")
 
         //productObj convert to js pure object for add category slug before respoce
         const product = productObj.toObject()
         product.slug = category?.slug
-        
-        res.json({product})
+
+        res.json({ product })
 
     } catch (error) {
         console.log(error.message)
@@ -455,10 +457,12 @@ export const editProduct = async (req, res) => {
         // Store file paths
         const imagePaths = req.files.map(file => file.path);
 
+        //finding the category _id for update in product collection
         const categoryId = await Category.findOne({ slug: category_slug }).select("_id")
-        const discount_percentage = ((mrp - discount_price) / mrp) * 100;
+        const discount_percentage = Math.floor(((mrp - discount_price) / mrp) * 100);
         const last_price = mrp - discount_price
 
+        //all product updating variables added to a obj for cleaner code
         const updateProduct = {
             product_name,
             description,
@@ -473,17 +477,42 @@ export const editProduct = async (req, res) => {
             last_price
         }
 
-        const oldImagesPath = await Product.findOne({ _id:id}).select("images -_id")
+        //saving old product image file path for delete image after updating production collection
+        const oldImagesPath = await Product.findOne({ _id: id }).select("images -_id")
 
-        const updated = await Product.findByIdAndUpdate(id, updateProduct, {new: true})
-        if(!updated) res.status(500).json({message: "Not updated something went wrong"})
+        //Updating products
+        const updated = await Product.findByIdAndUpdate(id, updateProduct, { new: true })
+        if (!updated) res.status(500).json({ message: "Not updated something went wrong" })
+        console.log(oldImagesPath)
 
-        
-        
+        //after editing the product details, deleting the old product images
+        oldImagesPath.images.forEach(imgPath => {
+            const fullPath = path.resolve(imgPath);
+            fs.unlink(fullPath, err => {
+                if (err) console.error(`Failed to delete ${imgPath}:`, err);
+                else console.log(`${imgPath} deleted`);
+            });
+        });
+
+        //response
         res.json({ success: true })
 
 
     } catch (error) {
+        console.log(error.message)
+    }
+}
+
+//@desc delete product
+// DELETE /product/delete/:id
+export const deleteProduct = async (req, res) => {
+    try {
+        const _id = req.params.id
+        console.log("delete product _id reached - ", _id)
+        const deleted = await Product.deleteOne({_id})
+        res.json({ success: true})
         
+    } catch (error) {
+        console.log(error.message)
     }
 }

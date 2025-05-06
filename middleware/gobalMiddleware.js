@@ -8,7 +8,6 @@ export const endPoints = (req, res, next) => {
 
 export const showJWT = (req, res, next) => {
     const token = req.cookies?.jwt
-    console.log(token)
     if (token) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
             if(err) {

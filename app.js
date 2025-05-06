@@ -1,5 +1,5 @@
 //importing core modules
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
 import path from 'path';
 
 //importing third-party modules
@@ -34,10 +34,17 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 //middleware for login and signUp with google
 app.use(session({
-    secret: process.env.SESSION_SECRET || "hekko",
-    resave: false,
-    saveUninitialized: false
+  secret: process.env.SESSION_SECRET || "hekko",
+  resave: false,
+  saveUninitialized: false
 }))
+
+// prevent caching in browser
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
 app.use(cookieParser())
 app.use(passport.initialize())
 app.use(passport.session())

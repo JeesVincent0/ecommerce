@@ -68,5 +68,7 @@ function arrayLimit(val) {
   return val.length > 0;
 }
 
+productSchema.index({ product_name: 'text', description: 'text', tags: 'text' });
+
 const Product = mongoose.model('Product', productSchema);
 export default Product
