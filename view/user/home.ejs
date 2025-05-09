@@ -3,7 +3,43 @@
   <body class="bg-gray-100">
 
     <!-- Top Navbar -->
-    <%- include('../partials/navBar') %>
+    <div
+class="fixed top-0 left-0 w-full h-16 bg-[#1B1254] text-white flex items-center justify-between px-4 shadow z-50 font-bold">
+
+<div class="flex items-center space-x-4 ml-[3%]">
+    <span class="text-4xl">SHOPPI</span>
+    <a href="/home" class="text-white text-base hover:underline ml-6">Home</a>
+    <a href="/cart" class="text-white text-base hover:underline ml-6">Cart</a>
+    <a href="/orders" class="text-white text-base hover:underline ml-6">Orders</a>
+</div>
+            <div id="userSearchDiv">
+                <div class="flex items-center space-x-2 mr-4 relative">
+                    <input id="userSearch" type="text" value="" 
+                        oninput="toggleClearButtonProducts()"
+                        class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" />
+                
+                    <!-- Clear Button -->
+                    <button id="clearSearchButton" onclick="clearSearchProduct()"
+                        class="absolute right-28 text-gray-500 hover:text-gray-700 hidden" 
+                        style="font-size: 18px;">
+                        &times;
+                    </button>
+                
+                    <button onclick="productSearch()"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+                        Search
+                    </button>
+
+
+                </div>
+                
+            </div>
+<form action="/profile" method="GET">
+    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+        Account
+    </button>
+</form>
+</div>
 
     <div class="mt-16 aspect-w-16 aspect-h-4 w-full relative">
       <a href="/target-page">
