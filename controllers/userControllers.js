@@ -1,5 +1,12 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import fs from "fs"
 
 import User from '../models/userSchema.js'
 import PendingUser from '../models/userTemp.js'
@@ -14,7 +21,8 @@ import mongoose from 'mongoose'
 import { generateOtp } from '../utils/generateOtp.js'
 import Cart from '../models/cartSchema.js'
 import { generateOrderId } from '../utils/generateOrderId.js'
-
+import generateInvoice from '../utils/generateInvoice.js'
+import Wallet from '../models/walletSchema.js';
 
 //@desc get page not found
 //GET /notfound
@@ -303,17 +311,11 @@ export const getProducts = async (req, res) => {
         const limit = 8;
         const skip = (page - 1) * limit;
 
-        const matchStage = {};
+        const matchStage = {
+            isActive: true // Product must be active
+        };
 
-        // Category filtering
-        if (category) {
-            const categoryDoc = await Category.findOne({ slug: category });
-            if (categoryDoc) {
-                matchStage.category_id = new mongoose.Types.ObjectId(categoryDoc._id);
-            }
-        }
-
-        // Text search
+        // If search key provided
         if (key) {
             matchStage.$text = { $search: key };
         }
@@ -333,7 +335,6 @@ export const getProducts = async (req, res) => {
         if (name === '1') sortStage.product_name = 1;
         else if (name === '2') sortStage.product_name = -1;
 
-        // If text search used and no custom sort, sort by text score
         if (key && Object.keys(sortStage).length === 0) {
             sortStage.score = { $meta: "textScore" };
         }
@@ -341,9 +342,27 @@ export const getProducts = async (req, res) => {
         // Aggregation pipeline
         const pipeline = [
             { $match: matchStage },
+
+            // Join with Category collection
+            {
+                $lookup: {
+                    from: 'categories', // collection name in MongoDB (usually lowercase plural)
+                    localField: 'category_id',
+                    foreignField: '_id',
+                    as: 'category'
+                }
+            },
+            { $unwind: '$category' },
+
+            // Filter products whose category is active
+            {
+                $match: {
+                    'category.status': 'active'
+                    // Optionally, also check: 'category.isChild': true
+                }
+            },
         ];
 
-        // Project text score (if searching)
         if (key) {
             pipeline.push({ $addFields: { score: { $meta: "textScore" } } });
         }
@@ -354,23 +373,36 @@ export const getProducts = async (req, res) => {
             { $limit: limit }
         );
 
-        // Execute pipeline
         const products = await Product.aggregate(pipeline);
 
-        // Count total products for pagination
-        const totalCount = await Product.countDocuments(matchStage);
+        // Count for pagination (repeat logic with $count)
+        const countPipeline = [
+            { $match: matchStage },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category_id',
+                    foreignField: '_id',
+                    as: 'category'
+                }
+            },
+            { $unwind: '$category' },
+            { $match: { 'category.status': 'active' } },
+            { $count: 'total' }
+        ];
+
+        const countResult = await Product.aggregate(countPipeline);
+        const totalCount = countResult[0]?.total || 0;
         const totalPages = Math.ceil(totalCount / limit);
 
-        // Response
         res.json({ products, totalPages, page });
-
-
 
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
 
 //@desc render the main product list page
 //GET /productlist
@@ -675,20 +707,29 @@ export const renderCart = (req, res) => {
 //POST /add-to-cart/:id
 export const addToCart = async (req, res) => {
     try {
-
-        //getting datas into variables
-        const productId = req.params.id
+        const productId = req.params.id;
         const token = req.cookies.jwt;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const email = decoded.userEmail;
 
-        //gettin user and product details from db
-        const user = await User.findOne({ email })
-        const product = await Product.findById(productId)
-        const userId = user._id
+        const user = await User.findOne({ email });
+        const product = await Product.findById(productId);
+        
+        // Check if product exists
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+
+        // ✅ Prevent adding to cart if stock is 0
+        if (product.stock <= 0) {
+            return res.status(400).json({ success: false, message: "Product out of stock" });
+        }
+
+        const userId = user._id;
         const price = product.last_price;
 
-        let cart = await Cart.findOne({ userId })
+        let cart = await Cart.findOne({ userId });
+
         if (!cart) {
             cart = new Cart({
                 userId,
@@ -699,7 +740,6 @@ export const addToCart = async (req, res) => {
                 }]
             });
         } else {
-            // Check if product already in cart
             const existingItem = cart.items.find(item => item.productId.equals(productId));
 
             if (existingItem) {
@@ -717,13 +757,14 @@ export const addToCart = async (req, res) => {
         cart.updatedAt = new Date();
         await cart.save();
 
-        res.json({ success: true })
+        res.json({ success: true });
 
     } catch (error) {
         console.log(error.toString());
-        res.json({ success: false })
+        res.status(500).json({ success: false, message: "Something went wrong" });
     }
-}
+};
+
 
 //@desc get cart details 
 //GET /get-cart
@@ -1023,5 +1064,88 @@ export const cancelOrder = async (req, res) => {
   } catch (err) {
     console.error(err.toString());
     res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};
+
+export const returnOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ success: false, message: "Return reason is required" });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (order.orderStatus !== "delivered") {
+      return res.status(400).json({ success: false, message: "Only delivered orders can be returned" });
+    }
+
+    order.returnRequest = true;
+    order.returnReason = reason;
+
+    await order.save();
+
+    res.status(200).json({ success: true, message: "Return request saved successfully" });
+  } catch (err) {
+    console.error("Error in returnOrder:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getInvoice = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate('items.productId');
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    const invoicePath = path.join(__dirname, '..', 'invoices', `${order._id}.pdf`);
+
+    // Check if invoice already exists, otherwise generate
+    if (!fs.existsSync(invoicePath)) {
+      generateInvoice(order, invoicePath);
+    }
+
+    // Wait a little for file to be ready
+    setTimeout(() => {
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=invoice-${order._id}.pdf`
+      });
+      res.sendFile(invoicePath);
+    }, 500);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getWallet = async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    if (!token) return res.status(401).json({ success: false, message: "No token provided" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userEmail = decoded.userEmail;
+
+    const user = await User.findOne({ email: userEmail });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const wallet = await Wallet.findOne({ userId: user._id });
+    if (!wallet) {
+      return res.json({
+        success: true,
+        wallet: { balance: 0, transactions: [] }
+      });
+    }
+
+    res.json({ success: true, wallet });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };

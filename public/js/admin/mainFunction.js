@@ -10,6 +10,10 @@ function hideProductList() {
     productListingSection.classList.add("hidden")
 }
 
+function hideOrderSection() {
+   
+}
+
 //hide category list section
 function hideCategoryList() {
     const maincategeryListSection = document.getElementById("maincategeryListSection");
@@ -71,4 +75,9 @@ function accessOrderSection() {
     const orderSection = document.getElementById("orderSection");
     orderSection.innerHTML = "";
     return orderSection
+}
+
+function addOrderSection() {
+    const orderSection = document.getElementById("orderSection")
+    orderSection.classList.remove("hidden")
 }

@@ -53,35 +53,35 @@ function limitWords(element, maxWords) {
 }
 
 
-function loadCategoryData(parent) {
-    fetch(`/category/miancategory/${parent}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-    })
-        .then((res) => res.json())
-        .then((data) => {
-            console.log("data reached",data.categoryNames)
-            let categories = Array.isArray(data.categoryNames) ? data.categoryNames : [data.categoryNames];
-            if (data.parent && data.categoryNames) {
-                loadForm(categories, "optionsContainer1")
-            } else if (!data.parent && data.categoryNames && data.child) {
-                loadForm(categories, "optionsContainer1")
-            }
+// function loadCategoryData(parent) {
+//     fetch(`/category/miancategory/${parent}`, {
+//         method: "GET",
+//         headers: { "Content-Type": "application/json" }
+//     })
+//         .then((res) => res.json())
+//         .then((data) => {
+//             console.log("data reached",data.categoryNames)
+//             let categories = Array.isArray(data.categoryNames) ? data.categoryNames : [data.categoryNames];
+//             if (data.parent && data.categoryNames) {
+//                 loadForm()
+//             } else if (!data.parent && data.categoryNames && data.child) {
+//                 loadForm(categories, "optionsContainer1")
+//             }
 
 
 
-        })
-}
+//         })
+// }
 
 // this function will show the suggestion options
-function loadForm(categoryNames, id) {
-    console.log("loadForm", categoryNames)
-    const optionsContainer = document.getElementById(id);
-    optionsContainer.innerHTML = "";
-    categoryNames.forEach(category => {
-        optionsContainer.innerHTML += `<option value="${category.slug}" data-id="${category._id}">${category.slug}</option>`
-    });
-}
+// function loadForm(categoryNames, id) {
+//     console.log("loadForm", categoryNames)
+//     const optionsContainer = document.getElementById(id);
+//     optionsContainer.innerHTML = "";
+//     categoryNames.forEach(category => {
+//         optionsContainer.innerHTML += `<option value="${category.slug}" data-id="${category._id}">${category.slug}</option>`
+//     });
+// }
 
 // if admin select any option given that appearse on the field
 function catName(selectedElement, id) {

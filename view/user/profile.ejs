@@ -13,12 +13,12 @@
             </div>
 
 
-        
-        <form action="/profile" method="GET">
-            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
-                Account
-            </button>
-        </form>
+
+            <form action="/profile" method="GET">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+                    Account
+                </button>
+            </form>
         </div>
 
         <!-- Left Sidebar -->
@@ -29,15 +29,25 @@
                 My profile
             </button>
 
-            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="address()"
-                id="addressButton">
+            <button class="hidden w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400"
+                onclick="address()" id="addressButton">
                 Address
             </button>
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="getWallet()"
+                id="walletButton">
+                Wallet
+            </button>
 
-            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="order()"
-                id="orderButton">
+            <button class="hidden w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400"
+                onclick="order()" id="orderButton">
                 Products
             </button>
+
+                        <form action="/userlogout" method="GET">
+                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-md text-sm">
+                    Logout
+                </button>
+            </form>
 
         </div>
 

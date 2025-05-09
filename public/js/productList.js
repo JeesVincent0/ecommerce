@@ -92,7 +92,7 @@ function renderProducts(products) {
 
                     <!-- Buttons -->
                     <div class="mt-2 flex justify-between items-center">
-                        <button onclick="event.stopPropagation(); buyNow('${product._id}')" class="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700">Buy Now</button>
+                        <button type="button" onclick="event.stopPropagation(); addToCart('${product._id}')" class="bg-yellow-400 hover:bg-yellow-500 text-white px-6 py-2 rounded hover:cursor-pointer" >Add to cart</button>
                         <button class="text-gray-500 hover:text-red-500">❤️</button>
                     </div>
                 </div>
@@ -102,6 +102,21 @@ function renderProducts(products) {
     });
 }
 
+function addToCart(productId) {
+    fetch(`/add-to-cart/${productId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+    })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                alert("Product added to cart")
+            } else {
+                alert("not added")
+            }
+        })
+        .catch((error) => console.log(error.toString()));
+}
 function renderCategory() {
     const categoryOptionsUser = document.getElementById("categoryOptionsUser");
     categoryOptionsUser.innerHTML = "";

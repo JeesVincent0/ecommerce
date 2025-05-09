@@ -1,3 +1,4 @@
+
 function productList() {
 
   //hide other section
@@ -12,6 +13,13 @@ function productList() {
 
   const productListingSection = document.getElementById("productListingSection");
   productListingSection.classList.remove("hidden")
+
+  const productmainsection = document.getElementById("productmainsection")
+  productmainsection.classList.remove("hidden")
+
+  const productListingSection1 = document.getElementById("categoriesContainer2");
+  productListingSection1.classList.add("hidden")
+
 
   loadProducts()
 }
@@ -29,6 +37,7 @@ function loadProducts(page = 1, limit = 8) {
 }
 
 function renderProducts(products) {
+  console.log(products)
   const container = document.getElementById("productTableBody");
   container.innerHTML = "";
 
@@ -44,11 +53,17 @@ function renderProducts(products) {
       <td class="px-6 py-4">₹${product.last_price}</td>
       <td class="px-6 py-4 text-green-600">${product.discount_percentage}%</td>
       <td class="px-6 py-4">${product.stock}</td>
-      <td class="px-6 py-4 ${product.isActive ? 'text-green-600' : 'text-red-600'}">
-        ${product.isActive ? 'Active' : 'Blocked'}
-      </td>
+      <td class="px-6 py-4">
+  <button 
+    onclick="toggleProductStatus('${product._id}', ${product.isActive})"
+    class="px-4 py-1 rounded-md text-white text-sm 
+           ${product.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}">
+    ${product.isActive ? 'Block' : 'Unblock'}
+  </button>
+</td>
+
       <td class="px-6 py-4 space-x-1">
-        <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">View</button>
+        <button onclick="editProduct('${product._id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs">Edit</button>
         
       </td>
     `;
@@ -71,6 +86,32 @@ function productPagination(totalPages, currentPage, callback) {
 
   if (currentPage < totalPages) {
     pagination.innerHTML += `<button onclick="${callback.name}(${currentPage + 1})" class="ml-3 px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Next &raquo;</button>`;
+  }
+}
+
+async function toggleProductStatus(productId, currentStatus) {
+  const confirmAction = confirm(`Are you sure you want to ${currentStatus ? 'block' : 'unblock'} this product?`);
+  if (!confirmAction) return;
+
+  try {
+    const response = await fetch(`/admin/products/${productId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ isActive: !currentStatus })
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      alert(`Product has been ${!currentStatus ? 'unblocked' : 'blocked'} successfully.`);
+      location.reload(); // or update UI without reloading
+    } else {
+      alert(result.message || 'Something went wrong');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Server error');
   }
 }
 
@@ -121,7 +162,7 @@ function productPagination(totalPages, currentPage, callback) {
 
 //this function for search bar for user search
 function productSearch(page = 1, limit = 9) {
-  const searchKey = document.getElementById("searchInput").value.trim()
+  const searchKey = document.getElementById("searchInputPro").value.trim()
   console.log("category search", searchKey)
 
   fetch(`/products/search?key=${searchKey}&page=${page}&limit=${limit}`, {
@@ -139,7 +180,7 @@ function productSearch(page = 1, limit = 9) {
 
 //this button function is for search clear button
 function toggleClearButtonProducts() {
-  const searchInput = document.getElementById("searchInput");
+  const searchInput = document.getElementById("searchInputPro");
   const clearButton = document.getElementById("clearSearchButton1");
 
   if (searchInput.value.trim() !== "") {
@@ -151,13 +192,17 @@ function toggleClearButtonProducts() {
 
 //this function will inoke and render user after clicking the clear button
 function clearSearchProduct() {
-  const searchInput = document.getElementById("searchInput");
+  const searchInput = document.getElementById("searchInputPro");
   searchInput.value = "";
   toggleClearButtonProducts();
   loadProducts()
 }
 
 function addProduct() {
+    const productListingSection1 = document.getElementById("categoriesContainer2");
+  productListingSection1.classList.remove("hidden")
+  const productmainsection = document.getElementById("productmainsection")
+  productmainsection.classList.add("hidden")
   const pagination = document.getElementById("paginationContainer2");
   pagination.innerHTML = "";
   const searchBarContainer = document.getElementById("searchBarContainer");
@@ -267,90 +312,96 @@ function addProduct() {
         });
       }
     })
+  document.addEventListener("DOMContentLoaded", function () {
   setupImageUploadValidation();
-
+});
 }
 
+  let selectedFiles = [];
 
-let selectedFiles = [];
+  function setupImageUploadValidation() {
+    const imageInput = document.getElementById("imageUpload");
+    const previewContainer = document.getElementById("imagePreview");
+    const uploadError = document.getElementById("uploadError");
 
-function setupImageUploadValidation() {
-  const imageInput = document.getElementById("imageUpload");
-  const previewContainer = document.getElementById("imagePreview");
-  const uploadError = document.getElementById("uploadError");
+    imageInput.addEventListener("change", function () {
+      const newFiles = Array.from(imageInput.files);
 
-  imageInput.addEventListener("change", function () {
-    const newFiles = Array.from(imageInput.files);
-
-    for (const file of newFiles) {
-      // Max image count check
-      if (selectedFiles.length >= 4) {
-        uploadError.innerText = "You can only upload up to 4 images.";
-        return;
-      }
-
-      // File size check (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        uploadError.innerText = `File "${file.name}" is too large. Max 2MB allowed.`;
-        return;
-      }
-
-      // Check if the file is already added
-      if (selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
-        return;
-      }
-
-      // Create a URL for the selected file
-      const imageURL = URL.createObjectURL(file);
-
-      // Create an image element
-      const img = new Image();
-      img.src = imageURL;
-
-      // When image is loaded
-      img.onload = () => {
-        const ratio = img.width / img.height;
-        // Check if the image is square (aspect ratio 1:1)
-        if (ratio < 0.95 || ratio > 1.05) {
-          uploadError.innerText = `File "${file.name}" must be square (1:1).`;
+      newFiles.forEach((file) => {
+        if (selectedFiles.length >= 4) {
+          uploadError.innerText = "You can only upload up to 4 images.";
           return;
         }
 
-        // Add the file to the selected files array
-        selectedFiles.push(file);
+        if (file.size > 2 * 1024 * 1024) {
+          uploadError.innerText = `File "${file.name}" is too large. Max 2MB allowed.`;
+          return;
+        }
 
-        // Create a preview wrapper element
-        const wrapper = document.createElement("div");
-        wrapper.className = "relative";
+        if (selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+          return;
+        }
 
-        // Create the image element
-        const imageElement = document.createElement("img");
-        imageElement.src = imageURL;
-        imageElement.className = "w-24 h-24 object-cover rounded-lg border";
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = new Image();
+          img.src = e.target.result;
 
-        // Create a remove button
-        const removeBtn = document.createElement("button");
-        removeBtn.innerHTML = "&times;";
-        removeBtn.className = "absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs";
-        removeBtn.onclick = () => {
-          // Remove the image from the selectedFiles array and remove from DOM
-          selectedFiles = selectedFiles.filter(f => f !== file);
-          wrapper.remove();
+          img.onload = function () {
+            const minSize = Math.min(img.width, img.height);
+            const cropX = (img.width - minSize) / 2;
+            const cropY = (img.height - minSize) / 2;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = 300; // output size (square)
+            canvas.height = 300;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(
+              img,
+              cropX, cropY, minSize, minSize, // source crop
+              0, 0, 300, 300                  // destination size
+            );
+
+            canvas.toBlob((blob) => {
+              const croppedFile = new File([blob], file.name, { type: "image/jpeg" });
+              selectedFiles.push(croppedFile);
+
+              const imageURL = URL.createObjectURL(blob);
+
+              const wrapper = document.createElement("div");
+              wrapper.className = "relative";
+
+              const imageElement = document.createElement("img");
+              imageElement.src = imageURL;
+              imageElement.className = "w-24 h-24 object-cover rounded-lg border";
+
+              const removeBtn = document.createElement("button");
+              removeBtn.innerHTML = "&times;";
+              removeBtn.className = "absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs";
+              removeBtn.onclick = () => {
+                selectedFiles = selectedFiles.filter(f => f !== croppedFile);
+                wrapper.remove();
+              };
+
+              wrapper.appendChild(imageElement);
+              wrapper.appendChild(removeBtn);
+              previewContainer.appendChild(wrapper);
+            }, "image/jpeg", 0.9);
+          };
         };
 
-        // Append image and remove button to wrapper
-        wrapper.appendChild(imageElement);
-        wrapper.appendChild(removeBtn);
+        reader.readAsDataURL(file);
+      });
 
-        // Append the preview wrapper to the container
-        previewContainer.appendChild(wrapper);
-      };
-    }
+      imageInput.value = "";
+    });
+  }
 
-    // Clear the file input field after processing
-    imageInput.value = "";
-  });
-}
+  window.onload = setupImageUploadValidation;
+
+
+
 
 
 function saveProduct() {
@@ -390,6 +441,11 @@ function editProduct(productId) {
 }
 
 function renderEditForm(product) {
+  console.log("edit form reached")
+      const productListingSection1 = document.getElementById("categoriesContainer2");
+  productListingSection1.classList.remove("hidden")
+  const productmainsection = document.getElementById("productmainsection")
+  productmainsection.classList.add("hidden")
   const pagination = document.getElementById("paginationContainer2");
   pagination.innerHTML = "";
   const searchBarContainer = document.getElementById("searchBarContainer");
@@ -499,7 +555,10 @@ function renderEditForm(product) {
     class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
     Update Product
   </button>
-</form>`;
+</form>
+
+
+`;
 
   const categoryCanteiner = document.getElementById("optiosContainer")
   categoryCanteiner.innerHTML = "";
@@ -526,58 +585,115 @@ function renderEditForm(product) {
   setupImageUploadValidation1(product.images)
 }
 
-let selectedFiles1 = []; // Can contain both URL strings and File objects
+let selectedFiles1 = []; // Holds both existing URL strings and { file, previewUrl } objects
 
 function setupImageUploadValidation1(existingImages = []) {
   const imageInput = document.getElementById("imageUploadEdit");
   const previewContainer = document.getElementById("imagePreview");
   const uploadError = document.getElementById("uploadError");
+  const cropperModal = document.getElementById("cropperModal");
+  const cropperImage = document.getElementById("cropperImage");
+  const cancelCrop = document.getElementById("cancelCrop");
+  const confirmCrop = document.getElementById("confirmCrop");
 
-  // Load existing images from backend
+  let cropper;
+  selectedFiles1 = [];
+  previewContainer.innerHTML = "";
+
+  // Load existing images
   existingImages.forEach(url => {
-    selectedFiles1.push(url); // Just store the URL
-    renderImagePreview(url);
+    selectedFiles1.push(url); // Keep as URL string
+    renderImagePreview(url, true);
   });
 
   imageInput.addEventListener("change", function () {
     uploadError.innerText = "";
     const newFiles = Array.from(imageInput.files);
+    let currentIndex = 0;
 
-    for (const file of newFiles) {
+    function processNextImage() {
+      if (currentIndex >= newFiles.length) {
+        imageInput.value = ""; // Reset input
+        return;
+      }
+
+      const file = newFiles[currentIndex++];
+
       if (selectedFiles1.length >= 4) {
         uploadError.innerText = "You can only upload up to 4 images.";
-        break;
+        return;
       }
 
       if (file.size > 2 * 1024 * 1024) {
         uploadError.innerText = `File "${file.name}" is too large. Max 2MB allowed.`;
-        continue;
+        processNextImage();
+        return;
       }
 
-      if (selectedFiles1.find(f => typeof f !== "string" && f.name === file.name && f.size === file.size)) {
-        continue;
+      // Avoid duplicates
+      const isDuplicate = selectedFiles1.some(f =>
+        typeof f !== "string" &&
+        f.file.name === file.name &&
+        f.file.size === file.size
+      );
+      if (isDuplicate) {
+        processNextImage();
+        return;
       }
 
-      const imageURL = URL.createObjectURL(file);
-      const img = new Image();
-      img.src = imageURL;
+      const reader = new FileReader();
+      reader.onload = () => {
+        cropperImage.src = reader.result;
+        cropperModal.classList.remove("hidden");
 
-      img.onload = () => {
-        const ratio = img.width / img.height;
-        if (ratio < 0.95 || ratio > 1.05) {
-          uploadError.innerText = `File "${file.name}" must be square (1:1).`;
-          return;
-        }
+        cropperImage.onload = () => {
+          cropper = new Cropper(cropperImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+          });
+        };
 
-        selectedFiles1.push(file);
-        renderImagePreview(imageURL, file);
+        cancelCrop.onclick = () => {
+          cropper.destroy();
+          cropper = null;
+          cropperModal.classList.add("hidden");
+          processNextImage();
+        };
+
+        confirmCrop.onclick = () => {
+          const canvas = cropper.getCroppedCanvas({
+            width: 500,
+            height: 500,
+          });
+
+          canvas.toBlob((blob) => {
+            if (blob.size > 2 * 1024 * 1024) {
+              uploadError.innerText = `Cropped image is too large. Max 2MB allowed.`;
+              cropper.destroy();
+              cropperModal.classList.add("hidden");
+              processNextImage();
+              return;
+            }
+
+            const croppedFile = new File([blob], file.name, { type: blob.type });
+            const previewUrl = URL.createObjectURL(croppedFile);
+
+            selectedFiles1.push({ file: croppedFile, previewUrl });
+            renderImagePreview(previewUrl, false);
+
+            cropper.destroy();
+            cropperModal.classList.add("hidden");
+            processNextImage();
+          }, "image/jpeg");
+        };
       };
+      reader.readAsDataURL(file);
     }
 
-    imageInput.value = "";
+    processNextImage(); // Start processing
   });
 
-  function renderImagePreview(src, file = null) {
+  function renderImagePreview(src, isExisting = false) {
     const wrapper = document.createElement("div");
     wrapper.className = "relative";
 
@@ -587,13 +703,16 @@ function setupImageUploadValidation1(existingImages = []) {
 
     const removeBtn = document.createElement("button");
     removeBtn.innerHTML = "&times;";
-    removeBtn.className = "absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs";
+    removeBtn.className =
+      "absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs";
 
     removeBtn.onclick = () => {
-      selectedFiles1 = selectedFiles1.filter(f => {
-        if (file) return f !== file; // Remove uploaded File
-        return f !== src; // Remove backend URL
-      });
+      if (isExisting) {
+        selectedFiles1 = selectedFiles1.filter(f => f !== src);
+      } else {
+        selectedFiles1 = selectedFiles1.filter(f => f.previewUrl !== src);
+        URL.revokeObjectURL(src);
+      }
       wrapper.remove();
     };
 
@@ -602,6 +721,8 @@ function setupImageUploadValidation1(existingImages = []) {
     previewContainer.appendChild(wrapper);
   }
 }
+
+
 
 function saveProduct1() {
   const form = document.getElementById("editProductForm");

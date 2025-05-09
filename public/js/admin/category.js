@@ -2,6 +2,9 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("categoryButton").addEventListener("click", (e) => {
         e.preventDefault();
 
+         const orderSection = document.getElementById("orderSection")
+    orderSection.classList.add("hidden")
+
         //Accessing left side button
         const usersButton = document.getElementById("usersButton");
         const categoryButton = document.getElementById("categoryButton");
@@ -111,22 +114,19 @@ function loadCategoryList(categories) {
         <td class="py-3 px-6 ${category.status === 'active' ? 'text-green-600' : 'text-red-600'}">
           ${category.status === 'active' ? 'Active' : 'Blocked'}
         </td>
-        <td class="py-3 px-6">
-          <button 
-            type="button"
-            class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded ml-1">
-            View
-          </button>  
-          <button 
-            type="button"
-            class="blockButton ${category.status === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
-            text-white text-sm px-3 py-1 rounded"
-            data-email="${category.slug}">
-            ${category.status === 'active' ? 'Block' : 'Unblock'}
-          </button>
+        <td class="py-3 px-6">${category.productCount}</td>
 
-          ${category.isChild ? '<button type="button" class="blockButton bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded" data-slug="${category.slug}">Delete</button>' : ''}
-        </td>`
+        <td class="py-3 px-6">
+ 
+<button 
+onclick="blockCategory('${category.slug}')"
+  type="button"
+  class="blockButton ${category.status === 'active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white text-sm px-3 py-1 rounded"
+  data-id="${category._id}">
+  ${category.status === 'active' ? 'Block' : 'Unblock'}
+</button>
+
+`
     });
 
 }
@@ -150,7 +150,8 @@ function pagination(totalPages, currentPage, callback) {
 
 //this function for search bar for user search
 function categorySearch(page = 1, limit = 2) {
-    const searchKey = document.getElementById("searchInput").value.trim()
+    const searchKey = document.getElementById("searchInputCat").value.trim()
+    console.log(searchKey)
     console.log("category search", searchKey)
 
     fetch(`/category/search?key=${searchKey}&page=${page}&limit=${limit}`, {
@@ -168,8 +169,8 @@ function categorySearch(page = 1, limit = 2) {
 
 //this button function is for search clear button
 function toggleClearButtonCat() {
-    const searchInput = document.getElementById("searchInput");
-    const clearButton = document.getElementById("clearSearchButton");
+    const searchInput = document.getElementById("searchInputCat");
+    const clearButton = document.getElementById("clearSearchButtonCat");
 
     if (searchInput.value.trim() !== "") {
         clearButton.classList.remove("hidden");
@@ -180,7 +181,7 @@ function toggleClearButtonCat() {
 
 //this function will inoke and render user after clicking the clear button
 function clearSearchCat() {
-    const searchInput = document.getElementById("searchInput");
+    const searchInput = document.getElementById("searchInputCat");
     searchInput.value = "";
     toggleClearButtonCat();
     loadCategory()
@@ -204,3 +205,6 @@ function blockCategory(slug) {
         console.error("Error updating category:", error);
     });
 }
+
+
+

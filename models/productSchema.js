@@ -59,6 +59,7 @@ const productSchema = new mongoose.Schema(
         ref: 'Review',
       }
     ],
+    isActive: { type: Boolean, default: true}
   },
   { timestamps: true }
 );

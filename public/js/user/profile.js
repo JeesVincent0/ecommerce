@@ -1,3 +1,5 @@
+
+
 //@desc disable side button color
 function hideMyProfileButton() {
     const categoryButton = document.getElementById("myProfileButton");
@@ -558,4 +560,56 @@ function saveAddress(event,userId) {
             myProfile()
         }
     });
+}
+
+function getWallet() {
+    fetch("get-wallet", {
+        method: "GET"
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        wallet(data.wallet)
+    })
+}
+
+
+function wallet(wallet) {
+  hideMyProfileButton();
+  
+  const mainSection = accessMainSection();
+  const addressSection = accessAddressSection();
+  const heading = accessHeading();
+
+  heading.innerHTML = "My Wallet";
+  addressSection.classList.add("hidden"); // Hide address section if needed
+
+  mainSection.innerHTML = `
+    <div class=" p-6 space-y-6">
+      <!-- Wallet Balance -->
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-bold text-gray-800">Wallet Balance</h2>
+        <span class="text-2xl font-semibold text-green-600">₹${wallet.balance}</span>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Recent Transactions</h3>
+        <ul class="space-y-2 max-h-60 overflow-y-auto pr-2">
+          ${wallet.transactions.slice().reverse().map(tx => `
+            <li class="flex items-center justify-between border rounded-lg p-3 bg-gray-50">
+              <div>
+                <p class="text-sm text-gray-800 font-medium">
+                  ${tx.reason} ${tx.orderId ? `( #${tx.orderId.toString().slice(-6)} )` : ""}
+                </p>
+                <p class="text-xs text-gray-500">${new Date(tx.date).toLocaleString()}</p>
+              </div>
+              <span class="${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'} font-semibold text-sm">
+                ${tx.type === 'credit' ? '+' : '-'}₹${tx.amount}
+              </span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    </div>
+  `;
 }

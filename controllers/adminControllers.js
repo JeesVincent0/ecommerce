@@ -7,6 +7,8 @@ import Product from "../models/productSchema.js"
 import mongoose, { Types } from "mongoose"
 import path from "path"
 import fs from 'fs'
+import Order from "../models/ordersSchema.js"
+import Wallet from "../models/walletSchema.js"
 
 //@desc render admin login page
 //GET /adminlogin
@@ -147,28 +149,39 @@ export const getUsersSearch = async (req, res) => {
 //@desc get category list
 //GET /category
 export const getCategoryList = async (req, res) => {
-    try {
+  try {
+    console.log("reached");
 
-        console.log("reached")
-        //getting data from query params
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 5;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
 
-        //settup for get users
-        const skip = (page - 1) * limit;
+    const categories = await Category.find()
+      .sort({ createdAt: -1 })
+      .select("name slug status isChild")
+      .skip(skip)
+      .limit(limit);
 
-        const categoryList = await Category.find().sort({ createdAt: -1}).select("name slug status -_id isChild").skip(skip).limit(limit)
-        console.log(categoryList)
+    // Get product count for each category
+    const categoryList = await Promise.all(categories.map(async (category) => {
+      const productCount = await Product.countDocuments({ category_id: category._id });
+      return {
+        ...category.toObject(),
+        productCount,
+      };
+    }));
 
-        const totalCategory = await Category.countDocuments();
-        const totalPages = Math.ceil(totalCategory / limit)
+    const totalCategory = await Category.countDocuments();
+    const totalPages = Math.ceil(totalCategory / limit);
 
+    res.json({ categoryList, totalPages, page });
 
-        res.json({ categoryList, totalPages: totalPages, page })
-    } catch (error) {
+  } catch (error) {
+    console.error("Error fetching category list:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
-    }
-}
 
 //@desc get category neme and slug for category selection
 //GET /category/miancategory/:parentId
@@ -327,7 +340,7 @@ export const getProducts = async (req, res) => {
         //settup for get users
         const skip = (page - 1) * limit;
 
-        const product = await Product.find().sort({ createdAt: -1}).select("product_name mrp discount_price discount_percentage _id images stock last_price").skip(skip).limit(limit)
+        const product = await Product.find().sort({ createdAt: -1}).select("product_name mrp discount_price discount_percentage _id images stock last_price isActive").skip(skip).limit(limit)
 
         const totalProduct = await Product.countDocuments();
         const totalPages = Math.ceil(totalProduct / limit)
@@ -430,7 +443,7 @@ export const getProductData = async (req, res) => {
         const _id = req.params.id
 
         //fing neccesory fields from product collection and category collection
-        const productObj = await Product.findOne({ _id }).select("_id product_name description brand mrp discount_price stock tags category_id images")
+        const productObj = await Product.findOne({ _id }).select("_id product_name description brand mrp discount_price stock tags category_id images isActive")
         const categoryId = new mongoose.Types.ObjectId(productObj.category_id)
         const category = await Category.findOne({ _id: categoryId }).select("slug -_id")
 
@@ -516,3 +529,140 @@ export const deleteProduct = async (req, res) => {
         console.log(error.message)
     }
 }
+
+// Controller
+export const updateOrderStatus = async (req, res) => {
+  const { orderId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const updated = await Order.findByIdAndUpdate(orderId, { orderStatus: status }, { new: true });
+    if (!updated) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    res.json({ success: true, message: "Order status updated" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export const handleReturnRequest = async (req, res) => {
+  const { orderId } = req.params;
+  const { approve } = req.body;
+
+  try {
+    const status = approve ? "returned" : "delivered";
+    const order = await Order.findById(orderId);
+
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+    // Update order status
+    order.orderStatus = status;
+    order.returnRequest = false;
+    await order.save();
+
+    if (approve) {
+      // Add refund to wallet
+      let wallet = await Wallet.findOne({ userId: order.userId });
+      if (!wallet) {
+        wallet = new Wallet({
+          userId: order.userId,
+          balance: 0,
+          transactions: []
+        });
+      }
+
+      const refundAmount = order.totalAmount;
+
+      wallet.balance += refundAmount;
+      wallet.transactions.push({
+        type: 'credit',
+        amount: refundAmount,
+        reason: 'Order refund',
+        orderId: order._id
+      });
+
+      await wallet.save();
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal error" });
+  }
+};
+
+
+export const toggleCategoryStatus = async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ error: 'Category not found' });
+
+    category.status = category.status === 'active' ? 'inactive' : 'active';
+    await category.save();
+
+    res.status(200).json({ status: category.status });
+  } catch (error) {
+    console.error('Toggle error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+export const getUserDetailsAndOrders = async (req, res) => {
+  try {
+    const email = req.params.email;
+
+    // Find user by email (excluding password)
+     const user = await User.findOne({ email })
+      .select('-password')
+      .populate('addresses');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Find all orders for that user, and populate product details inside items
+    const orders = await Order.find({ userId: user._id })
+      .sort({ placedAt: -1 })
+      .populate('items.productId', 'product_name images brand') // Only needed fields
+
+    res.json({
+      success: true,
+      details: {
+        user,
+        orders
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching user and orders:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+
+export const toggleProductStatus = async (req, res) => {
+    console.log("dataslgjfgjafbg")
+  const { id } = req.params;
+  const { isActive } = req.body;
+
+  console.log(id, isActive)
+
+  try {
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { isActive },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    res.json({ success: true, message: `Product ${isActive ? 'unblocked' : 'blocked'} successfully`, product });
+
+  } catch (error) {
+    console.error('Error updating product status:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

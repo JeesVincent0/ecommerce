@@ -26,7 +26,8 @@ const orderSchema = new mongoose.Schema({
   placedAt: { type: Date, default: Date.now },
   orderPlaced: { type: Boolean , default: false},
   orderId: { type: String, unique: true},
-  returnRequest: { type: Boolean, default: false}
+  returnRequest: { type: Boolean, default: false},
+  returnReason: { type: String },
 });
 
 const Order = mongoose.model('Order', orderSchema);

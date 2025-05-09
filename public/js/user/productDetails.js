@@ -8,6 +8,8 @@ function addToCart(productId) {
         .then((data) => {
             if (data.success) {
                 alert("Product added to cart")
+            }else {
+                alert("not added")
             }
         })
         .catch((error) => console.log(error.toString()));
