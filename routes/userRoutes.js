@@ -1,13 +1,16 @@
 //importing third-prty modules
 import express from 'express'
 import passport from 'passport'
+import multer from 'multer'
 
 //importing local modules
-import { checkmail, checkotp, createNewPassword, createNewUser, forgottonPassword, getCreatePassword,  getHome,  getLogin, getProducts, getProfile, googleCallback, listProducts, logout, notfound, otpPage, otpSend, otpVerify, passwordChange, productDetail, renderProfile, signUpPage, userLogout, verifyLogin, verifyOtp } from '../controllers/userControllers.js'
+import { addToCart, cancelOrder, checkmail, checkotp, checkOut, createAddress, createNewPassword, createNewUser, createOrder, decreamentItem, deleteItem, editProfile, forgottonPassword, getAddress, getCartDetails, getCreatePassword,  getHome,  getLogin, getOrders, getOrdersAdmin, getProducts, getProfile, getProfilePic, googleCallback, listProducts, logout, notfound, ordersPage, otpPage, otpSend, otpVerify, passwordChange, paymentMethods, productDetail, renderCart, renderProfile, signUpPage, updateAddress, updateOrderStatus, userLogout, verifyLogin, verifyOtp } from '../controllers/userControllers.js'
 import { redirectIfAuthenticated, verifyUserJWT } from '../middleware/routerMiddleware.js'
 
 //setting router to a variable
 const router = express.Router()
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 //get page not found
 router.get('/notfound', notfound)
@@ -74,9 +77,63 @@ router.get("/sendotp", otpSend);
 //verify opt from profile section
 router.post("/otpVerify", otpVerify);
 
+//get sprcific address for edit
+router.get("/getaddress/:id", getAddress);
+
+//update address
+router.post("/update-address/:id", updateAddress);
+
+//create new address
+router.post("/save-address/:id", createAddress);
+
 //change password
 router.patch("/changepassword", passwordChange);
 
+//form data after to change profile details
+router.patch("/edit-profile", upload.single('profilePic'), editProfile);
+
+//get profile pic
+router.get('/user/:email/profile-pic', getProfilePic);
+
+//get cart page
+router.get("/cart", renderCart);
+
+//add product to cart
+router.post("/add-to-cart/:id", addToCart);
+
+//get cart details
+router.get("/get-cart", getCartDetails);
+
+//decreament items quantity
+router.post("/decrement-cart/:id", decreamentItem);
+
+//delete cart items
+router.delete("/delete-item/:id", deleteItem);
+
+//checkout from cart
+router.get("/checkout", checkOut);
+
+//create order collection using cart details and address selcted
+router.post("/select-address", createOrder);
+
+//select order payment method
+router.post("/place-order", paymentMethods);
+
+//get order page
+router.get("/orders", ordersPage);
+
+//get all orders
+router.get("/get-orders", getOrders)
+
+//for admin list all orders
+router.get("/get-orders-admin", getOrdersAdmin)
+
+// PUT route to update order status
+router.put('/orders/:id/status', updateOrderStatus);
+
+//cancelling order
+router.put('/orders/:id/cancel', cancelOrder);
+  
 //signUp with google setup
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email']}))
 router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/'}), googleCallback)

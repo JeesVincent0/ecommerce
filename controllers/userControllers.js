@@ -1,8 +1,10 @@
-import bcrypt, { hash } from 'bcrypt'
+import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 import User from '../models/userSchema.js'
 import PendingUser from '../models/userTemp.js'
+import Address from '../models/addressSchema.js'
+import Order from '../models/ordersSchema.js'
 import { sendOtp } from '../utils/sendOtp.js'
 import { createToken } from './JWT.js'
 
@@ -10,6 +12,8 @@ import Product from "../models/productSchema.js"
 import Category from "../models/categorySchema.js"
 import mongoose from 'mongoose'
 import { generateOtp } from '../utils/generateOtp.js'
+import Cart from '../models/cartSchema.js'
+import { generateOrderId } from '../utils/generateOrderId.js'
 
 
 //@desc get page not found
@@ -31,7 +35,6 @@ export const createNewUser = async (req, res) => {
 
         //Getting user details from req.body
         const { name, email, password } = req.body
-        console.log(`${name}, ${email}, ${password}`)
 
         //checking the email already taken or not
         const checkemail = await User.findOne({ email: email })
@@ -127,7 +130,6 @@ export const verifyLogin = async (req, res) => {
 
         //find user from DB
         const user = await User.findOne({ email: email })
-        console.log('email', !user)
 
         //checking user entered email is correct or wrong
         if (!user) throw new Error("wrong email")
@@ -154,7 +156,7 @@ export const verifyLogin = async (req, res) => {
         } else if (error.message === 'user blocked') {
             return res.status(400).json({ success: false, message: 'user blocked', block: true, pass: true, email: true });
         } else {
-            return res.status(500).json({ success: false, message: "Something went wrong"})
+            return res.status(500).json({ success: false, message: "Something went wrong" })
         }
     }
 }
@@ -192,8 +194,6 @@ export const checkmail = async (req, res) => {
         const emailSend = await sendOtp(email, otp)
         if (!emailSend) throw new Error("otp email not send")
 
-        console.log('mail sended')
-
         res.json({ success: true })
 
     } catch (error) {
@@ -219,7 +219,6 @@ export const checkotp = async (req, res) => {
 
         //finding user original DB document for set JWT
         const orinalUser = await User.findOne({ email })
-        console.log("checkotp", orinalUser)
 
         //creating JWT token
         const token = createToken(user.email, '5m')
@@ -269,7 +268,6 @@ export const createNewPassword = async (req, res) => {
         //Retriving data from JWT Token
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         if (!decoded?.userEmail) throw new Error("Session expired")
-        console.log("jwt created")
 
         const salt = await bcrypt.genSalt(10)
         const hash = await bcrypt.hash(password, salt)
@@ -390,7 +388,6 @@ export const productDetail = async (req, res) => {
 
     const product = await Product.findOne({ _id: productId })
     const relatedProducts = await Product.find({ category_id: product.category_id }).limit(8)
-    console.log("related", relatedProducts)
 
     res.render("user/productDetails", { product, relatedProducts })
 }
@@ -401,7 +398,6 @@ export const getHome = async (req, res) => {
     try {
 
         const clothes = await Product.find({ category_id: "6810cb9ff606c8964af4ee71" })
-        console.log(clothes)
         res.render("user/home")
     } catch (error) {
 
@@ -420,7 +416,7 @@ export const userLogout = (req, res) => {
 
         res.render("user/login")
     } catch (error) {
-        res.status(500).json({message: "something went wrong"})
+        res.status(500).json({ message: "something went wrong" })
     }
 }
 
@@ -434,7 +430,7 @@ export const renderProfile = async (req, res) => {
 
     } catch (error) {
         console.log(error.message)
-        res.status(500).json({ message: "Someting went wrong", err: error.message})
+        res.status(500).json({ message: "Someting went wrong", err: error.message })
     }
 }
 
@@ -446,8 +442,10 @@ export const getProfile = async (req, res) => {
         const token = req.cookies.jwt;
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-        const user = await User.findOne({ email: decoded.userEmail })
-        res.json({ success: true, user: user})
+        const email = decoded.userEmail;
+
+        const user = await User.findOne({ email }).populate('addresses');
+        res.json({ success: true, user: user })
 
     } catch (error) {
         console.log(error.message)
@@ -467,15 +465,14 @@ export const otpSend = async (req, res) => {
         const email = decoded.userEmail;
 
         const sendotp = await sendOtp(email, otp)
-        if(sendotp) {
-            const remove = await PendingUser.deleteOne({email})
-            const create = await PendingUser.create({email, otp})
-            console.log("successfully otp sended")
+        if (sendotp) {
+            const remove = await PendingUser.deleteOne({ email })
+            const create = await PendingUser.create({ email, otp })
             res.json({ success: true, message: "Otp sended successfully" });
         }
     } catch (error) {
         console.log(error.toString())
-        res.json({ success: true, message: "Something went wrong"})
+        res.json({ success: true, message: "Something went wrong" })
     }
 }
 
@@ -490,7 +487,7 @@ export const otpVerify = async (req, res) => {
         const email = decoded.userEmail;
 
         const pendingUser = await PendingUser.findOne({ email })
-        if(pendingUser.otp === otp) {
+        if (pendingUser.otp === otp) {
             res.json({ success: true })
         } else {
             res.json({ success: false })
@@ -521,6 +518,510 @@ export const passwordChange = async (req, res) => {
 
     } catch (error) {
         console.log(error.toString())
-        res.json({ success: false, message: 'Something went wrong'})
+        res.json({ success: false, message: 'Something went wrong' })
     }
 }
+
+//@desc save changes for my profile
+//PATCH /edit-profile
+export const editProfile = async (req, res) => {
+    try {
+        const { name, email, phone } = req.body;
+        const imageBuffer = req.file?.buffer;
+        const contentType = req.file?.mimetype;
+
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+        const email1 = decoded.userEmail;
+
+        const updateData = {};
+
+        if (name) updateData.name = name;
+        if (phone) updateData.phone = phone;
+        if (email) updateData.email = email;
+
+        if (req.file) {
+            updateData.profileImage = {
+                data: imageBuffer,
+                contentType,
+            };
+        }
+
+        const updatedUser = await User.findOneAndUpdate(
+            { email: email1 },
+            updateData,
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.json({ success: true, user: updatedUser });
+
+    } catch (error) {
+        console.log(error.toString());
+        res.status(500).json({ success: false, message: "Something went wrong" });
+    }
+};
+
+//@desc get profile image
+//GET /user/:email/profile-pic
+export const getProfilePic = async (req, res) => {
+    try {
+        const email = req.params.email
+        const user = await User.findOne({ email });
+        if (user?.profileImage?.data) {
+            res.set('Content-Type', user.profileImage.contentType);
+            res.send(user.profileImage.data);
+        } else {
+            res.status(404).send('No image');
+        }
+    } catch (error) {
+        console.log(error.message)
+        res.json({ success: false, message: "Something went wrong" })
+    }
+}
+
+//@desc get specific address
+// GET /getaddress/:id
+export const getAddress = async (req, res) => {
+    try {
+        const id = req.params.id
+        const address = await Address.findById(id)
+        res.json({ success: true, address })
+    } catch (error) {
+        console.log(error.toString())
+        res.json({ success: false })
+    }
+}
+
+//@desc update address
+//POST /update-address/:id
+export const updateAddress = async (req, res) => {
+    try {
+        const addressId = req.params.id;
+        const { housename, city, street, state, postalCode, label } = req.body;
+
+        const updatedAddress = await Address.findByIdAndUpdate(
+            addressId,
+            {
+                housename,
+                city,
+                street,
+                state,
+                postalCode,
+                label
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedAddress) {
+            return res.status(404).json({ success: false, message: 'Address not found' });
+        }
+
+        res.json({ success: true })
+    } catch (error) {
+        console.log(error.toString())
+        res.json({ success: true })
+    }
+}
+
+//@desc create new address
+//POST /save-address/:id
+export const createAddress = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { housename, city, street, state, postalCode, label } = req.body;
+
+        // Create new address document
+        const newAddress = new Address({
+            userId,
+            housename,
+            street,
+            city,
+            state,
+            postalCode,
+            label
+        });
+
+        const savedAddress = await newAddress.save();
+
+        // Push the address ID into user's addresses array
+        await User.findByIdAndUpdate(userId, {
+            $push: { addresses: savedAddress._id }
+        });
+
+        res.json({ success: true })
+    } catch (error) {
+        console.log(error.toString())
+        res.json({ success: false })
+    }
+}
+
+//@desc render cart page
+//GET /cart
+export const renderCart = (req, res) => {
+    try {
+        res.render("user/cart")
+    } catch (error) {
+        console.log(error.toString())
+        res.json({ success: false })
+    }
+}
+
+//@desc add new product to cart
+//POST /add-to-cart/:id
+export const addToCart = async (req, res) => {
+    try {
+
+        //getting datas into variables
+        const productId = req.params.id
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+
+        //gettin user and product details from db
+        const user = await User.findOne({ email })
+        const product = await Product.findById(productId)
+        const userId = user._id
+        const price = product.last_price;
+
+        let cart = await Cart.findOne({ userId })
+        if (!cart) {
+            cart = new Cart({
+                userId,
+                items: [{
+                    productId,
+                    quantity: 1,
+                    priceAtTime: price
+                }]
+            });
+        } else {
+            // Check if product already in cart
+            const existingItem = cart.items.find(item => item.productId.equals(productId));
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+                existingItem.priceAtTime = price;
+            } else {
+                cart.items.push({
+                    productId,
+                    quantity: 1,
+                    priceAtTime: price
+                });
+            }
+        }
+
+        cart.updatedAt = new Date();
+        await cart.save();
+
+        res.json({ success: true })
+
+    } catch (error) {
+        console.log(error.toString());
+        res.json({ success: false })
+    }
+}
+
+//@desc get cart details 
+//GET /get-cart
+export const getCartDetails = async (req, res) => {
+    try {
+
+        const token = req.cookies.jwt
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+        const userId = await User.findOne({ email }).select("_id")
+
+        const cart = await Cart.findOne({ userId: userId._id }).populate('items.productId')
+
+
+        res.json({ success: true, cart })
+    } catch (error) {
+        console.log(error.toString())
+        res.json({ success: false })
+    }
+}
+
+// @desc Decrement item quantity in cart
+// @route POST /decrement-cart/:id
+export const decreamentItem = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+
+        const user = await User.findOne({ email }).select('_id');
+        const cart = await Cart.findOne({ userId: user._id });
+
+        if (!cart) {
+            return res.status(404).json({ success: false, message: 'Cart not found' });
+        }
+
+        const item = cart.items.find(i => i.productId.equals(productId));
+
+        if (item) {
+            if (item.quantity > 1) {
+                item.quantity -= 1;
+                await cart.save();
+                return res.json({ success: true });
+            } else {
+                return res.json({ success: false, message: 'Minimum quantity reached' });
+            }
+        }
+
+        return res.status(404).json({ success: false, message: 'Product not in cart' });
+
+    } catch (error) {
+        console.error(error.toString());
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+
+// @desc Delete cart item
+// @route DELETE /delete-item/:id
+export const deleteItem = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+
+        const user = await User.findOne({ email }).select('_id');
+        const cart = await Cart.findOne({ userId: user._id });
+
+        if (!cart) {
+            return res.status(404).json({ success: false, message: 'Cart not found' });
+        }
+
+        // Filter out the item to delete
+        cart.items = cart.items.filter(item => !item.productId.equals(productId));
+
+        await cart.save();
+
+        return res.json({ success: true, message: 'Item removed from cart' });
+    } catch (error) {
+        console.log(error.toString());
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+//@desc checkout from cart
+//GET /checkout
+export const checkOut = async (req, res) => {
+    try {
+
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+
+        const user = await User.findOne({ email }).select('_id');
+
+        const address = await Address.find({ userId: user })
+        res.json({ success: true, address })
+
+    } catch (error) {
+        console.log(error.toString())
+        res.status(500).json({ success: false })
+    }
+}
+
+//@desc create new order
+//POST /select-address
+export const createOrder = async (req, res) => {
+    try {
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+
+        const user = await User.findOne({ email });
+        const cart = await Cart.findOne({ userId: user._id }).populate('items.productId');
+
+        if (!cart || cart.items.length === 0) {
+            return res.status(400).json({ success: false, message: 'Cart is empty' });
+        }
+
+        // Use selected addressId from frontend
+        const { addressId } = req.body;
+
+        const shippingAddress = await Address.findOne({ _id: addressId, userId: user._id });
+        if (!shippingAddress) {
+            return res.status(400).json({ success: false, message: 'Shipping address not found' });
+        }
+
+        // Calculate total
+        const totalAmount = cart.items.reduce((sum, item) => {
+            return sum + (item.priceAtTime * item.quantity);
+        }, 0);
+
+        const newOrder = new Order({
+            userId: user._id,
+            userName: user.name,
+            items: cart.items.map(item => ({
+                productId: item.productId._id,
+                quantity: item.quantity,
+                priceAtPurchase: item.priceAtTime
+            })),
+            shippingAddress: {
+                housename: shippingAddress.housename,
+                street: shippingAddress.street,
+                city: shippingAddress.city,
+                state: shippingAddress.state,
+                postalCode: shippingAddress.postalCode,
+                label: shippingAddress.label,
+                phone: user.phone
+            },
+            totalAmount,
+            orderStatus: 'processing'
+        });
+
+        await newOrder.save();
+
+        // Clear the cart
+        await Cart.findOneAndUpdate({ userId: user._id }, { items: [] });
+
+        res.status(200).json({ success: true, orderId: newOrder._id, message: 'Order placed successfully' });
+    } catch (error) {
+        console.log(error.toString())
+        res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+//@desc select payment method
+//POST /place-order
+export const paymentMethods = async (req, res) => {
+    const { orderId, paymentMethod } = req.body;
+
+    if (!orderId || !paymentMethod) {
+        return res.status(400).json({ success: false, message: "Missing order ID or payment method." });
+    }
+
+    try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found." });
+        }
+
+        const orderId1 = generateOrderId()
+
+        // Update payment method
+        order.paymentMethod = paymentMethod;
+        order.orderPlaced = true;
+        order.orderId = orderId1;
+        order.orderStatus = 'placed'
+
+        await order.save();
+
+        await Order.deleteMany({
+            $or: [
+              { orderPlaced: false },
+              { orderPlaced: { $exists: false } }
+            ]
+          });          
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Error placing order:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+//@desc render orders page
+//GET /orders
+export const ordersPage = async (req, res) => {
+    try {
+        res.render("user/orders")
+    } catch (error) {
+        console.log(error.toString())
+        res.status(500).json({ success: false, message: "Something went wrong"})
+    }
+}
+
+//@desc get all orders
+//GET /get-orders
+export const getOrders = async (req, res) => {
+    try {
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+        const user = await User.findOne({ email }).select("_id");
+
+        const orders = await Order.find({ userId: user._id })
+            .populate({ path: "items.productId" })              // Populate products
+            .populate({ path: "userId", select: "name email" }); // Populate user
+
+        res.json({ success: true, orders });
+    } catch (error) {
+        console.log("Populate error:", error.toString());
+        res.status(500).json({ success: false, message: "Something went wrong" });
+    }
+};
+
+
+
+//@desc get all orders
+//GET /get-orders-admin
+export const getOrdersAdmin = async (req, res) => {
+    try {
+
+        // Populate product data inside order items
+        const orders = await Order.find()
+            .populate("items.productId"); // assuming your schema has items.productId as a ref to Product
+
+        res.json({ success: true, orders });
+    } catch (error) {
+        console.log(error.toString());
+        res.status(500).json({ success: false, message: "Something went wrong" });
+    }
+}
+
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    order.orderStatus = status;
+    await order.save();
+
+    res.json({ success: true, message: 'Order status updated' });
+  } catch (error) {
+    console.error('Update error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+//@desc cancell order
+// PUT /orders/:id/cancel
+export const cancelOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Optional: prevent cancelling delivered or already cancelled orders
+    if (order.orderStatus === 'delivered' || order.orderStatus === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'Cannot cancel this order' });
+    }
+
+    order.orderStatus = 'cancelled';
+    await order.save();
+
+    res.json({ success: true, message: 'Order cancelled' });
+  } catch (err) {
+    console.error(err.toString());
+    res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};

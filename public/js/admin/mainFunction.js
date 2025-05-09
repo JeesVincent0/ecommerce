@@ -28,6 +28,12 @@ function hideAddCategorySection() {
     addCategorySection.classList.add("hidden")
 }
 
+//hide orderlist section
+function hideOrderSection() {
+    const orderSection = document.getElementById("orderSection")
+    orderSection.innerHTML = "";
+}
+
 
 //@desc disable side button color
 //hide category button color
@@ -48,9 +54,21 @@ function hideUserButton() {
 
 }
 
+function hideOrderButton() {
+    const orderButton = document.getElementById("orderButton");
+    orderButton.classList.remove("bg-gray-400");
+
+}
+
 //@desc add side button color
 //add user button color
 function addUserButton() {
     const usersButton = document.getElementById("usersButton");
     usersButton.classList.add("bg-gray-400");
+}
+
+function accessOrderSection() {
+    const orderSection = document.getElementById("orderSection");
+    orderSection.innerHTML = "";
+    return orderSection
 }

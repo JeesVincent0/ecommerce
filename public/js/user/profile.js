@@ -41,8 +41,6 @@ function myProfile() {
     hideAddressButton()
     hideOrderButton()
 
-    console.log("myProfile called")
-
     fetch("/myprofile", {
         method: "GET",
         headers: { "Content-Type": "application/json" }
@@ -102,16 +100,13 @@ function renderMyProfile(user) {
     mainSecion.innerHTML = `
                             <div class="max-w-xl mx-auto mt-3 space-y-6 text-gray-800">
                             <!-- Profile Image -->
-                            <div class="flex justify-center">
-                                <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
-                                    <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                    </svg>
-                                </div>
-                            </div>
-
+<div class="flex justify-center">
+  <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-300">
+    <img src="http://localhost:3000/user/${user.email}/profile-pic" 
+         alt="Profile" 
+         class="w-full h-full object-cover" />
+  </div>
+</div>
                             <!-- User Info -->
                             <div class="space-y-4">
                                 <div class="flex items-center">
@@ -139,57 +134,77 @@ function renderMyProfile(user) {
                          class="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
                          Edit profile
                         </button>`
-
+user.addresses.forEach(address => {
     addressSection.innerHTML += `
-                        <div class="space-y-3 mt-6 border p-3 m-10">
-                        <div>
-                            <label class="text-sm text-gray-600">House Name:</label>
-                            <div class="bg-gray-200 px-3 py-2 rounded-md">Kollamnakudiyil house</div>
-                        </div>
-                        <div>
-                            <label class="text-sm text-gray-600">City:</label>
-                            <div class="bg-gray-200 px-3 py-2 rounded-md">Muvattupuzha</div>
-                        </div>
-                        <div>
-                            <label class="text-sm text-gray-600">Town:</label>
-                            <div class="bg-gray-200 px-3 py-2 rounded-md">Vazhakulam</div>
-                        </div>
+                        <div class="space-y-3 mt-6 border p-3 m-10 relative">
+    <div>
+        <label class="text-sm text-gray-600">House Name:</label>
+        <div class="bg-gray-200 px-3 py-2 rounded-md">${address.housename}</div>
+    </div>
+    <div>
+        <label class="text-sm text-gray-600">City:</label>
+        <div class="bg-gray-200 px-3 py-2 rounded-md">${address.city}</div>
+    </div>
+    <div>
+        <label class="text-sm text-gray-600">Street:</label>
+        <div class="bg-gray-200 px-3 py-2 rounded-md">${address.street}</div>
+    </div>
 
-                        <div class="flex space-x-4">
-                            <div>
-                                <label class="text-sm text-gray-600">State:</label>
-                                <div class="bg-gray-200 px-3 py-2 rounded-md">Kerala</div>
-                            </div>
-                            <div>
-                                <label class="text-sm text-gray-600">Pin:</label>
-                                <div class="bg-gray-200 px-3 py-2 rounded-md">686672</div>
-                            </div>
-                        </div>
-                        <!-- Address Type -->
-                        <div class="flex items-center space-x-6 mt-4">
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="addressType" class="form-radio" checked>
-                                <span class="ml-2">Home</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="addressType" class="form-radio">
-                                <span class="ml-2">Office</span>
-                            </label>
-                        </div>
-                    </div>`
+    <div class="flex space-x-4">
+        <div>
+            <label class="text-sm text-gray-600">State:</label>
+            <div class="bg-gray-200 px-3 py-2 rounded-md">${address.state}</div>
+        </div>
+        <div>
+            <label class="text-sm text-gray-600">Pin:</label>
+            <div class="bg-gray-200 px-3 py-2 rounded-md">${address.postalCode}</div>
+        </div>
+    </div>
+    <!-- Address Type -->
+    <div class="flex items-center space-x-6 mt-4">
+        <span class="ml-2">${address.label}</span>
+    </div>
+
+    <!-- Edit Button -->
+    <button onclick="getOneAddress('${address._id}')" type="button"
+     class="absolute bottom-3 right-3 bg-blue-500 text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+        Edit
+    </button>
+</div>
+`
+});
+addressSection.innerHTML += `
+<button onclick="addNewAddress('${user._id}')"
+ class="space-y-3 mt-6 border p-3 m-10 relative bg-green-500 hover:bg-green-600 text-white py-3 rounded-md text-sm">
+    Add Address
+</button>
+`;
 }
 
 function editProfile() {
+    fetch("/myprofile", {
+        method: "GET",
+        headers: { "Content-Type" : "application/json" }
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        if(data.success) {
+            renderEditProfile(data.user)
+        }
+    })
+}
+
+function renderEditProfile(user) {
 
     const mainSecion = accessMainSection()
 
     mainSecion.innerHTML = `
-    <form class="space-y-6">
+    <form id="editProfileForm" class="space-y-6">
   <h2 class="text-xl font-semibold text-gray-800 text-center">Edit Profile</h2>
 
   <!-- Profile Picture -->
   <div class="flex items-center space-x-4">
-    <img id="previewImage" src="/images/googleLogo.png" alt="Profile" class="w-16 h-16 rounded-full object-cover">
+    <img id="previewImage" src="http://localhost:3000/user/${user.email}/profile-pic" alt="Profile" class="w-16 h-16 rounded-full object-cover">
     <input type="file" id="profilePic" name="profilePic" accept="image/*"
            class="text-sm text-gray-600 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
   </div>
@@ -197,21 +212,21 @@ function editProfile() {
   <!-- Name -->
   <div>
     <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-    <input type="text" name="name" id="name" required
+    <input type="text" name="name" id="name" placeholder="${user.name}"
            class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
   </div>
 
   <!-- Email -->
   <div>
     <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-    <input type="email" name="email" id="email" required
+    <input type="email" name="email" id="email"  placeholder="${user.email}"
            class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
   </div>
 
   <!-- Phone Number -->
   <div>
     <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-    <input type="tel" name="phone" id="phone" required pattern="[0-9]{10}"
+    <input type="number" name="phone" id="phone"  placeholder="${user.phone}"
            class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
   </div>
 
@@ -224,6 +239,38 @@ function editProfile() {
   </div>
 </form>
 `
+
+document.getElementById('profilePic').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (file) {
+      document.getElementById('previewImage').src = URL.createObjectURL(file);
+    }
+  });
+
+  document.getElementById('editProfileForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    fetch('/edit-profile', {
+      method: 'PATCH',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("Profile updated successfully!");
+      } else {
+        alert("Failed to update profile.");
+      }
+    })
+    .catch(err => {
+      console.error("Error:", err);
+      alert("Something went wrong.");
+    });
+  });
+
 }
 
 function changePassword() {
@@ -293,7 +340,6 @@ function changePassword() {
 
 function verifyOtp() {
     const otp = document.getElementById("otp").value
-    console.log(otp)
 
     fetch("/otpVerify", {
         method: "POST",
@@ -336,4 +382,180 @@ function submitNewPassword() {
         }
     })
     .catch((error) => console.log(error.toString()))
+}
+
+function getOneAddress(userId) {
+    fetch(`/getaddress/${userId}`, {
+        method: "GET",
+        headers: { "Content-Type" : "application/json" }
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        if(data.success) {
+            renderAddressEditForm(data.address)
+        }
+    })
+}
+
+function renderAddressEditForm(address) {
+    const addressSection = accessAddressSection()
+    addressSection.innerHTML = `
+    <form class="space-y-3 mt-6 border p-3 m-10 relative bg-white rounded-md shadow-sm" onsubmit="submitAddress(event,'${address._id}')">
+    <div>
+        <label class="text-sm text-gray-600">House Name:</label>
+        <input type="text" name="housename" value="${address.housename}" 
+               class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none" required>
+    </div>
+
+    <div>
+        <label class="text-sm text-gray-600">City:</label>
+        <input type="text" name="city" value="${address.city}" 
+               class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none" required>
+    </div>
+
+    <div>
+        <label class="text-sm text-gray-600">Street:</label>
+        <input type="text" name="street" value="${address.street}" 
+               class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none">
+    </div>
+
+    <div class="flex space-x-4">
+        <div class="flex-1">
+            <label class="text-sm text-gray-600">State:</label>
+            <input type="text" name="state" value="${address.state}" 
+                   class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none">
+        </div>
+        <div class="flex-1">
+            <label class="text-sm text-gray-600">Pin:</label>
+            <input type="text" name="postalCode" value="${address.postalCode}" 
+                   class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none">
+        </div>
+    </div>
+
+    <div>
+        <label class="text-sm text-gray-600">Label (e.g., Home, Office):</label>
+               <select id="addressType" name="addressType" class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none">
+                <option value="${address.label}">${address.label}</option>
+                <option value="home">Home</option>
+                <option value="office">Office</option>
+                </select>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-end">
+        <button type="submit"
+            class="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-md">
+            Save updates
+        </button>
+    </div>
+</form>
+`
+}
+
+function submitAddress(event,userId) {
+    event.preventDefault();
+
+    const form = event.target;
+    const data = {
+        housename: form.housename.value,
+        city: form.city.value,
+        street: form.street.value,
+        state: form.state.value,
+        postalCode: form.postalCode.value,
+        label: form.addressType.value
+    };
+
+    fetch(`/update-address/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            myProfile()
+        }
+    });
+}
+
+function addNewAddress(userId) {
+    console.log(userId)
+    const addressSection = accessAddressSection()
+    
+    addressSection.innerHTML = `
+    <form class="space-y-3 mt-6 border p-3 m-10 relative bg-white rounded-md shadow-sm" onsubmit="saveAddress(event,'${userId}')">
+    <div>
+        <label class="text-sm text-gray-600">House Name:</label>
+        <input type="text" name="housename"  
+               class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none" required>
+    </div>
+
+    <div>
+        <label class="text-sm text-gray-600">City:</label>
+        <input type="text" name="city" 
+               class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none" required>
+    </div>
+
+    <div>
+        <label class="text-sm text-gray-600">Street:</label>
+        <input type="text" name="street"
+               class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none">
+    </div>
+
+    <div class="flex space-x-4">
+        <div class="flex-1">
+            <label class="text-sm text-gray-600">State:</label>
+            <input type="text" name="state" 
+                   class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none">
+        </div>
+        <div class="flex-1">
+            <label class="text-sm text-gray-600">Pin:</label>
+            <input type="text" name="postalCode" 
+                   class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none">
+        </div>
+    </div>
+
+    <div>
+        <label class="text-sm text-gray-600">Label (e.g., Home, Office):</label>
+               <select id="addressType" name="addressType" class="w-full bg-gray-200 px-3 py-2 rounded-md outline-none">
+                <option value="">Select</option>
+                <option value="home">Home</option>
+                <option value="office">Office</option>
+                </select>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-end">
+        <button type="submit"
+            class="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-md">
+            Save
+        </button>
+    </div>
+</form>`
+}
+
+function saveAddress(event,userId) {
+    event.preventDefault();
+
+    const form = event.target;
+    const data = {
+        housename: form.housename.value,
+        city: form.city.value,
+        street: form.street.value,
+        state: form.state.value,
+        postalCode: form.postalCode.value,
+        label: form.addressType.value
+    };
+
+    fetch(`/save-address/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            myProfile()
+        }
+    });
 }

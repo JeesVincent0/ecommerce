@@ -18,6 +18,8 @@
             <!-- Left Side: Logo and Label -->
             <div class="flex items-center space-x-4 ml-[3%]">
                 <span class="text-4xl">SHOPPI</span>
+                <a href="/home" class="text-white text-base hover:underline ml-6">Home</a>
+                <a href="/cart" class="text-white text-base hover:underline ml-6">Cart</a>
             </div>
         </div>
 
@@ -83,7 +85,7 @@
               
                     <!-- Add to Cart or Sold Out -->
                     <button class="bg-blue-700 text-white px-6 py-2 rounded cursor-not-allowed" >Buy now</button>
-                    <button class="bg-yellow-400 text-white px-6 py-2 rounded cursor-not-allowed" >Add to cart</button>
+                    <button type="button" onclick="addToCart('<%= product._id %>')" class="bg-yellow-400 hover:bg-yellow-500 text-white px-6 py-2 rounded hover:cursor-pointer" >Add to cart</button>
                     <button class="bg-pink-400 text-white px-6 py-2 rounded cursor-not-allowed" >Add Wishlist</button>
 
                     <!-- Description -->
@@ -156,6 +158,7 @@
                 <p class="text-sm">&copy; <span id="year"></span> SHOPPI. All rights reserved.</p>
             </div>
         </footer>
+        <script src="/js/user/productDetails.js"></script>
 
     </body>
 

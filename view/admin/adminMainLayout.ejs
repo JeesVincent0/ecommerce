@@ -41,6 +41,10 @@
                 Products
             </button>
 
+            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="orderLlist()" id="orderButton">
+                Orders
+            </button>
+
         </div>
 
 
@@ -61,6 +65,29 @@
         <div class="hidden" id="productListingSection">
             <%- include('../partials/adminPartials/productList') %>
         </div>
+        <div id="orderSection" class="ml-[20%] mt-16 p-4 pl-10">
+            <table class="min-w-full bg-white rounded shadow">
+                <thead>
+                  <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left cursor-pointer" onclick="sortOrderTable(0)">Customer ⬍</th>
+                    <th class="py-3 px-6 text-left cursor-pointer" onclick="sortOrderTable(1)">Order ID ⬍</th>
+                    <th class="py-3 px-6 text-left cursor-pointer" onclick="sortOrderTable(2)">Date ⬍</th>
+                    <th class="py-3 px-6 text-left">Total</th>
+                    <th class="py-3 px-6 text-left">Status</th>
+                    <th class="py-3 px-6 text-left">Actions</th>
+                    <th class="py-3 px-6 text-left">Notofication</th>
+                  </tr>
+                </thead>
+                <tbody id="orderTableBody" class="text-gray-700 text-sm">
+                  <!-- Dynamic rows will be inserted here -->
+                </tbody>
+              </table>
+              
+        </div>
+
+        <div class="ml-[20%] mt-18" id="orderDetails">
+
+        </div>
         
 
         <script src="/js/admin/users.js"></script>
@@ -69,6 +96,7 @@
         <script src="/js/admin/editCategory.js"></script>
         <script src="/js/admin/products.js"></script>
         <script src="/js/admin/mainFunction.js"></script>
+        <script src="/js/admin/orders.js"></script>
     </body>
 
     </html>

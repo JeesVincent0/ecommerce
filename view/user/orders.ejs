@@ -1,0 +1,29 @@
+<%- include('../partials/head') %>
+
+    <body>
+
+        <%- include('../partials/navBar') %>
+
+            <div class="flex mt-16">
+                <!-- Left side: Order cards (50% width) -->
+                <div class="w-1/2 overflow-y-auto h-screen">
+                    <h2 class="text-2xl font-bold m-6 mb-4 ml-6" id="heading">All orders</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-1 gap-6 p-6" id="odersCard">
+                        <!-- Example Order Card -->
+
+                    </div>
+                </div>
+
+                <!-- Right side: Fixed panel (50% width) -->
+                <div
+                    class="mt-16 w-1/2 h-screen fixed right-0 top-0 bg-gray-100 p-6 overflow-auto shadow-lg pb-14" id="orderDetails">
+                    <!-- You can put order details or any content here -->
+                    
+
+                </div>
+            </div>
+
+
+            <script src="/js/user/orders.js"></script>
+
+    </body>
