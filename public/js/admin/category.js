@@ -2,8 +2,10 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("categoryButton").addEventListener("click", (e) => {
         e.preventDefault();
 
-         const orderSection = document.getElementById("orderSection")
-    orderSection.classList.add("hidden")
+        const orderSection = document.getElementById("orderSection")
+        orderSection.classList.add("hidden")
+        const addButton = document.getElementById("addButton");
+        addButton.classList.remove("hidden")
 
         //Accessing left side button
         const usersButton = document.getElementById("usersButton");
@@ -38,51 +40,6 @@ window.addEventListener("DOMContentLoaded", () => {
         loadCategory()
     })
 });
-
-//setting search bar, category edit and add button on navbar
-// function addSearchAndButtons() {
-
-//     //Accessing navbar search div
-//     const searchBarContainer = document.getElementById("searchBarContainer");
-
-//     //setting html content
-//     searchBarContainer.innerHTML = "";
-//     searchBarContainer.innerHTML = `<div class="flex items-center space-x-2 mr-4 relative">
-//             <span class="hidden" id="searchSpan"></span>
-            //  <button
-            //     id="addButton"  
-            //     onclick="addCategory()"
-            //     class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
-            // >
-            //     Add </button>
-            // <input 
-            //     id="searchInput" 
-            //     type="text" 
-            //     placeholder="Search..."
-            //     oninput="toggleClearButton()" 
-            //     class="bg-white px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" 
-            // />
-            
-            // <!-- Clear Button -->
-            // <button 
-            //     id="clearSearchButton" 
-            //     onclick="clearSearchCat()" 
-            //     class="absolute right-28 text-gray-500 hover:text-gray-700 hidden"
-            //     style="font-size: 18px;">
-            //     &times;
-            // </button>
-    
-            // <button  
-            //     onclick="categorySearch()"
-            //     class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
-            // >
-            //     Search
-            // </button>
-                       
-            
-//         </div>
-//     `;
-// }
 
 //this function for get category data and pagination data from server
 function loadCategory(page = 1, limit = 5) {
@@ -126,6 +83,13 @@ onclick="blockCategory('${category.slug}')"
   ${category.status === 'active' ? 'Block' : 'Unblock'}
 </button>
 
+<button 
+  onclick="editCat('${category.slug}')"
+  type="button"
+  class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded"
+  data-id="${category.slug}">
+  Edit
+</button>
 `
     });
 
@@ -192,19 +156,16 @@ function blockCategory(slug) {
         method: "PATCH", // because we are modifying
         headers: { "Content-Type": "application/json" }
     })
-    .then((res) => res.json())
-    .then((data) => {
-        if (data.status) {
-            // Successfully updated, reload category list
-            loadCategory();
-        } else {
-            console.error(data.message || "Failed to update category status");
-        }
-    })
-    .catch((error) => {
-        console.error("Error updating category:", error);
-    });
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.status) {
+                // Successfully updated, reload category list
+                loadCategory();
+            } else {
+                console.error(data.message || "Failed to update category status");
+            }
+        })
+        .catch((error) => {
+            console.error("Error updating category:", error);
+        });
 }
-
-
-

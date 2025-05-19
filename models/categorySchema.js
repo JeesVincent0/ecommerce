@@ -23,26 +23,21 @@ const categorySchema = new mongoose.Schema(
       enum: ['active', 'inactive'],
       default: 'active',
     },
-    parentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      default: null,
-    },
-    position: {
+    offers: {
       type: Number,
       default: 0,
     },
-    level: {
+    totalProducts: {
       type: Number,
-      default: 1,
+      default: 0,
     },
-    isChild: {
-      type: Boolean,
-      default: false,
-    }
+    totalSales: {
+      type: Number,
+      default: 0,
+    },
   },
   {
-    timestamps: true, // createdAt and updatedAt auto
+    timestamps: true, // adds createdAt and updatedAt
   }
 );
 

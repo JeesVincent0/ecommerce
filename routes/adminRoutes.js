@@ -1,5 +1,5 @@
 import express from 'express'
-import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus } from '../controllers/adminControllers.js'
+import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons } from '../controllers/adminControllers.js'
 import { productImageUpload, redirectIfAuthenticatedAdmin, verifyAdminJWT } from '../middleware/routerMiddleware.js'
 
 const router = express.Router()
@@ -52,7 +52,7 @@ router.get("/products", getProducts);
 //product search
 router.get("/products/search", getProductsSearch)
 
-//get child category names in product adding form
+//get available category
 router.get("/product/category", getChildCategory)
 
 //add new product
@@ -62,13 +62,14 @@ router.post("/product/add", productImageUpload, addNewProduct);
 router.get("/product/:id", getProductData);
 
 //edit product details
-router.post("/product/edit", productImageUpload, editProduct);
+router.post('/product/edit',  productImageUpload, editProduct);
+
 
 //product delete
 router.delete("/product/delete/:id", deleteProduct);
 
 // Backend (Express)
-router.put('/orders/:orderId/status', updateOrderStatus)
+// router.put('/orders/:orderId/status', updateOrderStatus)
 
 //block and unblock category
 router.patch('/toggle-status/:id', toggleCategoryStatus);
@@ -78,6 +79,24 @@ router.put('/orders/:orderId/return-request', handleReturnRequest);
 router.get('/user-details/:email', getUserDetailsAndOrders);
 
 router.patch('/admin/products/:id/status', toggleProductStatus);
+
+//get all coupons
+router.get("/coupon", getCoupons);
+
+//add new coupen
+router.post("/coupon/add", productImageUpload, addCoupon);
+
+//get coupon data for edit coupon
+router.get("/coupon/edit", getCoupon);
+
+//save edited coupon data
+router.patch("/coupon/edit", productImageUpload, saveCoupon);
+
+//bock and unblock coupen
+router.patch("/coupon/block", blockCoupon);
+
+router.get('/coupon/search', searchCoupons);
+
 
 
 export default router

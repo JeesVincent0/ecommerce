@@ -2,25 +2,25 @@ let currentOrderId = null;
 
 
 function getOrder() {
-    fetch("/get-orders", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-    })
+  fetch("/get-orders", {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  })
     .then((res) => res.json())
     .then((data) => {
-        if (data.success && data.orders.length > 0) {
-            window.allOrders = data.orders; // store globally
-            renderOrderCard(data.orders);
+      if (data.success && data.orders.length > 0) {
+        window.allOrders = data.orders; // store globally
+        renderOrderCard(data.orders);
 
-            // Find and show the previously selected order, or default to first
-            const selected = data.orders.find(o => o._id === currentOrderId);
-            if (selected) {
-                renderOrderDetails(selected);
-            } else {
-                renderOrderDetails(data.orders[0]);
-                currentOrderId = data.orders[0]._id;
-            }
+        // Find and show the previously selected order, or default to first
+        const selected = data.orders.find(o => o._id === currentOrderId);
+        if (selected) {
+          renderOrderDetails(selected);
+        } else {
+          renderOrderDetails(data.orders[0]);
+          currentOrderId = data.orders[0]._id;
         }
+      }
     })
     .catch(err => console.error("Failed to fetch orders:", err));
 }
@@ -28,33 +28,33 @@ function getOrder() {
 getOrder();
 
 function accessOdersCard() {
-    const odersCard = document.getElementById("odersCard");
-    odersCard.innerHTML = "";
-    return odersCard;
+  const odersCard = document.getElementById("odersCard");
+  odersCard.innerHTML = "";
+  return odersCard;
 }
 
 function accessOrderDetails() {
-    const orderDetails = document.getElementById("orderDetails");
-    orderDetails.innerHTML = "";
-    return orderDetails;
+  const orderDetails = document.getElementById("orderDetails");
+  orderDetails.innerHTML = "";
+  return orderDetails;
 }
 
 function renderOrderCard(orders) {
-    const odersCard = accessOdersCard();
+  const odersCard = accessOdersCard();
 
-    orders.forEach((order, index) => {
-        const date = new Date(order.placedAt);
-        const formattedDate = date.toLocaleDateString("en-IN", {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
-        });
+  orders.forEach((order, index) => {
+    const date = new Date(order.placedAt);
+    const formattedDate = date.toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
 
-        const card = document.createElement("div");
-        card.className = "bg-white shadow rounded-2xl p-5 space-y-4 border cursor-pointer";
-        card.setAttribute("data-id", order._id); // changed from data-index to data-id for consistency
+    const card = document.createElement("div");
+    card.className = "bg-white shadow rounded-2xl p-5 space-y-4 border cursor-pointer";
+    card.setAttribute("data-id", order._id); // changed from data-index to data-id for consistency
 
-        card.innerHTML = `
+    card.innerHTML = `
             <div class="flex justify-between items-center">
                 <h3 class="text-lg font-semibold text-gray-800">Order: ${order.orderId}</h3>
                 <span class="text-sm px-3 py-1 bg-green-100 text-green-700 rounded-full">${order.orderStatus}</span>
@@ -65,124 +65,160 @@ function renderOrderCard(orders) {
                 <p><strong>Date:</strong> ${formattedDate}</p>
             </div>
         `;
-        odersCard.appendChild(card);
-    });
+    odersCard.appendChild(card);
+  });
 
-    // ✅ Corrected: Use event delegation only once
-    odersCard.addEventListener("click", (e) => {
-        const card = e.target.closest("[data-id]");
-        if (card) {
-            const orderId = card.getAttribute("data-id");
-            const selectedOrder = window.allOrders.find(o => o._id === orderId);
-            if (selectedOrder) {
-                currentOrderId = orderId; // store the selected order ID
-                renderOrderDetails(selectedOrder);
-            }
-        }
-    });
+  // Corrected: Use event delegation only once
+  odersCard.addEventListener("click", (e) => {
+    const card = e.target.closest("[data-id]");
+    if (card) {
+      const orderId = card.getAttribute("data-id");
+      const selectedOrder = window.allOrders.find(o => o._id === orderId);
+      if (selectedOrder) {
+        currentOrderId = orderId; // store the selected order ID
+        renderOrderDetails(selectedOrder);
+      }
+    }
+  });
 }
 
 
 function renderOrderDetails(order) {
-    const orderDetails = accessOrderDetails();
-    const date = new Date(order.placedAt);
-    const formattedDate = date.toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-    });
+  const orderDetails = accessOrderDetails();
+  const date = new Date(order.placedAt);
+  const formattedDate = date.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
 
-    orderDetails.innerHTML = `
-    <div class="max-w-5xl mx-auto p-6 space-y-8">
-        <!-- Header -->
-        <div class="bg-white shadow rounded-2xl p-6 space-y-2">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800">Order #${order.orderId}</h2>
-                    <span class="text-sm text-gray-600">Placed on: ${formattedDate}</span>
-                </div>
-                <div class="text-right space-y-1">
-                    <span class="text-sm px-3 py-1 bg-green-100 text-green-700 rounded-full block">${order.orderStatus}</span>
-
-                    ${order.orderStatus !== "delivered" && order.orderStatus !== "cancelled" && order.orderStatus !== "returned" ? `
-                        <button class="text-sm mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
-                            onclick="cancelOrder('${order._id}')">
-                            Cancel Order
-                        </button>
-                    ` : ""}
-
-                    ${order.orderStatus === "delivered" ? `
-                        <div id="returnSection">
-                            ${order.returnRequest ? `
-                                <span class="text-sm mt-2 inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-xl">
-                                    Return Requested
-                                </span>
-                            ` : `
-                                <button class="text-sm mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
-                                    onclick="showReturnInput('${order._id}')">
-                                    Return Order
-                                </button>
-                            `}
-                        </div>
-                    ` : ""}
-
-                    <button onclick="downloadInvoice('${order._id}')"
-                        class="text-sm mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl">
-                        Download Invoice
-                    </button>
-                </div>
+  orderDetails.innerHTML = `
+   <div class="max-w-5xl mx-auto p-6 space-y-8">
+    <!-- Header -->
+    <div class="bg-white shadow rounded-2xl p-6 space-y-2">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Order #${order.orderId}</h2>
+                <span class="text-sm text-gray-600">Placed on: ${formattedDate}</span>
             </div>
+            <div class="text-right space-y-1">
+    <span class="text-sm px-3 py-1 bg-green-100 text-green-700 rounded-full block">${order.orderStatus}</span>
+
+    ${!["delivered", "cancelled", "returned", "failed"].includes(order.orderStatus) ? `
+        <button class="text-sm mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
+            onclick="cancelOrder('${order._id}')">
+            Cancel Order
+        </button>
+    ` : ""}
+
+    ${order.orderStatus === "delivered" ? `
+        <div id="returnSection">
+            ${order.returnRequest ? `
+                <span class="text-sm mt-2 inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-xl">
+                    Return Requested
+                </span>
+            ` : `
+                <button class="text-sm mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
+                    onclick="showReturnInput('${order._id}')">
+                    Return Order
+                </button>
+            `}
+            <button onclick="downloadInvoice('${order._id}')"
+                class="text-sm mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl">
+                Download Invoice
+            </button>
         </div>
+    ` : ""}
+</div>
 
-        <!-- Address & Payment -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white shadow rounded-2xl p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Shipping Address</h3>
-                <p class="text-sm text-gray-600">
-                    ${order.userName}<br>
-                    ${order.shippingAddress.housename} <br>
-                    ${order.shippingAddress.street}<br>
-                    ${order.shippingAddress.city}, ${order.shippingAddress.state}, ${order.shippingAddress.postalCode}<br>
-                    Phone: ${order.shippingAddress.phone}
-                </p>
-            </div>
-            <div class="bg-white shadow rounded-2xl p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Payment Method</h3>
-                <p class="text-sm text-gray-600">${order.paymentMethod}</p>
-            </div>
-        </div>
-
-        <!-- Items -->
-        <div class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">Items in this Order</h3>
-            <div class="space-y-4">
-                ${order.items.map(item => {
-                    const image = (item.images && item.images.length > 0) ? item.images[0] : 'default-image.jpg';
-                    return `
-                        <div class="flex items-center gap-4 border-b pb-4">
-                            <div class="w-24 h-24">
-                                <img src="http://localhost:3000/${item.productId.images[0]}" alt="${item.product_name}" class="w-full h-full object-cover rounded-xl">
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="text-md font-medium text-gray-800">${item.productId.product_name}</h4>
-                                <p class="text-sm text-gray-600">Quantity: ${item.quantity}</p>
-                                <p class="text-sm text-gray-600">Price at Purchase: ₹${item.priceAtPurchase}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm font-semibold text-gray-800">₹${item.priceAtPurchase * item.quantity}</p>
-                            </div>
-                        </div>
-                    `;
-                }).join("")}
-            </div>
-        </div>
-
-        <!-- Total -->
-        <div class="bg-white shadow rounded-2xl p-6 text-right">
-            <p class="text-lg font-semibold text-gray-800">Total: ₹${order.totalAmount}</p>
         </div>
     </div>
+
+    <!-- Address & Payment -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white shadow rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Shipping Address</h3>
+            <p class="text-sm text-gray-600">
+                ${order.userName}<br>
+                ${order.shippingAddress.housename} <br>
+                ${order.shippingAddress.street}<br>
+                ${order.shippingAddress.city}, ${order.shippingAddress.state}, ${order.shippingAddress.postalCode}<br>
+                Phone: ${order.shippingAddress.phone}
+            </p>
+        </div>
+        <div class="bg-white shadow rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Payment Method</h3>
+            <p class="text-sm text-gray-600">${order.paymentMethod}</p>
+        </div>
+    </div>
+
+    <!-- Items -->
+    <div class="bg-white shadow rounded-2xl p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Items in this Order</h3>
+        <div class="space-y-4">
+${order.items.map(item => {
+    const image = (item.productId.images && item.productId.images.length > 0) ? item.productId.images[0] : 'default-image.jpg';
+    return `
+        <div class="flex items-center gap-4 border-b pb-4">
+            <div class="w-24 h-24">
+                <img src="http://localhost:3000/${image}" alt="${item.productId.product_name}" class="w-full h-full object-cover rounded-xl">
+            </div>
+            <div class="flex-1">
+                <h4 class="text-md font-medium text-gray-800">${item.productId.product_name}</h4>
+                <p class="text-sm text-gray-600">Quantity: ${item.quantity}</p>
+                <p class="text-sm text-gray-600">Price at Purchase: ₹${item.priceAtPurchase}</p>
+            </div>
+            <div class="text-right space-y-2">
+                <p class="text-sm font-semibold text-gray-800">₹${item.priceAtPurchase * item.quantity}</p>
+${!['cancelled', 'delivered', 'returned', 'failed'].includes(order.orderStatus) && item.status !== 'cancelled' && item.status !== 'returned'
+    ? `<button class="text-sm mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
+                onclick="cancelOrderItem('${order._id}', '${item.productId._id}')">
+            Cancel Item
+        </button>`
+    : `<span class="text-sm mt-2 inline-block bg-gray-100 text-gray-600 px-4 py-1 rounded-xl">
+${item.status && item.status.length > 0 ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : 'N/A'}
+</span>`
+}
+
+      
+            </div>
+        </div>
+    `;
+  }).join("")}
+
+        </div>
+    </div>
+
+    <!-- Total -->
+    <div class="bg-white shadow rounded-2xl p-6 text-right">
+        <p class="text-lg font-semibold text-gray-800">Total: ₹${order.totalAmount}</p>
+    </div>
+</div>
+
+
 `;
+
+}
+
+function cancelOrderItem(orderId, itemId) {
+
+  fetch(`/user/order/item/cancel`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ orderId, itemId })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      }
+    })
+    .catch(error => {
+      console.error("Error cancelling item:", error);
+    });
+
 
 }
 
@@ -200,22 +236,17 @@ function cancelOrder(orderId) {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert("Order cancelled successfully");
-        getOrder(); 
-      } else {
-        alert("Failed to cancel the order");
+        getOrder();
       }
     })
     .catch(err => {
       console.error("Error cancelling order:", err);
-      alert("Something went wrong");
     });
 }
 
 function returnOrder(orderId) {
   const reason = prompt("Please enter the reason for returning this order:");
   if (!reason || reason.trim() === "") {
-    alert("Return reason is required.");
     return;
   }
 
@@ -229,15 +260,11 @@ function returnOrder(orderId) {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert("Order return request submitted successfully");
-        getOrder(); 
-      } else {
-        alert("Failed to return the order");
+        getOrder();
       }
     })
     .catch(err => {
       console.error("Error returning order:", err);
-      alert("Something went wrong");
     });
 }
 
@@ -259,7 +286,6 @@ function showReturnInput(orderId) {
 function submitReturnReason(orderId) {
   const reason = document.getElementById("returnReasonInput").value.trim();
   if (!reason) {
-    alert("Please enter a return reason.");
     return;
   }
 
@@ -273,15 +299,11 @@ function submitReturnReason(orderId) {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        alert("Return request submitted successfully.");
         location.reload(); // Refresh the page
-      } else {
-        alert("Failed to submit return request.");
       }
     })
     .catch(err => {
       console.error("Error:", err);
-      alert("Something went wrong.");
     });
 }
 
@@ -308,6 +330,16 @@ function downloadInvoice(orderId) {
     })
     .catch(err => {
       console.error("Error downloading invoice:", err);
-      alert("Could not download the invoice.");
     });
+}
+
+async function handleRazorpay(orderId) {
+  const res = await fetch("/place-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderId, paymentMethod: "razorepay" }),
+  });
+
+  const data = await res.json();
+  
 }

@@ -1,0 +1,83 @@
+<%- include('../partials/head') %>
+
+
+    <body class="bg-gray-100">
+
+        <!-- Top Navbar -->
+        <div
+            class="fixed top-0 left-0 w-full h-16 bg-[#1B1254] text-white flex items-center justify-between px-4 shadow z-50 font-bold">
+
+            <!-- Left Side: Logo and Label -->
+            <div class="flex items-center space-x-4 ml-[3%]">
+                <span class="text-4xl">SHOPPI</span>
+                <a href="/home" class="text-white text-base hover:underline ml-6">Home</a>
+                <a href="/cart" class="text-white text-base hover:underline ml-6">Cart</a>
+                <a href="/orders" class="text-white text-base hover:underline ml-6">Orders</a>
+                <a href="/wishlist" class="text-white text-base hover:underline ml-6">Wishlist</a>
+                <button onclick="showAllProducts()" class="text-white text-base hover:underline ml-6">Shop</button>
+            </div>
+
+            <form action="/profile" method="GET">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+                    Account
+                </button>
+            </form>
+
+        </div>
+
+
+        <div class="mt-16 aspect-w-16 aspect-h-4 w-full relative">
+            <% if (!wishlist || wishlist.products.length===0) { %>
+                <div class="text-center py-12">
+                    <h2 class="text-2xl font-semibold text-gray-600">Your wishlist is empty</h2>
+                    <p class="text-gray-500 mt-2">Browse products and add them to your wishlist!</p>
+                </div>
+                <% } else { %>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
+                        <% wishlist.products.forEach(item=> { %>
+                            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                                <img src="<%= item.productId.images[0] %>" alt="<%= item.productId.product_name %>"
+                                    class="w-full h-48 object-cover">
+
+                                <div class="p-4">
+                                    <h2 class="text-lg font-semibold">
+                                        <%= item.productId.product_name %>
+                                    </h2>
+                                    <p class="text-gray-700 mt-2">₹<%= item.productId.last_price %>
+                                    </p>
+
+                                    <button onclick="removeFromWishlist('<%= item.productId._id %>')"
+                                        class="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <% }) %>
+                    </div>
+                    <% } %>
+        </div>
+
+    </body>
+    <script>
+        function removeFromWishlist(productId) {
+            fetch("/wishlist/remove", {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload(); // Refresh page to update UI
+                    } else {
+                        alert("Failed to remove from wishlist");
+                    }
+                })
+                .catch(err => console.error("Error:", err));
+        }
+    </script>
+
+
+    </html>

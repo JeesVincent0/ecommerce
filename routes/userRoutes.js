@@ -4,7 +4,7 @@ import passport from 'passport'
 import multer from 'multer'
 
 //importing local modules
-import { addToCart, cancelOrder, checkmail, checkotp, checkOut, createAddress, createNewPassword, createNewUser, createOrder, decreamentItem, deleteItem, editProfile, forgottonPassword, getAddress, getCartDetails, getCreatePassword,  getHome,  getInvoice,  getLogin, getOrders, getOrdersAdmin, getProducts, getProfile, getProfilePic, getWallet, googleCallback, listProducts, logout, notfound, ordersPage, otpPage, otpSend, otpVerify, passwordChange, paymentMethods, productDetail, renderCart, renderProfile, returnOrder, signUpPage, updateAddress, updateOrderStatus, userLogout, verifyLogin, verifyOtp } from '../controllers/userControllers.js'
+import { addToCart, addToWishlist, cancelOrder, cancelOrderItem, cancelOrderItemController, checkmail, checkotp, checkOut, createAddress, createNewPassword, createNewUser, createOrder, decreamentItem, deleteAddress, deleteItem, editProfile, forgottonPassword, getAddress, getCartDetails, getCreatePassword,  getHome,  getInvoice,  getLogin, getOrders, getOrdersAdmin, getProducts, getProfile, getProfilePic, getWallet, googleCallback, listProducts, logout, notfound, ordersPage, otpPage, otpSend, otpVerify, passwordChange, paymentMethods, productDetail, removeFromWishlist, renderCart, renderFailed, renderProfile, renderSuccess, renderWishlist, returnOrder, signUpPage, updateAddress, updateOrderStatus, userLogout, verifyCoupon, verifyLogin, verifyOtp, verifyPayment } from '../controllers/userControllers.js'
 import { redirectIfAuthenticated, verifyUserJWT } from '../middleware/routerMiddleware.js'
 
 //setting router to a variable
@@ -83,6 +83,9 @@ router.get("/getaddress/:id", getAddress);
 //update address
 router.post("/update-address/:id", updateAddress);
 
+//delete address
+router.delete("/address/:id", deleteAddress);
+
 //create new address
 router.post("/save-address/:id", createAddress);
 
@@ -131,8 +134,14 @@ router.get("/get-orders-admin", getOrdersAdmin)
 // PUT route to update order status
 router.put('/orders/:id/status', updateOrderStatus);
 
-//cancelling order
+//cancelling full order
 router.put('/orders/:id/cancel', cancelOrder);
+
+//cancell one spesific order from the order
+router.patch("/user/order/item/cancel", cancelOrderItem)
+
+//cancelling one item from a order
+router.patch('/order/item/cancel', cancelOrderItemController);
 
 //return request
 router.put("/orders/:id/return", returnOrder);
@@ -140,9 +149,30 @@ router.put("/orders/:id/return", returnOrder);
 // Route to download invoice
 router.get('/orders/:id/invoice', getInvoice);
 
+//render wallet page show transaction
 router.get("/get-wallet", getWallet);
 
-  
+//order success page rendering
+router.get("/order-success", renderSuccess);
+
+//order failed page rendering
+router.get("/order-failed", renderFailed);
+
+//render wishlist 
+router.get("/wishlist", renderWishlist);
+
+//add product to wishlist 
+router.post('/wishlist/add', addToWishlist);
+
+//remove wishlist product
+router.delete("/wishlist/remove", removeFromWishlist);
+
+//checking payment varification
+router.post("/verify-payment", verifyPayment);
+
+//verify coupon
+router.post("/checkcoupon", verifyCoupon);
+
 //signUp with google setup
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email']}))
 router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/'}), googleCallback)

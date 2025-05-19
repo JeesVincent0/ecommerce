@@ -1,56 +1,74 @@
-<%- include('../partials/head') %>
+<!DOCTYPE html>
+<html lang="en">
 
-    <body class="bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-        <!-- Top Navbar -->
-        <div
-            class="fixed top-0 left-0 w-full h-16 bg-[#1B1254] text-white flex items-center justify-between px-4 shadow z-50 font-bold">
 
-            <!-- Left Side: Logo and Label -->
-            <div class="flex items-center space-x-4 ml-[3%]">
-                <span class="text-4xl">SHOPPI</span>
-                <span class="mt-2">Admin</span>
-            </div>
+</head>
 
-            <!-- Right Side: Search Bar -->
-             <div id="searchBarContainer">
-                
-             </div>
+<body class="bg-gray-100">
 
-             <form action="/logout" method="GET">
-                <button type="submit"
-                  class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-md text-sm">
-                  Logout
-                </button>
-              </form>
+    <!-- Top Navbar -->
+    <div
+        class="fixed top-0 left-0 w-full h-16 bg-[#1B1254] text-white flex items-center justify-between px-4 shadow z-50 font-bold">
+
+        <!-- Left Side: Logo and Label -->
+        <div class="flex items-center space-x-4 ml-[3%]">
+            <span class="text-4xl">SHOPPI</span>
+            <span class="mt-2">Admin</span>
+        </div>
+
+        <!-- Right Side: Search Bar -->
+        <div id="searchBarContainer">
 
         </div>
 
-        <!-- Left Sidebar -->
-        <div class="fixed top-16 left-0 w-[20%] h-[calc(100vh-4rem)] bg-white text-gray-800 p-4 space-y-2">
-
-            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" id="usersButton">
-                Users
+        <form action="/logout" method="GET">
+            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-md text-sm">
+                Logout
             </button>
+        </form>
 
-            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" id="categoryButton">
-                Category
-            </button>
+    </div>
 
-            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="productList()" id="productsButton">
-                Products
-            </button>
+    <!-- Left Sidebar -->
+    <div class="fixed top-16 left-0 w-[20%] h-[calc(100vh-4rem)] bg-white text-gray-800 p-4 space-y-2">
 
-            <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="orderLlist()" id="orderButton">
-                Orders
-            </button>
+        <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" id="usersButton">
+            Users
+        </button>
 
-        </div>
+        <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" id="categoryButton">
+            Category
+        </button>
+
+        <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="productList()"
+            id="productsButton">
+            Products
+        </button>
+
+        <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="orderLlist()"
+            id="orderButton">
+            Orders
+        </button>
+
+        <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="couponList()"
+            id="couponButton">
+            Coupon
+        </button>
+
+    </div>
 
 
 
-        <!-- Main Content -->
-        <%- include('../partials/loader') %>
+    <!-- Main Content -->
+    <%- include('../partials/loader') %>
         <div class="hidden" id="mainUserSession">
             <%- include('../partials/adminPartials/userMainSection') %>
         </div>
@@ -66,26 +84,79 @@
             <%- include('../partials/adminPartials/productList') %>
         </div>
         <div id="orderSection" class="hidden ml-[20%] mt-16 p-4 pl-10">
-            <table class="min-w-full bg-white rounded shadow">
+            <div>
+                <input id="searchInputOrder" type="text" placeholder="Search..." oninput="toggleClearButtonOrder()"
+                    class="bg-gray-200 px-3 py-1 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-400 pr-8" />
+
+                <!-- Clear Button -->
+                <button id="clearSearchButtonOrder" onclick="clearSearchOrder()"
+                    class="absolute right-28 text-gray-500 hover:text-gray-700 hidden" style="font-size: 18px;">
+                    &times;
+                </button>
+
+                <button onclick="orderSearch()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
+                    Search
+                </button>
+            </div>
+
+            <table class="mt-10 min-w-full bg-white rounded shadow">
                 <thead>
-                  <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                    <th class="py-3 px-6 text-left cursor-pointer" onclick="sortOrderTable(0)">Customer ⬍</th>
-                    <th class="py-3 px-6 text-left cursor-pointer" onclick="sortOrderTable(1)">Order ID ⬍</th>
-                    <th class="py-3 px-6 text-left cursor-pointer" onclick="sortOrderTable(2)">Date ⬍</th>
-                    <th class="py-3 px-6 text-left">Total</th>
-                    <th class="py-3 px-6 text-left">Status</th>
-                    <th class="py-3 px-6 text-left">Actions</th>
-                    <th class="py-3 px-6 text-left">Notofication</th>
-                  </tr>
+                    <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left cursor-pointer" onclick="sortTable1(0)">Customer ⬍</th>
+                        <th class="py-3 px-6 text-left cursor-pointer" onclick="sortTable1(1)">Order ID ⬍</th>
+                        <th class="py-3 px-6 text-left cursor-pointer" onclick="sortTable1(2)">Date ⬍</th>
+                        <th class="py-3 px-6 text-left">Total</th>
+                        <th class="py-3 px-6 text-left">Status</th>
+                        <th class="py-3 px-6 text-left">Actions</th>
+                        <th class="py-3 px-6 text-left">Notofication</th>
+                    </tr>
                 </thead>
                 <tbody id="orderTableBody" class="text-gray-700 text-sm">
-                  <!-- Dynamic rows will be inserted here -->
+                    <!-- Dynamic rows will be inserted here -->
                 </tbody>
-              </table>
-              
+            </table>
+
+            <div class="flex justify-center">
+                <div id="paginationContainer5" class="fixed bottom-6  w-full flex justify-center z-49">
+                    <!-- Pagination buttons will be created here -->
+                </div>
+            </div>
+
         </div>
 
         <div class="ml-[20%] mt-18" id="orderDetails">
+
+        </div>
+
+        <!-- Crop Modal -->
+        <!-- Modal Background -->
+        <div id="imageCropModal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <!-- Modal Content -->
+            <div class="bg-white p-6 rounded-lg w-[90%] max-w-md shadow-lg relative">
+                <h2 class="text-lg font-semibold mb-4">Crop Image</h2>
+
+                <!-- Image Crop Area -->
+                <div class="flex justify-center">
+                    <canvas id="cropCanvas" class="border rounded"></canvas>
+                </div>
+
+                <!-- Buttons -->
+                <div class="mt-4 flex justify-end gap-2">
+                    <button onclick="cancelCrop()"
+                        class="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded">Cancel</button>
+                    <button onclick="confirmCrop()"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Crop</button>
+                </div>
+
+                <!-- Close Icon -->
+                <button onclick="cancelCrop()"
+                    class="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl">&times;</button>
+            </div>
+        </div>
+
+        <div id="couponSection">
 
         </div>
 
@@ -95,14 +166,17 @@
         <script src="/js/admin/addCategory.js"></script>
         <script src="/js/admin/editCategory.js"></script>
         <script src="/js/admin/products.js"></script>
+        <script src="/js/admin/addProduct.js"></script>
+        <script src="/js/admin/editProduct.js" defer></script>
         <script src="/js/admin/mainFunction.js"></script>
         <script src="/js/admin/orders.js"></script>
+        <script src="/js/admin/coupon.js"></script>
 
         <!-- In <head> -->
 
-<!-- Before </body> -->
+        <!-- Before </body> -->
 
 
-    </body>
+</body>
 
-    </html>
+</html>

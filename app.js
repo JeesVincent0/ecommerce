@@ -2,6 +2,8 @@
 import { fileURLToPath } from 'url';
 import path from 'path';
 
+import { productImageUpload } from './middleware/routerMiddleware.js';
+
 //importing third-party modules
 import express from 'express'
 import cookieParser from 'cookie-parser';
@@ -14,9 +16,11 @@ import adminRoutes from './routes/adminRoutes.js'
 import { connectDB } from './config/dbConnection.js';
 import { endPoints, showJWT } from './middleware/gobalMiddleware.js';
 import './config/passport.js'
+import { editProduct } from './controllers/adminControllers.js';
 
 //main variable setting
 const app = express()
+const router = express.Router()
 const port = process.env.PORT || 3000
 const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/ecommerce'
 
@@ -24,9 +28,10 @@ const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/ecommerce'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+
 //body parse middleware
 app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
+app.use(express.urlencoded({ extended: true }))
 
 //static middleware
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));

@@ -24,6 +24,10 @@ function fetchProduct(page = 1, limit = 2) {
 
 }
 
+function showAllProducts() {
+    window.location.href = `/productlist`
+}
+
 function productSearch() {
     const searchKey = document.getElementById("userSearch").value.trim();
     const query = new URLSearchParams({
@@ -109,11 +113,7 @@ function addToCart(productId) {
     })
         .then((res) => res.json())
         .then((data) => {
-            if (data.success) {
-                alert("Product added to cart")
-            } else {
-                alert("not added")
-            }
+
         })
         .catch((error) => console.log(error.toString()));
 }

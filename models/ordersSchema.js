@@ -8,7 +8,7 @@ const orderItemSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  userName: { type: String, required: true},
+  userName: { type: String, required: true },
   items: [orderItemSchema],
   shippingAddress: {
     housename: String,
@@ -17,16 +17,18 @@ const orderSchema = new mongoose.Schema({
     state: String,
     postalCode: String,
     label: { type: String },
-    phone: { type: String}
+    phone: { type: String }
   },
+  coupon: { code: { type: String }, discountAmount: { type: Number, default: 0 } },
   totalAmount: { type: Number, required: true },
-  paymentMethod: { type: String, enum: ['cod', 'online'], required: false },
+  grandTotal: { type: Number, required: true },
+  paymentMethod: { type: String, enum: ['cod', 'online', 'razorpay', 'N/A'], required: false, default: "N/A" },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
-  orderStatus: { type: String, enum: ['placed','processing', 'shipped', 'delivered', 'cancelled','returned'], default: 'processing' },
+  orderStatus: { type: String, enum: ['placed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'failed'], default: 'failed' },
   placedAt: { type: Date, default: Date.now },
-  orderPlaced: { type: Boolean , default: false},
-  orderId: { type: String, unique: true},
-  returnRequest: { type: Boolean, default: false},
+  orderPlaced: { type: Boolean, default: false },
+  orderId: { type: String, unique: true },
+  returnRequest: { type: Boolean, default: false },
   returnReason: { type: String },
 });
 

@@ -2,22 +2,26 @@
 import multer from "multer";
 import path from "path";
 import jwt from "jsonwebtoken"
+import crypto from "crypto";
 
-// Configure storage 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/products"); // Save files in this folder
+    cb(null, "uploads/products");
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    cb(null, Date.now() + "-" + file.fieldname + ext);
+    const uniqueSuffix = Date.now() + "-" + crypto.randomBytes(4).toString("hex");
+    cb(null, uniqueSuffix + ext);
   },
 });
 
+
 // File filter to accept only images
 const fileFilter = (req, file, cb) => {
+   console.log("File received in multer fileFilter:", file);
   const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
   if (allowedTypes.includes(file.mimetype)) {
+   
     cb(null, true);
   } else {
     cb(new Error("Only JPG, JPEG, and PNG images are allowed."), false);
@@ -33,10 +37,8 @@ const upload = multer({
   },
 });
 
+
 export const productImageUpload = upload.array("images", 4); // max 4 images
-
-
-
 
 export const verifyUserJWT = (req, res, next) => {
   const token = req.cookies?.jwt // assuming token is stored in cookies

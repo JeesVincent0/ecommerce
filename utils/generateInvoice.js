@@ -1,15 +1,25 @@
 import path from 'path';
-import fs from 'fs'
-import PDFDocument from 'pdfkit'
+import fs from 'fs';
+import PDFDocument from 'pdfkit';
 
 function generateInvoice(order, outputPath) {
   const doc = new PDFDocument({ margin: 50 });
 
   doc.pipe(fs.createWriteStream(outputPath));
 
-  // Header
-  doc.fontSize(20).text('INVOICE', { align: 'center' });
-  doc.moveDown();
+  // Company Info (top-left)
+  doc
+    .fontSize(14)
+    .text('SHOPPI PVT LTD', 50, 50)
+    .text('Muvatupuzha, Vazhakulam')
+    .text('Ph. 9188557788');
+
+  // Invoice title (top-right)
+  doc
+    .fontSize(24)
+    .text('INVOICE', { align: 'right' });
+
+  doc.moveDown(2);
 
   // Order Info
   doc.fontSize(12).text(`Order ID: ${order.orderId}`);
@@ -31,7 +41,7 @@ function generateInvoice(order, outputPath) {
   doc.fontSize(12).text(order.paymentMethod);
   doc.moveDown();
 
-  // Items Table
+  // Items
   doc.fontSize(14).text('Items:', { underline: true });
   order.items.forEach((item, i) => {
     doc.fontSize(12).text(`${i + 1}. ${item.productId.product_name} - Qty: ${item.quantity} - ₹${item.priceAtPurchase} each`);

@@ -1,50 +1,10 @@
-function addCategory() {
-    console.log("button pressed");
+// Character counter for description
+document.getElementById('categoryDescription').addEventListener('input', function () {
+    const charCount = this.value.length;
+    document.getElementById('charCount').textContent = charCount;
+});
 
-    // accessing DOM elements
-    const addButton = document.getElementById("addButton");
-    const maincategeryAddSection = document.getElementById("maincategeryAddSection");
-    const maincategeryListSection = document.getElementById("maincategeryListSection");
-
-    // disable search bar
-    const searchBarContainer = document.getElementById("searchBarContainer");
-    searchBarContainer.innerHTML = "";
-
-    // enable and disable elements
-    addButton.classList.add("hidden");
-    maincategeryAddSection.classList.remove("hidden");
-    maincategeryListSection.classList.add("hidden");
-
-    // properly get parent ID from hidden span
-    const selectedParentElement = document.getElementById("selectedParentId");
-    const parentId = selectedParentElement.getAttribute("data-id") || null; // or null, or "" if you want no parent
-    console.log("Using parent ID:", parentId);
-
-    // Pass the correct parent ID
-    loadCategoryData(parentId);
-}
-
-
-//this function is for transfer add category form data to server
-function submitNewCategory() {
-    const categoryName = document.getElementById("mainCategoryName").value.trim();
-    const categoryDiscription = document.getElementById("categoryDescription").value.trim();
-    const categoryStatus = document.getElementById("categoryStatus").value
-    const parentId = document.getElementById("selectedParentId").getAttribute('data-id') || null;
-
-    fetch("/category", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ parentId: parentId, categoryName: categoryName, categoryStatus: categoryStatus, categoryDescription: categoryDiscription })
-    })
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.status) {
-                document.getElementById("categoryButton").click();
-            }
-        })
-}
-
+// Word limit function for description
 function limitWords(element, maxWords) {
     let words = element.value.trim().split(/\s+/);
     if (words.length > maxWords) {
@@ -52,48 +12,70 @@ function limitWords(element, maxWords) {
     }
 }
 
+// Function to handle adding a new category section
+function addCategory() {
 
-// function loadCategoryData(parent) {
-//     fetch(`/category/miancategory/${parent}`, {
-//         method: "GET",
-//         headers: { "Content-Type": "application/json" }
-//     })
-//         .then((res) => res.json())
-//         .then((data) => {
-//             console.log("data reached",data.categoryNames)
-//             let categories = Array.isArray(data.categoryNames) ? data.categoryNames : [data.categoryNames];
-//             if (data.parent && data.categoryNames) {
-//                 loadForm()
-//             } else if (!data.parent && data.categoryNames && data.child) {
-//                 loadForm(categories, "optionsContainer1")
-//             }
+    // Accessing DOM elements
+    const addButton = document.getElementById("addButton");
+    const maincategeryAddSection = document.getElementById("maincategeryAddSection");
+    const maincategeryListSection = document.getElementById("maincategeryListSection");
 
+    // Disable search bar
+    const searchBarContainer = document.getElementById("searchBarContainer");
+    if (searchBarContainer) {
+        searchBarContainer.innerHTML = "";
+    }
 
+    // Enable and disable elements
+    if (addButton) addButton.classList.add("hidden");
+    if (maincategeryAddSection) maincategeryAddSection.classList.remove("hidden");
+    if (maincategeryListSection) maincategeryListSection.classList.add("hidden");
 
-//         })
-// }
+}
 
-// this function will show the suggestion options
-// function loadForm(categoryNames, id) {
-//     console.log("loadForm", categoryNames)
-//     const optionsContainer = document.getElementById(id);
-//     optionsContainer.innerHTML = "";
-//     categoryNames.forEach(category => {
-//         optionsContainer.innerHTML += `<option value="${category.slug}" data-id="${category._id}">${category.slug}</option>`
-//     });
-// }
+// Function to submit the new category
+function submitNewCategory() {
+    const categoryName = document.getElementById("categoryName").value.trim();
+    const categoryDescription = document.getElementById("categoryDescription").value.trim();
+    const categoryStatus = document.getElementById("categoryStatus").value;
+    const categoryOffers = document.getElementById("categoryOffers").value.trim();
 
-// if admin select any option given that appearse on the field
-function catName(selectedElement, id) {
-    console.log(id)
-    console.log(selectedElement.value)
-    const inputField = document.getElementById(id);
-    const categoriesLabelField = document.getElementById("categoriesLabel")
-    const selectedParentId = document.getElementById("selectedParentId")
+    // Validation
+    if (!categoryName) {
+        const categoryLabel = document.getElementById("categoryLabel")
+        categoryLabel.style.color = "red";
+        categoryLabel.innerText = "Enter category name"
+        return;
+    }
 
-    const selectedOption = selectedElement.options[selectedElement.selectedIndex];
-    const categoryId = selectedOption.getAttribute('data-id');
-    selectedParentId.setAttribute('data-id', categoryId);
-    categoriesLabelField.innerText = "Add subcategory for " + selectedElement.value
-    loadCategoryData(categoryId)
+    fetch("/category", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            name: categoryName,
+            description: categoryDescription,
+            status: categoryStatus,
+            offer: categoryOffers,
+        })
+    })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.status) {
+                if (document.getElementById("categoryButton")) {
+                    document.getElementById("addCategoryForm").reset();
+                    document.getElementById("categoryButton").click();
+                } else {
+                    document.getElementById('addCategoryForm').reset();
+                    document.getElementById('charCount').textContent = '0';
+                }
+            } else {
+                const categoryLabel = document.getElementById("categoryLabel")
+                categoryLabel.style.color = "red";
+                categoryLabel.innerText = "Use another name"
+            }
+
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
 }

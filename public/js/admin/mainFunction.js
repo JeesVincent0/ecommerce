@@ -10,8 +10,10 @@ function hideProductList() {
     productListingSection.classList.add("hidden")
 }
 
+//hide order list section
 function hideOrderSection() {
-   
+    const orderSection = document.getElementById("orderSection")
+    orderSection.classList.add("hidden")
 }
 
 //hide category list section
@@ -80,4 +82,10 @@ function accessOrderSection() {
 function addOrderSection() {
     const orderSection = document.getElementById("orderSection")
     orderSection.classList.remove("hidden")
+}
+
+function accessCouponSection() {
+    const couponSection = document.getElementById("couponSection");
+    couponSection.innerHTML = "";
+    return couponSection;
 }
