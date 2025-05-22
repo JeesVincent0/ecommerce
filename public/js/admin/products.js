@@ -55,7 +55,6 @@ function renderProducts(products) {
       <td class="px-6 py-4">${product.product_name}</td>
       <td class="px-6 py-4">${product.category_id.name}</td>
       <td class="px-6 py-4">₹${product.mrp}</td>
-      <td class="px-6 py-4">₹${product.last_price}</td>
       <td class="px-6 py-4 text-green-600">${product.discount_percentage}%</td>
       <td class="px-6 py-4">${product.stock}</td>
       <td class="px-6 py-4">

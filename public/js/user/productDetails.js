@@ -194,7 +194,7 @@ const cartUI = {
     cartState.totalItems = totalItems;
 
     // Render order summary
-    this.renderOrderSummary(totalItems, totalPrice);
+    this.renderOrderSummary(totalItems, totalPrice, totalPrice);
   },
 
   renderEmptyCart() {
@@ -208,7 +208,7 @@ const cartUI = {
         </svg>
         <h2 class="text-2xl font-semibold text-gray-800 mb-2">Your cart is empty</h2>
         <p class="text-gray-600 mb-6">Looks like you haven't added any products to your cart yet.</p>
-        <a href="/shop" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200">
+        <a href="/productlist" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200">
           Continue Shopping
         </a>
       </div>
@@ -217,7 +217,7 @@ const cartUI = {
     sideSection.innerHTML = '';
   },
 
-  renderOrderSummary(totalItems, totalPrice) {
+  renderOrderSummary(totalItems, totalPrice, grandTotal = totalPrice) {
     const sideSection = domHelpers.accessSideSection();
 
     sideSection.innerHTML = `
@@ -236,9 +236,15 @@ const cartUI = {
           <span class="text-green-600 font-medium">Free</span>
         </div>
 
+        <!-- coupon offer -->
+        <div class="flex justify-between text-sm text-gray-700 mb-2">
+          <span>Coupon offer</span>
+          <span class="text-green-600 font-medium">₹${grandTotal - totalPrice}</span>
+        </div>
+
         <!-- Apply coupon -->
         <div class="w-full max-w-md mx-auto mt-6 hidden" id="applyCoupon">
-          <label for="coupon" class="block text-sm font-medium text-gray-700 mb-1">Coupon Code</label>
+          <label for="coupon" class="block text-sm font-medium text-gray-700 mb-1" id="couponLabel">Coupon Code</label>
           <div class="relative">
             <input
               type="text"
@@ -262,7 +268,7 @@ const cartUI = {
         <!-- Total -->
         <div class="flex justify-between text-md font-semibold text-gray-800 mb-4">
           <span>Total Amount</span>
-          <span>₹${totalPrice}</span>
+          <span>₹${grandTotal}</span>
         </div>
 
         <!-- Checkout Button -->
@@ -270,7 +276,13 @@ const cartUI = {
                 class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
           Proceed to Checkout
         </button>
-      </div>`;
+        <button id="processButton2" onclick="checkOutFinal()" 
+                class="hidden w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+          Proceed to Checkout
+        </button>
+      </div>
+
+      `;
   },
 
   // Address section UI
@@ -727,6 +739,7 @@ const cartActions = {
 
   async incrementItem(productId) {
     const response = await cartAPI.addToCart(productId);
+    console.log(response)
 
     if (response.success) {
       this.loadCart();
@@ -742,6 +755,7 @@ const cartActions = {
       this.loadCart();
     } else {
       cartUI.showToast('Failed to update quantity', 'error');
+      console.log(response)
     }
   },
 
@@ -993,4 +1007,51 @@ function applyCoupon() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ code, orderId })
   })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        cartUI.renderOrderSummary(data.totalItems, data.totalPrice, data.grandTotal)
+        const processButton = document.getElementById("processButton")
+        processButton.classList.add("hidden")
+
+        const processButton2 = document.getElementById("processButton2")
+        processButton2.classList.remove("hidden")
+
+        const couponLabel = document.getElementById("couponLabel")
+        couponLabel.innerText = data.message;
+        couponLabel.style.color = "green"
+      } else {
+        const couponLabel = document.getElementById("couponLabel")
+        couponLabel.innerText = data.message;
+        couponLabel.style.color = "red"
+      }
+    })
+}
+
+async function checkOutFinal() {
+
+  const form = document.getElementById("paymentForm")
+  const formData = new FormData(form);
+  const paymentMethod = formData.get('paymentMethod');
+
+  const orderIdInput = document.querySelector('input[name="orderId"]');
+  const orderId = orderIdInput ? orderIdInput.value : null;
+    const response = await cartAPI.placeOrder(paymentMethod, orderId);
+
+    if (response.success) {
+      if (paymentMethod === 'cod') {
+        // Cash on delivery - redirect to success page
+        window.location.href = '/order-success';
+      } else if (response.razorpayOrderId) {
+        // Online payment - initialize payment gateway
+        cartActions.initializeRazorpay(response);
+      }
+    } else {
+      cartUI.showToast('Failed to place order', 'error');
+    }
+  // fetch("/place-order", {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({paymentMethod, orderId})
+  // })
 }

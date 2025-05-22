@@ -60,7 +60,7 @@ function renderOrderCard(orders) {
                 <span class="text-sm px-3 py-1 bg-green-100 text-green-700 rounded-full">${order.orderStatus}</span>
             </div>
             <div class="text-sm text-gray-600 space-y-1">
-                <p><strong>Total:</strong> ₹${order.totalAmount}</p>
+                <p><strong>Total:</strong> ₹${order.grandTotal}</p>
                 <p><strong>Payment:</strong> ${order.paymentMethod}</p>
                 <p><strong>Date:</strong> ${formattedDate}</p>
             </div>
@@ -191,7 +191,8 @@ ${item.status && item.status.length > 0 ? item.status.charAt(0).toUpperCase() + 
 
     <!-- Total -->
     <div class="bg-white shadow rounded-2xl p-6 text-right">
-        <p class="text-lg font-semibold text-gray-800">Total: ₹${order.totalAmount}</p>
+        <p class="text-lg font-semibold text-green-800">Coupon offer: ₹${order.coupon.discountAmount}</p>
+        <p class="text-lg font-semibold text-gray-800">Grand Total: ₹${order.grandTotal}</p>
     </div>
 </div>
 

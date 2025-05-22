@@ -56,13 +56,17 @@ const couponSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  usedCount: {
+    type: Number,
+    default: 0
+  },
   applicableUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   applicableProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   applicableCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }]
 },
-{
-  timestamps: true
-});
+  {
+    timestamps: true
+  });
 
 const Coupon = mongoose.model('Coupon', couponSchema);
 export default Coupon;

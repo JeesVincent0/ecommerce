@@ -6,7 +6,7 @@ import slugify from "slugify"
 import Product from "../models/productSchema.js"
 import mongoose, { Types } from "mongoose"
 import path from "path"
-import fs from 'fs'
+import fs, { stat } from 'fs'
 import Order from "../models/ordersSchema.js"
 import Wallet from "../models/walletSchema.js"
 import Coupon from "../models/couponSchema.js"
@@ -365,7 +365,7 @@ export const getProducts = async (req, res) => {
 
     const product = await Product.find().sort({ createdAt: -1 })
       .populate("category_id", "name")
-      .select("product_name mrp discount_price discount_percentage _id images stock last_price isActive")
+      .select("product_name mrp discount_percentage _id images stock isActive")
       .skip(skip)
       .limit(limit)
 
@@ -469,7 +469,7 @@ export const getProductData = async (req, res) => {
     const _id = req.params.id
 
     //fing neccesory fields from product collection and category collection
-    const productObj = await Product.findOne({ _id }).select("_id product_name description brand mrp discount_price stock tags category_id images isActive")
+    const productObj = await Product.findOne({ _id }).select("_id product_name description brand mrp discount_percentage stock tags category_id images isActive")
     const categoryId = new mongoose.Types.ObjectId(productObj.category_id)
     const category = await Category.findOne({ _id: categoryId }).select("slug -_id")
 
@@ -488,21 +488,8 @@ export const getProductData = async (req, res) => {
 //POST /product/edit
 export const editProduct = async (req, res) => {
   try {
-    console.log("edit form body", req.body);
-    console.log("edit form images", req.files);
 
-    const {
-      id,
-      product_name,
-      description,
-      brand,
-      mrp,
-      discount_price,
-      stock,
-      tags,
-      category_slug,
-      existingImages
-    } = req.body;
+    const {id, product_name, description, brand, mrp, discount_percentage, stock, tags, category_slug, existingImages } = req.body;
 
     // Parse and validate existingImages array
     let existingImagesArray = [];
@@ -534,9 +521,6 @@ export const editProduct = async (req, res) => {
 
     // Parse number values
     const mrpNum = parseFloat(mrp);
-    const discountPriceNum = parseFloat(discount_price);
-    const discount_percentage = Math.floor(((mrpNum - discountPriceNum) / mrpNum) * 100);
-    const last_price = mrpNum - discountPriceNum;
 
     // Get old product to compare images
     const oldProduct = await Product.findById(id).select('images');
@@ -561,9 +545,7 @@ export const editProduct = async (req, res) => {
       description,
       brand,
       mrp: mrpNum,
-      discount_price: discountPriceNum,
       discount_percentage,
-      last_price,
       stock: parseInt(stock),
       tags: tags?.split(',').map(tag => tag.trim()) || [],
       category_id: category._id,
@@ -783,19 +765,19 @@ export const getCoupons = async (req, res) => {
     const page = parseInt(req.query.page) || 1; // Default to page 1
     const limit = parseInt(req.query.limit) || 6;
     const skip = (page - 1) * limit;
-    
+
     // Get total count for pagination info
     const totalCoupons = await Coupon.countDocuments();
-    
+
     // Get coupons with pagination
     const coupons = await Coupon.find()
       .sort({ createdAt: -1 }) // Sort by newest first (adjust the field as needed)
       .skip(skip)
       .limit(limit);
-    
+
     // Send response with pagination metadata
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       coupons,
       pagination: {
         totalCoupons,
@@ -914,11 +896,11 @@ export const blockCoupon = async (req, res) => {
 export const searchCoupons = async (req, res) => {
   try {
     const query = req.query.query;
-    
+
     if (!query) {
       return res.status(400).json({ success: false, message: "Search query is required" });
     }
-    
+
     // Case-insensitive search on coupon code
     const coupons = await Coupon.find({
       $or: [
@@ -927,10 +909,66 @@ export const searchCoupons = async (req, res) => {
         { status: { $regex: query, $options: 'i' } }
       ]
     });
-    
+
     res.json({ success: true, coupons });
   } catch (error) {
     console.error("Error searching coupons:", error);
     res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
+
+
+//@desc approve redund for canceled and returned order
+// POST /refund
+export const approveRefund = async (req, res) => {
+  try {
+    const { orderId, status } = req.body;
+
+    const order = await Order.findOne({ orderId })
+
+    let orderUpdated;
+    // Razorpay payment with 'cancelled' or 'delivered' orders
+    if (order.orderStatus === "returned" && order.paymentStatus === "paid" && order.paymentMethod === "razorpay") {
+      orderUpdated = await Order.findOneAndUpdate({ orderId }, { $set: { refund: status === "approve" ? "approve" : "reject" } }, { new: true });
+      console.log("Refund status updated for Razorpay case.");
+    }
+    // COD orders with returned status
+    else if (order.orderStatus === "returned" && order.paymentMethod === "cod") {
+      orderUpdated = await Order.findOneAndUpdate({ orderId }, { $set: { refund: status === "approve" ? "approve" : "reject" } }, { new: true });
+      console.log("Refund status updated for COD returned case.");
+    }
+
+
+    console.log(orderUpdated)
+
+    if (orderUpdated.refund === "approve") {
+      let wallet = await Wallet.findOne({ userId: order.userId });
+
+      if (!wallet) {
+        wallet = new Wallet({
+          userId: order.userId,
+          balance: 0,
+          transactions: []
+        });
+      }
+
+      const refundAmount = order.totalAmount;
+
+      wallet.balance += refundAmount;
+      wallet.transactions.push({
+        type: 'credit',
+        amount: refundAmount,
+        reason: 'Order refund',
+        orderId: order._id
+      });
+
+      await wallet.save();
+
+    }
+    res.json({ success: true });
+
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Something went wrong" })
+  }
+}

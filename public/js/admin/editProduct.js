@@ -61,8 +61,8 @@ function renderEditForm(product) {
 
   <!-- Discount Price -->
   <div>
-    <label class="block text-sm font-medium text-gray-700">Discount Price (₹)</label>
-    <input type="number" name="discount_price" value="${product.discount_price}"
+    <label class="block text-sm font-medium text-gray-700">Discount Percentage (%)</label>
+    <input type="number" name="discount_percentage" value="${product.discount_percentage}"
       class="mt-2 border rounded-lg py-2 pl-3 pr-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
       required>
   </div>

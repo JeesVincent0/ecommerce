@@ -31,7 +31,7 @@ function orderLlist() {
 }
 
 function renderOrderTable(orders) {
-  
+
   const orderTableBody = document.getElementById("orderTableBody");
   orderTableBody.innerHTML = "";
 
@@ -115,6 +115,61 @@ function viewOrder(button) {
 
   orderDetails.innerHTML += `
         <div class="max-w-5xl mx-auto p-6 space-y-8">
+${!order.refund ? `
+        ${["returned"].includes(order.orderStatus) && (order.paymentMethod === "cod" || order.paymentMethod === "razorpay" ) ?
+      `<div class="bg-white shadow-sm border border-gray-100 rounded-xl p-5 my-4">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="flex items-start space-x-4">
+      <div class="bg-blue-50 p-2.5 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 8v4l3 3"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="font-semibold text-gray-900 text-lg">Refund Request</h3>
+        <p class="text-gray-600 mt-1">Customer has requested a refund of <span class="font-medium text-blue-700">₹${order.totalAmount}</span> for order #${order.orderId}</p>
+        <div class="flex flex-wrap items-center gap-3 mt-2">
+          <span class="inline-flex items-center text-xs font-medium text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 8v4l3 3"></path>
+            </svg>
+            Requested 
+          </span>
+          <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+            Pending Approval
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+      <button 
+        onclick="processRefund('${order.orderId}', 'approve')" 
+        class="inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 13l4 4L19 7"></path>
+        </svg>
+        Approve Refund
+      </button>
+      
+      <button 
+        onclick="processRefund('${order.orderId}', 'reject')" 
+        class="inline-flex justify-center items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        Reject
+      </button>
+    </div>
+  </div>
+</div>` : ``} ` : ``}
+
+
     <!-- Header -->
     <div class="bg-white shadow rounded-2xl p-6 space-y-2">
         <div class="flex justify-between items-center">
@@ -160,8 +215,9 @@ function viewOrder(button) {
             </p>
         </div>
         <div class="bg-white shadow rounded-2xl p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Payment Method</h3>
-            <p class="text-sm text-gray-600">${order.paymentMethod}</p>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Payment Details</h3>
+            <p class="text-sm text-gray-600">Payment Method : ${order.paymentMethod.toUpperCase()}</p>
+            ${order.refund ? `<p class="text-sm text-gray-600">Refund : ${order.refund.toUpperCase()}</p>` : ``}
         </div>
     </div>
 
@@ -170,9 +226,9 @@ function viewOrder(button) {
         <h3 class="text-xl font-semibold text-gray-800 mb-4">Items in this Order</h3>
         <div class="space-y-4">
             ${order.items.map(item => {
-    // Check if images exist and handle undefined or empty arrays
-    const image = (item.images && item.images.length > 0) ? item.images[0] : 'default-image.jpg'; // fallback to default image
-    return `
+        // Check if images exist and handle undefined or empty arrays
+        const image = (item.images && item.images.length > 0) ? item.images[0] : 'default-image.jpg'; // fallback to default image
+        return `
                     <div class="flex items-center gap-4 border-b pb-4">
                         <!-- Render image -->
                         <div class="w-24 h-24">
@@ -188,7 +244,7 @@ function viewOrder(button) {
                         </div>
                     </div>
                 `;
-  }).join("")}
+      }).join("")}
         </div>
     </div>
 
@@ -330,3 +386,18 @@ function clearSearchOrder() {
 //     tbody.innerHTML = "";
 //     rows.forEach(row => tbody.appendChild(row));
 // }
+
+function processRefund(orderId, status) {
+  fetch("/refund", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderId, status })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        orderLlist()
+      }
+    })
+    .catch(error => console.log(error))
+}

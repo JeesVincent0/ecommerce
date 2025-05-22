@@ -19,6 +19,7 @@ const orderSchema = new mongoose.Schema({
     label: { type: String },
     phone: { type: String }
   },
+  refund: { type: String, enum: [ "approve", "reject"], require: false },
   coupon: { code: { type: String }, discountAmount: { type: Number, default: 0 } },
   totalAmount: { type: Number, required: true },
   grandTotal: { type: Number, required: true },

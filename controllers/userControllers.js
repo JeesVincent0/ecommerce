@@ -14,6 +14,7 @@ import Address from '../models/addressSchema.js'
 import Order from '../models/ordersSchema.js'
 import { sendOtp } from '../utils/sendOtp.js'
 import { createToken } from './JWT.js'
+import mongoose from 'mongoose';
 
 import Product from "../models/productSchema.js"
 import Category from "../models/categorySchema.js"
@@ -25,7 +26,7 @@ import Wallet from '../models/walletSchema.js';
 import Wishlist from '../models/whishlistSchma.js';
 import Coupon from "../models/couponSchema.js"
 
-import crypto from "crypto"
+import crypto, { privateDecrypt } from "crypto"
 import instance from "../utils/razorpay.js"
 
 //@desc get page not found
@@ -318,24 +319,17 @@ export const getProducts = async (req, res) => {
         const limit = 8;
         const skip = (page - 1) * limit;
 
-        // Step 1: Match active products
+        // Step 1: Base match stage
         const matchStage = {
             isActive: true
         };
 
-        // Step 2: Search by keyword
+        // Step 2: Search key
         if (key) {
             matchStage.$text = { $search: key };
         }
 
-        // Step 3: Filter by price
-        if (minPrice || maxPrice) {
-            matchStage.last_price = {};
-            if (minPrice) matchStage.last_price.$gte = Number(minPrice);
-            if (maxPrice) matchStage.last_price.$lte = Number(maxPrice);
-        }
-
-        // Step 4: Setup sorting
+        // Step 3: Sorting setup
         const sortStage = {};
         if (price === '1') sortStage.last_price = 1;
         else if (price === '2') sortStage.last_price = -1;
@@ -347,11 +341,9 @@ export const getProducts = async (req, res) => {
             sortStage.score = { $meta: 'textScore' };
         }
 
-        // Step 5: Aggregation pipeline
+        // Step 4: Aggregation pipeline
         const pipeline = [
             { $match: matchStage },
-
-            // Join categories
             {
                 $lookup: {
                     from: 'categories',
@@ -361,26 +353,59 @@ export const getProducts = async (req, res) => {
                 }
             },
             { $unwind: '$category' },
-
-            // Filter active category and optional slug match
             {
                 $match: {
                     'category.status': 'active',
                     ...(category ? { 'category.slug': category.toLowerCase() } : {})
                 }
+            },
+            {
+                $addFields: {
+                    discount_chosen_percentage: {
+                        $max: ['$discount_percentage', '$category.offers']
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    last_price: {
+                        $round: [
+                            {
+                                $subtract: [
+                                    '$mrp',
+                                    {
+                                        $multiply: [
+                                            '$mrp',
+                                            { $divide: ['$discount_chosen_percentage', 100] }
+                                        ]
+                                    }
+                                ]
+                            },
+                            0
+                        ]
+                    }
+                }
             }
         ];
 
-        // Step 6: Text score if search key
+        // Step 5: Filter by price range
+        if (minPrice || maxPrice) {
+            const priceFilter = {};
+            if (minPrice) priceFilter.$gte = Number(minPrice);
+            if (maxPrice) priceFilter.$lte = Number(maxPrice);
+            pipeline.push({ $match: { last_price: priceFilter } });
+        }
+
+        // Step 6: Add text score if key present
         if (key) {
             pipeline.push({ $addFields: { score: { $meta: 'textScore' } } });
         }
 
-        // Step 7: Sorting
+        // Step 7: Apply sorting
         if (Object.keys(sortStage).length > 0) {
             pipeline.push({ $sort: sortStage });
         } else {
-            pipeline.push({ $sort: { _id: -1 } }); // Newest first by default
+            pipeline.push({ $sort: { _id: -1 } });
         }
 
         // Step 8: Pagination
@@ -407,9 +432,43 @@ export const getProducts = async (req, res) => {
                     ...(category ? { 'category.slug': category.toLowerCase() } : {})
                 }
             },
-            { $count: 'total' }
+            {
+                $addFields: {
+                    discount_chosen_percentage: {
+                        $max: ['$discount_percentage', '$category.offers']
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    last_price: {
+                        $round: [
+                            {
+                                $subtract: [
+                                    '$mrp',
+                                    {
+                                        $multiply: [
+                                            '$mrp',
+                                            { $divide: ['$discount_chosen_percentage', 100] }
+                                        ]
+                                    }
+                                ]
+                            },
+                            0
+                        ]
+                    }
+                }
+            }
         ];
 
+        if (minPrice || maxPrice) {
+            const priceFilter = {};
+            if (minPrice) priceFilter.$gte = Number(minPrice);
+            if (maxPrice) priceFilter.$lte = Number(maxPrice);
+            countPipeline.push({ $match: { last_price: priceFilter } });
+        }
+
+        countPipeline.push({ $count: 'total' });
         const countResult = await Product.aggregate(countPipeline);
         const totalCount = countResult[0]?.total || 0;
         const totalPages = Math.ceil(totalCount / limit);
@@ -417,14 +476,11 @@ export const getProducts = async (req, res) => {
         // Final response
         res.json({ products, totalPages, page });
 
-
-
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 };
-
 
 //@desc render the main product list page
 //GET /productlist
@@ -437,13 +493,121 @@ export const listProducts = async (req, res) => {
 //@desc get a specific product full datails and related product listing
 //GET /product/view/:id
 export const productDetail = async (req, res) => {
-    const productId = req.params.id
+    try {
+        const productId = new mongoose.Types.ObjectId(req.params.id);
 
-    const product = await Product.findOne({ _id: productId })
-    const relatedProducts = await Product.find({ category_id: product.category_id }).limit(8)
+        // Aggregation to fetch single product with category, last_price, and chosen discount
+        const productResult = await Product.aggregate([
+            { $match: { _id: productId } },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category_id',
+                    foreignField: '_id',
+                    as: 'category'
+                }
+            },
+            { $unwind: '$category' },
+            {
+                $addFields: {
+                    discount_chosen_percentage: {
+                        $max: ['$discount_percentage', '$category.offers']
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    last_price: {
+                        $round: [
+                            {
+                                $subtract: [
+                                    '$mrp',
+                                    {
+                                        $multiply: [
+                                            '$mrp',
+                                            { $divide: ['$discount_chosen_percentage', 100] }
+                                        ]
+                                    }
+                                ]
+                            },
+                            0
+                        ]
+                    }
+                }
+            }
+        ]);
 
-    res.render("user/productDetails", { product, relatedProducts })
-}
+        const product = productResult[0];
+
+        if (!product) {
+            return res.status(404).render("user/404", { message: "Product not found" });
+        }
+
+        // Related products from same category
+        const relatedProducts = await Product.aggregate([
+            {
+                $match: {
+                    category_id: product.category_id,
+                    _id: { $ne: product._id },
+                    isActive: true
+                }
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category_id',
+                    foreignField: '_id',
+                    as: 'category'
+                }
+            },
+            { $unwind: '$category' },
+            {
+                $match: {
+                    'category.status': 'active'
+                }
+            },
+            {
+                $addFields: {
+                    discount_chosen_percentage: {
+                        $max: ['$discount_percentage', '$category.offers']
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    last_price: {
+                        $round: [
+                            {
+                                $subtract: [
+                                    '$mrp',
+                                    {
+                                        $multiply: [
+                                            '$mrp',
+                                            { $divide: ['$discount_chosen_percentage', 100] }
+                                        ]
+                                    }
+                                ]
+                            },
+                            0
+                        ]
+                    }
+                }
+            },
+            { $limit: 8 }
+        ]);
+
+        // Render view with final data
+        res.render("user/productDetails", {
+            product,
+            relatedProducts
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).render("user/500", { message: "Server Error" });
+    }
+};
+
 
 //@desc render home page
 //GET /home
@@ -575,7 +739,7 @@ export const passwordChange = async (req, res) => {
 
         await User.updateOne({ email }, { $set: { hashPassword: hash } });
 
-        // Optionally, remove pending user entry after successful password change
+        // remove pending user entry after successful password change
         await PendingUser.deleteOne({ email });
 
         res.json({ success: true, message: "Password updated successfully" });
@@ -764,8 +928,9 @@ export const addToCart = async (req, res) => {
         const token = req.cookies.jwt;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const email = decoded.userEmail;
-
         const user = await User.findOne({ email });
+        const userId = user._id;
+
         const product = await Product.findById(productId);
 
         if (!product) {
@@ -776,8 +941,15 @@ export const addToCart = async (req, res) => {
             return res.status(400).json({ success: false, message: "Product out of stock" });
         }
 
-        const userId = user._id;
-        const price = product.last_price;
+        let price;
+
+        const category = await Category.findOne({ _id: product.category_id }, { offers: 1, _id: 0 });
+        if (category.offers <= product.discount_percentage) {
+            price = product.mrp - (product.mrp * (product.discount_percentage / 100))
+        } else {
+            price = product.mrp - (product.mrp * (category.offers / 100))
+        }
+
 
         let cart = await Cart.findOne({ userId });
 
@@ -1008,24 +1180,74 @@ export const createOrder = async (req, res) => {
 //POST /checkcoupon
 export const verifyCoupon = async (req, res) => {
     try {
-        
+
         const { code, orderId } = req.body;
 
-        const coupon = await Coupon.findOne({ code });
+        //gettion user from JWT token for check user used the coupon
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+        const user = await User.findOne({ email });
+
+        const now = new Date();
+
+        //chekcing coupon valid or not
+        const coupon = await Coupon.findOne({ code, status: "active", startDate: { $lte: now }, expiryDate: { $gte: now } });
+        if (!coupon) {
+            res.status(401).json({ success: false, message: "Coupon not valid" })
+        }
+
+        //getting order document for edit amount and add coupon details
         const order = await Order.findOne({ _id: orderId });
+
+        //checking the customer purchase amount and coupon minimum purchase value
+        if (order.grandTotal < coupon.minPurchase) {
+            res.status(401).json({ success: false, message: `Minimum purchese ₹${coupon.minPurchase}` })
+        }
+
+        //checking if the user used the coupon or not and also checking user coupon usage limit too...
+        const userUsed = coupon.usedBy.find(
+            (entry) => entry.userId.toString() === user._id.toString()
+        );
+
+        if (userUsed && userUsed.usageCount >= coupon.usageLimitPerUser) {
+            return res.status(401).json({ success: false, message: `Coupon usage limit reached (max ${coupon.usageLimitPerUser} times)`, });
+        }
+
+        //calculating the coupon discount and updating in the order document
+        let grandTotal1 = 0;
+        if (coupon.discountType === "fixed") {
+            grandTotal1 = order.grandTotal - coupon.discountValue
+        } else {
+            if (((coupon.discountValue / 100) * order.grandTotal) <= coupon.maxDiscount) {
+                grandTotal1 = Math.floor(order.grandTotal - ((coupon.discountValue / 100) * order.grandTotal));
+            } else {
+                grandTotal1 = order.grandTotal - coupon.maxDiscount;
+            }
+
+        }
+
+        if (!order.coupon.code && !order.coupon.discountAmount) {
+            await Order.updateOne({ _id: order._id }, { $set: { grandTotal: grandTotal1, 'coupon.code': coupon.code, 'coupon.discountAmount': order.grandTotal - grandTotal1 } });
+        }
+
+        const updatedOrder = await Order.findOne({ _id: orderId })
+        const totalItems = updatedOrder.items.reduce((sum, item) => sum + item.quantity, 0);
+
+        res.json({ success: true, message: "Coupon added succesfully", totalItems, totalPrice: updatedOrder.totalAmount, grandTotal: updatedOrder.grandTotal })
 
 
     } catch (error) {
-        res.status(500).json({ success: false })
+        res.status(500).json({ success: false, message: "Try after sometimes" })
     }
 }
 
 //@desc select payment method
 //POST /place-order
 export const paymentMethods = async (req, res) => {
-    console.log('this is the request body - ', req.body)
+
     const { orderId, paymentMethod } = req.body;
-    console.log(orderId, paymentMethod)
+
 
     if (!orderId || !paymentMethod) {
         return res.status(400).json({ success: false, message: "Missing order ID or payment method." });
@@ -1035,12 +1257,14 @@ export const paymentMethods = async (req, res) => {
         const order = await Order.findById(orderId).populate("items.productId");
         if (!order) return res.status(404).json({ success: false, message: "Order not found." });
 
+
+        //getting user for get user _id
         const token = req.cookies.jwt;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const email = decoded.userEmail;
-
         const user = await User.findOne({ email });
 
+        //creating new orderID
         const orderId1 = generateOrderId();
 
         order.paymentMethod = paymentMethod;
@@ -1061,12 +1285,11 @@ export const paymentMethods = async (req, res) => {
 
         if (paymentMethod === "razorpay") {
             const razorpayOrder = await instance.orders.create({
-                amount: order.totalAmount * 100,
+                amount: order.grandTotal * 100,
                 currency: "INR",
                 receipt: `receipt_${orderId1}`,
             });
 
-            console.log("razorpayOrder", razorpayOrder)
 
             return res.json({
                 success: true,
@@ -1077,6 +1300,30 @@ export const paymentMethods = async (req, res) => {
                 cod: false
             });
         }
+
+        const couponCode = order.coupon.code;
+        const userId = user._id
+        // Find the coupon
+        const coupon = await Coupon.findOne({ code: couponCode });
+
+        if (coupon) {
+            const userIndex = coupon.usedBy.findIndex(entry => entry.userId.toString() === userId.toString());
+
+            if (userIndex !== -1) {
+                // User exists, increment usageCount
+                coupon.usedBy[userIndex].usageCount += 1;
+            } else {
+                // New user, add to usedBy array
+                coupon.usedBy.push({ userId, usageCount: 1 });
+            }
+
+            // Save the updated coupon
+            await coupon.save();
+            await Coupon.updateMany({ code: couponCode }, { $inc: { totalUsageLimit: -1, usedCount: 1 } })
+        }
+
+        // Step 2: Check if user already used the coupon
+
 
         // Clear the cart
         await Cart.findOneAndUpdate({ userId: user._id }, { items: [] });
@@ -1106,7 +1353,30 @@ export const verifyPayment = async (req, res) => {
         .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-        await Order.findByIdAndUpdate(orderId, { paymentStatus: "Paid" });
+        const order = await Order.findByIdAndUpdate(orderId, { paymentStatus: "paid" }, { new: true });
+        const couponCode = order.coupon.code;
+        const userId = user._id
+        // Step 1: Find the coupon
+        const coupon = await Coupon.findOne({ code: couponCode });
+
+        if (coupon) {
+            // Step 2: Check if user already used the coupon
+            const userIndex = coupon.usedBy.findIndex(entry => entry.userId.toString() === userId.toString());
+
+            if (userIndex !== -1) {
+                // User exists, increment usageCount
+                coupon.usedBy[userIndex].usageCount += 1;
+            } else {
+                // New user, add to usedBy array
+                coupon.usedBy.push({ userId, usageCount: 1 });
+            }
+
+            // Step 3: Save the updated coupon
+            await coupon.save();
+            await Coupon.updateMany({ code: couponCode }, { $inc: { totalUsageLimit: -1, usedCount: 1 } })
+        }
+
+
         // Clear the cart
         await Cart.findOneAndUpdate({ userId: user._id }, { items: [] });
         return res.json({ success: true });
@@ -1121,7 +1391,7 @@ export const renderFailed = (req, res) => {
     try {
         res.render("user/placedFailed")
     } catch (error) {
-        res.status(500).json({ success: false, message: "Something went wrong"})
+        res.status(500).json({ success: false, message: "Something went wrong" })
     }
 }
 
@@ -1283,6 +1553,7 @@ export const cancelOrder = async (req, res) => {
         const orderId = req.params.id;
 
         const order = await Order.findById(orderId);
+        console.log(order)
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
@@ -1570,3 +1841,23 @@ export const removeFromWishlist = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
+
+//@desc generate user sharable referal url
+// GET /profile/referalurl
+export const generateReferalUrl = async (req, res) => {
+    try {
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const email = decoded.userEmail;
+        const user = await User.findOne({ email });
+        const userId = user._id;
+
+        const referralUrl = "http://localhost:3000/signup?"+ Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
+        res.json({ success: true, referralUrl })
+
+    } catch (error) {
+        console.log(error.toString())
+        res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}

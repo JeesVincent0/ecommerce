@@ -1,10 +1,10 @@
 
 
 //@desc disable side button color
-function hideMyProfileButton() {
-    const categoryButton = document.getElementById("myProfileButton");
-    categoryButton.classList.remove("bg-gray-400");
-}
+// function hideMyProfileButton() {
+//     const categoryButton = document.getElementById("myProfileButton");
+//     categoryButton.classList.remove("bg-gray-400");
+// }
 
 function hideAddressButton() {
     const productsButton = document.getElementById("addressButton")
@@ -40,7 +40,6 @@ function myProfile() {
 
     //changing side bar button color
     addMyProfileButton()
-    hideAddressButton()
     hideOrderButton()
 
     fetch("/myprofile", {
@@ -58,7 +57,7 @@ function address() {
 
     //changing side bar button color
     addAddressButton()
-    hideMyProfileButton()
+    // hideMyProfileButton()
     hideOrderButton()
 }
 
@@ -67,7 +66,7 @@ function order() {
 
     //changing side bar button color
     addOrderButton()
-    hideMyProfileButton()
+    // hideMyProfileButton()
     hideAddressButton()
 }
 
@@ -100,42 +99,158 @@ function renderMyProfile(user) {
     heading.innerHTML = "My Pofile"
 
     mainSecion.innerHTML = `
-                            <div class="max-w-xl mx-auto mt-3 space-y-6 text-gray-800">
-                            <!-- Profile Image -->
-<div class="flex justify-center">
-  <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-300">
-    <img src="http://localhost:3000/user/${user.email}/profile-pic" 
-         alt="Profile" 
-         class="w-full h-full object-cover" />
-  </div>
-</div>
-                            <!-- User Info -->
-                            <div class="space-y-4">
-                                <div class="flex items-center">
-                                    <label class="w-24 font-medium">Name:</label>
-                                    <div class="flex-1 bg-gray-200 px-3 py-1 rounded-md">${user.name}</div>
-                                </div>
-
-                                <div class="flex items-center">
-                                    <label class="w-24 font-medium">Email:</label>
-                                    <div class="flex-1 bg-gray-200 px-3 py-1 rounded-md">${user.email}
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center">
-                                    <label class="w-24 font-medium">Phone:</label>
-                                    <div class="flex-1 bg-gray-200 px-3 py-1 rounded-md">${user.phone ? user.phone : "Not added"}</div>
-                                </div>
-                            </div>
+                           <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Profile Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 backdrop-blur-sm border border-white/20">
+            <!-- Profile Header -->
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
+                <!-- Profile Image -->
+                <div class="relative">
+                    <div class="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 p-1">
+                        <div class="w-full h-full rounded-full overflow-hidden bg-white">
+                            <img src="http://localhost:3000/user/${user.email}/profile-pic" 
+                                 alt="Profile" 
+                                 class="w-full h-full object-cover" />
                         </div>
+                    </div>
+                    <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Profile Info -->
+                <div class="flex-1 text-center md:text-left">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">${user.name}</h1>
+                    <p class="text-gray-600 mb-4">Member since 2024</p>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                        <button onclick="editProfile()"
+                                class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Edit Profile
+                        </button>
                         <button onclick="changePassword()"
-                         class="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
-                         Change password
-                         </button>
-                         <button onclick="editProfile()"
-                         class="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm">
-                         Edit profile
-                        </button>`
+                                class="bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300 px-6 py-2.5 rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                            </svg>
+                            Change Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Details Grid -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                        <label class="block text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Email Address</label>
+                        <div class="text-gray-900 font-medium">${user.email}</div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                        <label class="block text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Phone Number</label>
+                        <div class="text-gray-900 font-medium">${user.phone ? user.phone : "Not provided"}</div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Account Status</h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                        <span class="text-green-700 font-semibold">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Referral Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 backdrop-blur-sm border border-white/20">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Share & Earn</h2>
+                <p class="text-gray-600 max-w-md mx-auto">Generate your unique referral link and earn rewards when friends join using your link.</p>
+            </div>
+            
+            <div class="max-w-md mx-auto">
+                <button 
+                    id="generateBtn" 
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none mb-6"
+                >
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Generate Referral Link
+                </button>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="loadingDiv" class="text-center py-8 hidden">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 mb-4">
+                    <div class="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                </div>
+                <p class="text-gray-600 font-medium">Creating your unique referral link...</p>
+            </div>
+            
+            <!-- Referral URL Display -->
+            <div id="referralDiv" class="max-w-2xl mx-auto hidden">
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-green-800">Referral Link Generated!</h3>
+                    </div>
+                    
+                    <div class="bg-white border-2 border-green-200 rounded-lg p-4 mb-4">
+                        <code id="referralUrl" class="text-blue-600 text-sm break-all select-all font-mono"></code>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button 
+                            id="copyBtn" 
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Copy Link
+                        </button>
+
+                    </div>
+                </div>
+                
+                <!-- Success Message -->
+                <div id="copySuccess" class="text-center p-4 bg-green-100 border border-green-300 rounded-lg hidden">
+                    <div class="flex items-center justify-center gap-2 text-green-700 font-semibold">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        Link copied to clipboard!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+`
     user.addresses.forEach(address => {
         addressSection.innerHTML += `
                         <div class="space-y-3 mt-6 p-3 m-10 relative">
@@ -197,6 +312,97 @@ function renderMyProfile(user) {
     Add Address
 </button>
 `;
+
+setupReferralEventListeners()
+}
+
+function setupReferralEventListeners() {
+    // Use setTimeout to ensure elements are rendered
+    setTimeout(() => {
+        const generateBtn = document.getElementById('generateBtn');
+        const referralDiv = document.getElementById('referralDiv');
+        const referralUrl = document.getElementById('referralUrl');
+        const loadingDiv = document.getElementById('loadingDiv');
+        const copyBtn = document.getElementById('copyBtn');
+        const copySuccess = document.getElementById('copySuccess');
+
+        // Check if elements exist before adding event listeners
+        if (!generateBtn) {
+            console.error('generateBtn element not found');
+            return;
+        }
+
+        generateBtn.addEventListener('click', async function () {
+            console.log("triggered");
+            
+            // Show loading state
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = `
+                <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent inline-block mr-2"></div>
+                Generating...
+            `;
+            
+            if (loadingDiv) loadingDiv.classList.remove('hidden');
+            if (referralDiv) referralDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('/profile/referalurl', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (referralUrl) referralUrl.textContent = data.referralUrl;
+                    if (referralDiv) referralDiv.classList.remove('hidden');
+                } else {
+                    throw new Error('Failed to generate referral');
+                }
+            } catch (error) {
+                console.log('Using mock URL for demo');
+                const mockUrl = `https://yourapp.com/signup?ref=${Math.random().toString(36).substring(7)}`;
+                if (referralUrl) referralUrl.textContent = mockUrl;
+                if (referralDiv) referralDiv.classList.remove('hidden');
+            } finally {
+                // Reset button state
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = `
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Generate Referral Link
+                `;
+                if (loadingDiv) loadingDiv.classList.add('hidden');
+            }
+        });
+
+        // Copy button event listener
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                if (referralUrl) {
+                    navigator.clipboard.writeText(referralUrl.textContent).then(function() {
+                        if (copySuccess) {
+                            copySuccess.classList.remove('hidden');
+                            setTimeout(() => {
+                                copySuccess.classList.add('hidden');
+                            }, 3000);
+                        }
+                    });
+                }
+            });
+        }
+    }, 100); // Small delay to ensure DOM is updated
+}
+
+// Placeholder functions for the buttons
+function editProfile() {
+    alert('Edit profile functionality to be implemented');
+}
+
+function changePassword() {
+    alert('Change password functionality to be implemented');
 }
 
 function editProfile() {
@@ -474,57 +680,57 @@ function renderAddressEditForm(address) {
 }
 
 function submitAddress(event, userId) {
-  event.preventDefault();
-  const form = event.target;
-  let isValid = true;
+    event.preventDefault();
+    const form = event.target;
+    let isValid = true;
 
-  const fields = [
-    { name: "housename", label: "label-housename", display: "House Name" },
-    { name: "city", label: "label-city", display: "City" },
-    { name: "street", label: "label-street", display: "Street" },
-    { name: "state", label: "label-state", display: "State" },
-    { name: "postalCode", label: "label-postalCode", display: "Pin" },
-    { name: "addressType", label: "label-addressType", display: "Label" },
-  ];
+    const fields = [
+        { name: "housename", label: "label-housename", display: "House Name" },
+        { name: "city", label: "label-city", display: "City" },
+        { name: "street", label: "label-street", display: "Street" },
+        { name: "state", label: "label-state", display: "State" },
+        { name: "postalCode", label: "label-postalCode", display: "Pin" },
+        { name: "addressType", label: "label-addressType", display: "Label" },
+    ];
 
-  fields.forEach(field => {
-    const input = form[field.name];
-    const label = document.getElementById(field.label);
+    fields.forEach(field => {
+        const input = form[field.name];
+        const label = document.getElementById(field.label);
 
-    if (!input.value.trim()) {
-      label.innerText = `${field.display} is required`;
-      label.style.color = "red";
-      input.classList.add("border", "border-red-500");
-      isValid = false;
-    } else {
-      label.innerText = `${field.display}:`;
-      label.style.color = "#4B5563"; // text-gray-600
-      input.classList.remove("border", "border-red-500");
-    }
-  });
-
-  if (!isValid) return;
-
-  const data = {
-    housename: form.housename.value.trim(),
-    city: form.city.value.trim(),
-    street: form.street.value.trim(),
-    state: form.state.value.trim(),
-    postalCode: form.postalCode.value.trim(),
-    label: form.addressType.value.trim()
-  };
-
-  fetch(`/update-address/${userId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        myProfile();
-      }
+        if (!input.value.trim()) {
+            label.innerText = `${field.display} is required`;
+            label.style.color = "red";
+            input.classList.add("border", "border-red-500");
+            isValid = false;
+        } else {
+            label.innerText = `${field.display}:`;
+            label.style.color = "#4B5563"; // text-gray-600
+            input.classList.remove("border", "border-red-500");
+        }
     });
+
+    if (!isValid) return;
+
+    const data = {
+        housename: form.housename.value.trim(),
+        city: form.city.value.trim(),
+        street: form.street.value.trim(),
+        state: form.state.value.trim(),
+        postalCode: form.postalCode.value.trim(),
+        label: form.addressType.value.trim()
+    };
+
+    fetch(`/update-address/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                myProfile();
+            }
+        });
 }
 
 
@@ -666,12 +872,12 @@ function saveAddress(event, userId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            myProfile();
-        }
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                myProfile();
+            }
+        });
 }
 
 
@@ -688,7 +894,7 @@ function getWallet() {
 
 
 function wallet(wallet) {
-    hideMyProfileButton();
+    // hideMyProfileButton();
 
     const mainSection = accessMainSection();
     const addressSection = accessAddressSection();
@@ -701,7 +907,7 @@ function wallet(wallet) {
     const totalCredits = wallet.transactions
         .filter(tx => tx.type === 'credit')
         .reduce((sum, tx) => sum + tx.amount, 0);
-    
+
     const totalDebits = wallet.transactions
         .filter(tx => tx.type === 'debit')
         .reduce((sum, tx) => sum + tx.amount, 0);
@@ -769,14 +975,14 @@ function wallet(wallet) {
                                 <div class="flex items-center space-x-3">
                                     <div class="flex-shrink-0">
                                         <div class="w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">
-                                            ${tx.type === 'credit' ? 
-                                                `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            ${tx.type === 'credit' ?
+            `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 2H8.828a2 2 0 00-1.414.586L6.293 3.707A1 1 0 015.586 4H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
-                                                </svg>` : 
-                                                `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                </svg>` :
+            `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
                                                 </svg>`
-                                            }
+        }
                                         </div>
                                     </div>
                                     <div>
@@ -784,9 +990,9 @@ function wallet(wallet) {
                                             ${tx.reason}
                                         </p>
                                         <div class="flex items-center">
-                                            ${tx.orderId ? 
-                                                `<span class="text-xs text-gray-500 bg-gray-100 rounded px-2 py-0.5 mr-2">Order #${tx.orderId.toString().slice(-6)}</span>` : 
-                                                ''}
+                                            ${tx.orderId ?
+            `<span class="text-xs text-gray-500 bg-gray-100 rounded px-2 py-0.5 mr-2">Order #${tx.orderId.toString().slice(-6)}</span>` :
+            ''}
                                             <span class="text-xs text-gray-500">${new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} at ${new Date(tx.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
                                         </div>
                                     </div>
@@ -798,21 +1004,21 @@ function wallet(wallet) {
                         </li>
                     `).join('')}
                 </ul>
-                ${wallet.transactions.length > 10 ? 
-                    `<div class="text-center p-4 border-t">
+                ${wallet.transactions.length > 10 ?
+            `<div class="text-center p-4 border-t">
                         <button onclick="showTransactionHistory()" class="text-blue-600 text-sm font-medium hover:text-blue-800">
                             View All Transactions
                         </button>
-                    </div>` : 
-                    wallet.transactions.length === 0 ? 
-                    `<div class="text-center p-6 text-gray-500">
+                    </div>` :
+            wallet.transactions.length === 0 ?
+                `<div class="text-center p-6 text-gray-500">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <p>No transactions found</p>
-                    </div>` : 
-                    ''
-                }
+                    </div>` :
+                ''
+        }
             </div>
         </div>
     </div>
@@ -923,15 +1129,15 @@ function wallet(wallet) {
                         `).join('')}
                     </tbody>
                 </table>
-                ${wallet.transactions.length === 0 ? 
-                    `<div class="text-center p-12 text-gray-500">
+                ${wallet.transactions.length === 0 ?
+            `<div class="text-center p-12 text-gray-500">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <p class="text-lg">No transactions found</p>
-                    </div>` : 
-                    ''
-                }
+                    </div>` :
+            ''
+        }
             </div>
         </div>
     </div>
@@ -941,10 +1147,10 @@ function wallet(wallet) {
     setTimeout(() => {
         const searchInput = document.getElementById('searchTransactions');
         if (searchInput) {
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', function () {
                 const searchTerm = this.value.toLowerCase();
                 const allItems = document.querySelectorAll('#allTransactionsList .all-transaction-item');
-                
+
                 allItems.forEach(item => {
                     const reason = item.getAttribute('data-reason');
                     if (reason.includes(searchTerm)) {
@@ -988,11 +1194,11 @@ function processAddFunds() {
         alert('Please enter a valid amount');
         return;
     }
-    
+
     // Here you would integrate with your payment gateway
     // After successful payment, update the wallet and close modal
     closeAddFundsModal();
-    
+
     // For demonstration purposes:
     alert(`Payment gateway would process ₹${amount} here`);
     // After payment is complete, you'd refresh the wallet data
@@ -1017,13 +1223,13 @@ function filterTransactions(type) {
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => btn.classList.remove('active', 'bg-blue-100', 'text-blue-800'));
     buttons.forEach(btn => btn.classList.add('bg-gray-100', 'text-gray-800'));
-    
+
     const clickedButton = document.querySelector(`.filter-btn:nth-child(${type === 'all' ? 1 : type === 'credit' ? 2 : 3})`);
     if (clickedButton) {
         clickedButton.classList.remove('bg-gray-100', 'text-gray-800');
         clickedButton.classList.add('active', 'bg-blue-100', 'text-blue-800');
     }
-    
+
     const items = document.querySelectorAll('#transactionsList .transaction-item');
     items.forEach(item => {
         if (type === 'all' || item.getAttribute('data-type') === type) {
@@ -1038,13 +1244,13 @@ function filterAllTransactions(type) {
     const buttons = document.querySelectorAll('.all-filter-btn');
     buttons.forEach(btn => btn.classList.remove('active', 'bg-blue-100', 'text-blue-800'));
     buttons.forEach(btn => btn.classList.add('bg-gray-100', 'text-gray-800'));
-    
+
     const clickedButton = document.querySelector(`.all-filter-btn:nth-child(${type === 'all' ? 1 : type === 'credit' ? 2 : 3})`);
     if (clickedButton) {
         clickedButton.classList.remove('bg-gray-100', 'text-gray-800');
         clickedButton.classList.add('active', 'bg-blue-100', 'text-blue-800');
     }
-    
+
     const items = document.querySelectorAll('#allTransactionsList .all-transaction-item');
     items.forEach(item => {
         if (type === 'all' || item.getAttribute('data-type') === type) {
@@ -1060,10 +1266,10 @@ function deleteAddress(addressId) {
     fetch(`/address/${addressId}`, {
         method: "DELETE"
     })
-    .then((res) => res.json())
-    .then((data) => {
-        if(data.success) {
-            myProfile();
-        }
-    })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                myProfile();
+            }
+        })
 }

@@ -4,7 +4,7 @@ import passport from 'passport'
 import multer from 'multer'
 
 //importing local modules
-import { addToCart, addToWishlist, cancelOrder, cancelOrderItem, cancelOrderItemController, checkmail, checkotp, checkOut, createAddress, createNewPassword, createNewUser, createOrder, decreamentItem, deleteAddress, deleteItem, editProfile, forgottonPassword, getAddress, getCartDetails, getCreatePassword,  getHome,  getInvoice,  getLogin, getOrders, getOrdersAdmin, getProducts, getProfile, getProfilePic, getWallet, googleCallback, listProducts, logout, notfound, ordersPage, otpPage, otpSend, otpVerify, passwordChange, paymentMethods, productDetail, removeFromWishlist, renderCart, renderFailed, renderProfile, renderSuccess, renderWishlist, returnOrder, signUpPage, updateAddress, updateOrderStatus, userLogout, verifyCoupon, verifyLogin, verifyOtp, verifyPayment } from '../controllers/userControllers.js'
+import { addToCart, addToWishlist, cancelOrder, cancelOrderItem, cancelOrderItemController, checkmail, checkotp, checkOut, createAddress, createNewPassword, createNewUser, createOrder, decreamentItem, deleteAddress, deleteItem, editProfile, forgottonPassword, generateReferalUrl, getAddress, getCartDetails, getCreatePassword,  getHome,  getInvoice,  getLogin, getOrders, getOrdersAdmin, getProducts, getProfile, getProfilePic, getWallet, googleCallback, listProducts, logout, notfound, ordersPage, otpPage, otpSend, otpVerify, passwordChange, paymentMethods, productDetail, removeFromWishlist, renderCart, renderFailed, renderProfile, renderSuccess, renderWishlist, returnOrder, signUpPage, updateAddress, updateOrderStatus, userLogout, verifyCoupon, verifyLogin, verifyOtp, verifyPayment } from '../controllers/userControllers.js'
 import { redirectIfAuthenticated, verifyUserJWT } from '../middleware/routerMiddleware.js'
 
 //setting router to a variable
@@ -172,6 +172,9 @@ router.post("/verify-payment", verifyPayment);
 
 //verify coupon
 router.post("/checkcoupon", verifyCoupon);
+
+//generate user referal url
+router.get("/profile/referalurl", generateReferalUrl);
 
 //signUp with google setup
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email']}))
