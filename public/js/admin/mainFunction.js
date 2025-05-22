@@ -89,3 +89,10 @@ function accessCouponSection() {
     couponSection.innerHTML = "";
     return couponSection;
 }
+
+
+function accessReferralCouponSection() {
+    const referralCouponList = document.getElementById("referralCouponList");
+    referralCouponList.innerHTML = "";
+    return referralCouponList;
+}

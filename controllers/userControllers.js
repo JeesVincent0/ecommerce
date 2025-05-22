@@ -38,7 +38,8 @@ export const notfound = (req, res) => {
 //@desc get user signup page
 // GET /signup
 export const signUpPage = (req, res) => {
-    res.render('user/signUp')
+    const referralUrl = req.query.ref;
+    res.render('user/signUp', { referralUrl })
 }
 
 //@desc create new user
@@ -47,7 +48,8 @@ export const createNewUser = async (req, res) => {
     try {
 
         //Getting user details from req.body
-        const { name, email, password } = req.body
+        const { name, email, password, referralUrl } = req.body
+        console.log({ name, email, password, referralUrl })
 
         //checking the email already taken or not
         const checkemail = await User.findOne({ email: email })
@@ -62,10 +64,10 @@ export const createNewUser = async (req, res) => {
         const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000)
 
         // Remove old pending if any
-        const removing = await PendingUser.deleteOne({ email })
+        await PendingUser.deleteOne({ email })
 
         //save the login details in a tepm collection
-        const saveDetails = await PendingUser.create({ name, email, hashPassword, otp, otpExpiresAt })
+        await PendingUser.create({ name, email, hashPassword, otp, otpExpiresAt, referralUrl })
 
         //this otp send to the user email that get from user
         const emailSend = await sendOtp(email, otp)
@@ -1852,8 +1854,11 @@ export const generateReferalUrl = async (req, res) => {
         const email = decoded.userEmail;
         const user = await User.findOne({ email });
         const userId = user._id;
+ 
+        const referralUrl = "http://localhost:3000/signup?ref=" + Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
 
-        const referralUrl = "http://localhost:3000/signup?"+ Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
+        const userDetails = await User.findOneAndUpdate({ _id: userId }, { $set: { referralUrl }}, {new: true})
+        console.log(userDetails)
         res.json({ success: true, referralUrl })
 
     } catch (error) {

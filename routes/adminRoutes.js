@@ -1,5 +1,5 @@
 import express from 'express'
-import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons, approveRefund } from '../controllers/adminControllers.js'
+import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons, approveRefund, getReferralCoupons, addReferralCoupon, getReferralCoupon, saveReferralCoupon } from '../controllers/adminControllers.js'
 import { productImageUpload, redirectIfAuthenticatedAdmin, verifyAdminJWT } from '../middleware/routerMiddleware.js'
 
 const router = express.Router()
@@ -92,14 +92,25 @@ router.get("/coupon/edit", getCoupon);
 //save edited coupon data
 router.patch("/coupon/edit", productImageUpload, saveCoupon);
 
-//bock and unblock coupen
+//block and unblock coupen
 router.patch("/coupon/block", blockCoupon);
 
+//search coupon;
 router.get('/coupon/search', searchCoupons);
+
+//get Referral coupons
+router.get("/coupon/referral", getReferralCoupons);
+
+//Create new referral coupon form submition
+router.post("/coupon/referral/add", productImageUpload, addReferralCoupon);
+
+//get referral coupon data for edit
+router.get("/coupon/referral/edit", getReferralCoupon);
 
 //approve refund for cancelled and returned product
 router.post("/refund", approveRefund);
 
-
+//sumbit edited referral coupon data
+router.patch("/coupon/referral/edit", productImageUpload, saveReferralCoupon);
 
 export default router

@@ -20,6 +20,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const nameField = document.getElementById("name");
     const newpasswordField = document.getElementById("newpassword");
     const repasswordField = document.getElementById("repassword");
+    const referralUrlField =  document.getElementById("referralUrl");
     const emailLabelField = document.getElementById("emailLabel");
 
     //DOM field values assign to a variable
@@ -27,6 +28,7 @@ window.addEventListener("DOMContentLoaded", () => {
     let name = nameField.value.trim();
     let newpassword = newpasswordField.value.trim();
     let repassword = repasswordField.value.trim();
+    let referralUrl = referralUrlField.value.trim();
 
     //reset the border color to null
     nameField.style.borderColor = "";
@@ -69,7 +71,7 @@ window.addEventListener("DOMContentLoaded", () => {
     fetch('/signup', {
       method: 'POST',
       headers: { 'content-type' : 'application/json'},
-      body: JSON.stringify({ name: name, email: email, password: newpassword })
+      body: JSON.stringify({ name: name, email: email, password: newpassword, referralUrl: referralUrl })
     })
     .then(res =>  res.json())
     .then(data => {

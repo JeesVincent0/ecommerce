@@ -176,75 +176,227 @@ function renderMyProfile(user) {
             </div>
         </div>
 
-        <!-- Referral Section -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 backdrop-blur-sm border border-white/20">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Share & Earn</h2>
-                <p class="text-gray-600 max-w-md mx-auto">Generate your unique referral link and earn rewards when friends join using your link.</p>
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referral & Rewards System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 p-8">
+    <!-- Referral Section -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 backdrop-blur-sm border border-white/20 max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                </svg>
             </div>
-            
-            <div class="max-w-md mx-auto">
-                <button 
-                    id="generateBtn" 
-                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none mb-6"
-                >
-                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Generate Referral Link
-                </button>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Share & Earn</h2>
+            <p class="text-gray-600 max-w-md mx-auto">Generate your unique referral link and earn rewards when friends join using your link.</p>
+        </div>
+        
+        <div class="max-w-md mx-auto">
+            <button 
+                id="generateBtn" 
+                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none mb-6"
+            >
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Create New Referral Link
+            </button>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="loadingDiv" class="text-center py-8 hidden">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 mb-4">
+                <div class="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
             </div>
-            
-            <!-- Loading State -->
-            <div id="loadingDiv" class="text-center py-8 hidden">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 mb-4">
-                    <div class="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
-                </div>
-                <p class="text-gray-600 font-medium">Creating your unique referral link...</p>
-            </div>
-            
-            <!-- Referral URL Display -->
-            <div id="referralDiv" class="max-w-2xl mx-auto hidden">
-                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-bold text-green-800">Referral Link Generated!</h3>
+            <p class="text-gray-600 font-medium">Creating your unique referral link...</p>
+        </div>
+        
+        <!-- Referral URL Display -->
+        <div id="referralDiv" class="max-w-2xl mx-auto mb-8">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
                     </div>
-                    
-                    <div class="bg-white border-2 border-green-200 rounded-lg p-4 mb-4">
-                        <code id="referralUrl" class="text-blue-600 text-sm break-all select-all font-mono"></code>
-                    </div>
-                    
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <button 
-                            id="copyBtn" 
-                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
-                        >
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                            </svg>
-                            Copy Link
-                        </button>
-
-                    </div>
+                    <h3 class="text-lg font-bold text-green-800">Referral Link Generated!</h3>
                 </div>
                 
-                <!-- Success Message -->
-                <div id="copySuccess" class="text-center p-4 bg-green-100 border border-green-300 rounded-lg hidden">
-                    <div class="flex items-center justify-center gap-2 text-green-700 font-semibold">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                <div class="bg-white border-2 border-green-200 rounded-lg p-4 mb-4">
+                    <code id="referralUrl" class="text-blue-600 text-sm break-all select-all font-mono">${user.referralUrl}</code>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button 
+                        id="copyBtn" 
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
-                        Link copied to clipboard!
+                        Copy Link
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Success Message -->
+            <div id="copySuccess" class="text-center p-4 bg-green-100 border border-green-300 rounded-lg hidden">
+                <div class="flex items-center justify-center gap-2 text-green-700 font-semibold">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    Link copied to clipboard!
+                </div>
+            </div>
+        </div>
+
+        <!-- Rewards Section -->
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-6">
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-orange-800 mb-2">Your Rewards</h3>
+                    <p class="text-orange-700">Congratulations! You've earned coupon codes from successful referrals.</p>
+                </div>
+
+                <!-- Rewards Summary -->
+                <div class="flex justify-center mb-6">
+                    <div class="bg-white rounded-lg px-6 py-3 border-2 border-yellow-300 shadow-md">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-orange-600" id="totalRewards">3</div>
+                            <div class="text-sm text-gray-600">Total Rewards Earned</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coupon Cards -->
+                <div id="couponContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Coupon Card 1 -->
+                    <div class="bg-white rounded-xl shadow-lg border-2 border-yellow-300 overflow-hidden transform hover:scale-105 transition-all duration-200">
+                        <div class="bg-gradient-to-r from-yellow-400 to-orange-400 px-4 py-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-white font-bold text-sm">20% OFF</span>
+                                <div class="w-2 h-6 bg-white rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="mb-3">
+                                <div class="text-xs text-gray-500 mb-1">Coupon Code</div>
+                                <div class="font-mono text-lg font-bold text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-center">SAVE20OFF</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mb-3">
+                                <div class="flex justify-between mb-1">
+                                    <span>Earned:</span>
+                                    <span class="font-semibold">Jan 15, 2025</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Expires:</span>
+                                    <span class="font-semibold text-red-600">Feb 15, 2025</span>
+                                </div>
+                            </div>
+                            <button class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm">
+                                Copy Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Coupon Card 2 -->
+                    <div class="bg-white rounded-xl shadow-lg border-2 border-purple-300 overflow-hidden transform hover:scale-105 transition-all duration-200">
+                        <div class="bg-gradient-to-r from-purple-400 to-pink-400 px-4 py-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-white font-bold text-sm">$10 OFF</span>
+                                <div class="w-2 h-6 bg-white rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="mb-3">
+                                <div class="text-xs text-gray-500 mb-1">Coupon Code</div>
+                                <div class="font-mono text-lg font-bold text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-center">GET10CASH</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mb-3">
+                                <div class="flex justify-between mb-1">
+                                    <span>Earned:</span>
+                                    <span class="font-semibold">Jan 10, 2025</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Expires:</span>
+                                    <span class="font-semibold text-red-600">Mar 10, 2025</span>
+                                </div>
+                            </div>
+                            <button class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm">
+                                Copy Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Coupon Card 3 -->
+                    <div class="bg-white rounded-xl shadow-lg border-2 border-green-300 overflow-hidden transform hover:scale-105 transition-all duration-200">
+                        <div class="bg-gradient-to-r from-green-400 to-emerald-400 px-4 py-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-white font-bold text-sm">15% OFF</span>
+                                <div class="w-2 h-6 bg-white rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="mb-3">
+                                <div class="text-xs text-gray-500 mb-1">Coupon Code</div>
+                                <div class="font-mono text-lg font-bold text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-center">FRIEND15</div>
+                            </div>
+                            <div class="text-xs text-gray-600 mb-3">
+                                <div class="flex justify-between mb-1">
+                                    <span>Earned:</span>
+                                    <span class="font-semibold">Dec 28, 2024</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Expires:</span>
+                                    <span class="font-semibold text-red-600">Jan 28, 2025</span>
+                                </div>
+                            </div>
+                            <button class="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm">
+                                Copy Code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No Rewards State (Hidden by default, show when no coupons) -->
+                <div id="noRewardsState" class="text-center py-8 hidden">
+                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-600 mb-2">No Rewards Yet</h4>
+                    <p class="text-gray-500">Start sharing your referral link to earn coupon codes!</p>
+                </div>
+
+                <!-- Referral Stats -->
+                <div class="mt-8 bg-white rounded-xl p-6 border border-yellow-200">
+                    <h4 class="text-lg font-bold text-gray-800 mb-4 text-center">Referral Statistics</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">12</div>
+                            <div class="text-sm text-gray-600">Total Referrals</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">3</div>
+                            <div class="text-sm text-gray-600">Successful Signups</div>
+                        </div>
+                        <div class="text-center p-4 bg-orange-50 rounded-lg">
+                            <div class="text-2xl font-bold text-orange-600">$45</div>
+                            <div class="text-sm text-gray-600">Total Rewards Value</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -326,6 +478,22 @@ function setupReferralEventListeners() {
         const copyBtn = document.getElementById('copyBtn');
         const copySuccess = document.getElementById('copySuccess');
 
+               document.querySelectorAll('#couponContainer button').forEach(button => {
+            button.addEventListener('click', function() {
+                const couponCode = this.parentElement.querySelector('.font-mono').textContent;
+                navigator.clipboard.writeText(couponCode).then(function() {
+                    // Change button text temporarily
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    button.classList.add('bg-green-500');
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('bg-green-500');
+                    }, 2000);
+                });
+            });
+        });
+
         // Check if elements exist before adding event listeners
         if (!generateBtn) {
             console.error('generateBtn element not found');
@@ -396,15 +564,6 @@ function setupReferralEventListeners() {
     }, 100); // Small delay to ensure DOM is updated
 }
 
-// Placeholder functions for the buttons
-function editProfile() {
-    alert('Edit profile functionality to be implemented');
-}
-
-function changePassword() {
-    alert('Change password functionality to be implemented');
-}
-
 function editProfile() {
     fetch("/myprofile", {
         method: "GET",
@@ -423,46 +582,148 @@ function renderEditProfile(user) {
     const mainSecion = accessMainSection()
 
     mainSecion.innerHTML = `
-    <form id="editProfileForm" class="space-y-6">
-  <h2 class="text-xl font-semibold text-gray-800 text-center">Edit Profile</h2>
+    <div class="max-w-2xl mx-auto">
+        <!-- Header Section -->
+        <div class="text-center mb-8 animate-fade-in">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                Edit Your Profile
+            </h1>
+            <p class="text-gray-600">Update your personal information and preferences</p>
+        </div>
 
-  <!-- Profile Picture -->
-  <div class="flex items-center space-x-4">
-    <img id="previewImage" src="http://localhost:3000/user/${user.email}/profile-pic" alt="Profile" class="w-16 h-16 rounded-full object-cover">
-    <input type="file" id="profilePic" name="profilePic" accept="image/*"
-           class="text-sm text-gray-600 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-  </div>
+        <!-- Form Container -->
+        <div class="glass-effect rounded-2xl shadow-xl border border-white/20 p-8 animate-slide-up">
+            <form id="editProfileForm" class="space-y-8">
+                
+                <!-- Profile Picture Section -->
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="relative group">
+                        <img id="previewImage" 
+                             src="http://localhost:3000/user/${user.email}/profile-pic" 
+                             alt="Profile" 
+                             class="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover ring-4 ring-white shadow-lg transition-transform group-hover:scale-105">
+                        <div class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col items-center space-y-2">
+                        <label for="profilePic" class="cursor-pointer">
+                            <span class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-medium rounded-full hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 shadow-lg">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Change Photo
+                            </span>
+                        </label>
+                        <input type="file" id="profilePic" name="profilePic" accept="image/*" class="hidden" />
+                        <p class="text-xs text-gray-500">JPG, PNG or GIF (max. 5MB)</p>
+                    </div>
+                </div>
 
-  <!-- Name -->
-  <div>
-    <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-    <input type="text" name="name" id="name" placeholder="${user.name}"
-           class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-  </div>
+                <!-- Form Fields Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Full Name -->
+                    <div class="md:col-span-2">
+                        <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <span class="flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Full Name
+                            </span>
+                        </label>
+                        <input type="text" 
+                               name="name" 
+                               id="name" 
+                               placeholder="${user.name}"
+                               class="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 hover:bg-white/90" />
+                    </div>
 
-  <!-- Email -->
-  <div>
-    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-    <input type="email" name="email" id="email"  placeholder="${user.email}"
-           class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-  </div>
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <span class="flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                Email Address
+                            </span>
+                        </label>
+                        <input type="email" 
+                               name="email" 
+                               id="email" 
+                               placeholder="${user.email}"
+                               class="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 hover:bg-white/90" />
+                    </div>
 
-  <!-- Phone Number -->
-  <div>
-    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-    <input type="number" name="phone" id="phone"  placeholder="${user.phone}"
-           class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-  </div>
+                    <!-- Phone Number -->
+                    <div>
+                        <label for="phone" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <span class="flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                </svg>
+                                Phone Number
+                            </span>
+                        </label>
+                        <input type="tel" 
+                               name="phone" 
+                               id="phone" 
+                               placeholder="${user.phone}"
+                               class="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 hover:bg-white/90" />
+                    </div>
+                </div>
 
-  <!-- Submit Button -->
-  <div>
-    <button type="submit"
-            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-      Save Changes
-    </button>
-  </div>
-</form>
+                <!-- Additional Options -->
+                <div class="bg-gray-50/50 rounded-xl p-4 space-y-3">
+                    <h3 class="text-sm font-semibold text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Preferences
+                    </h3>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Email notifications</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                    <button type="button" onclick="myProfile()"
+                            class="flex-1 px-6 py-3 border-2 border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all shadow-lg hover:shadow-xl">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Save Changes
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="text-center mt-8 text-sm text-gray-500">
+            <p>Your information is secure and will never be shared with third parties.</p>
+        </div>
+    </div>
 `
+
+editImagePreview()
 
     document.getElementById('profilePic').addEventListener('change', function (e) {
         const file = e.target.files[0];
@@ -492,6 +753,59 @@ function renderEditProfile(user) {
             });
     });
 
+}
+
+function editImagePreview() {
+            // Image preview functionality
+        document.getElementById('profilePic').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form submission handler
+        document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Add loading state to button
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = `
+                <span class="flex items-center justify-center">
+                    <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving...
+                </span>
+            `;
+            submitBtn.disabled = true;
+
+            // Simulate API call
+            setTimeout(() => {
+                submitBtn.innerHTML = originalContent;
+                submitBtn.disabled = false;
+                
+                // Show success message (you can customize this)
+                // alert('Profile updated successfully!');
+            }, 0);
+        });
+
+        // Add smooth focus transitions
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('transform', 'scale-105');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('transform', 'scale-105');
+            });
+        });
 }
 
 function changePassword() {

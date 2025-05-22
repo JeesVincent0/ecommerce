@@ -10,6 +10,7 @@ import fs, { stat } from 'fs'
 import Order from "../models/ordersSchema.js"
 import Wallet from "../models/walletSchema.js"
 import Coupon from "../models/couponSchema.js"
+import referralCoupon from "../models/referralCouponSchema.js"
 
 //@desc render admin login page
 //GET /adminlogin
@@ -489,7 +490,7 @@ export const getProductData = async (req, res) => {
 export const editProduct = async (req, res) => {
   try {
 
-    const {id, product_name, description, brand, mrp, discount_percentage, stock, tags, category_slug, existingImages } = req.body;
+    const { id, product_name, description, brand, mrp, discount_percentage, stock, tags, category_slug, existingImages } = req.body;
 
     // Parse and validate existingImages array
     let existingImagesArray = [];
@@ -759,6 +760,108 @@ export const toggleProductStatus = async (req, res) => {
 //     res.status(500).json({ success: false, message: "Something went wrong" });
 //   }
 // }
+export const getReferralCoupons = async (req, res) => {
+  try {
+    // Extract pagination parameters from query
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination info
+    const totalCoupons = await referralCoupon.countDocuments();
+
+    // Get coupons with pagination
+    const coupons = await referralCoupon.find()
+      .sort({ createdAt: -1 }) // Sort by newest first (adjust the field as needed)
+      .skip(skip)
+      .limit(limit);
+
+    // Send response with pagination metadata
+    res.json({
+      success: true,
+      coupons,
+      pagination: {
+        totalCoupons,
+        totalPages: Math.ceil(totalCoupons / limit),
+        currentPage: page,
+        hasNextPage: page * limit < totalCoupons,
+        hasPrevPage: page > 1
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching coupons:", error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
+  }
+};
+
+export const getReferralCoupon = async (req, res) => {
+  try {
+    const couponId = req.query.couponId;
+
+    const coupon = await referralCoupon.findOne({ _id: couponId })
+
+    res.json({ success: true, coupon })
+
+  } catch (error) {
+    console.log(error.toString())
+    res.status(500).json({ success: false, message: "Something went wrong" })
+  }
+}
+
+export const saveReferralCoupon = async (req, res) => {
+  try {
+    let { id, code, totalUsageLimit, discountType, discountValue, minPurchase, maxDiscount, offerDays } = req.body;
+    console.log({ id, code, totalUsageLimit, discountType, discountValue, minPurchase, maxDiscount, offerDays })
+
+    const existingCoupon = await referralCoupon.findOne({ code, _id: { $ne: id } });
+    if (existingCoupon) {
+      return res.status(400).json({ success: false, message: "Coupon code already exists." });
+    }
+
+    if(discountType === "fixed") {
+      maxDiscount = 0;
+    }
+
+    const updated = await referralCoupon.updateOne(
+      { _id: id },
+      {
+        $set: {
+          code, totalUsageLimit, discountType, discountValue, minPurchase, maxDiscount, offerDays
+        }
+      }
+    );
+
+    res.json({ success: true })
+  } catch (error) {
+    console.log(error.toString())
+    res.status(500).json({ success: false, message: "Something went wrong" })
+  }
+}
+
+//@desc Create new referral coupon form submition
+//POST /coupon/referral/add
+export const addReferralCoupon = async (req, res) => {
+  try {
+    const { code, totalUsageLimit, discountType, discountValue, minPurchase, maxDiscount, offerDays } = req.body;
+
+    const existingCoupon = await referralCoupon.findOne({ code })
+    if (existingCoupon) throw new Error("This coupon code is already taken")
+
+    const newCoupon = new referralCoupon({
+      code, totalUsageLimit, discountType, discountValue, minPurchase, maxDiscount, offerDays
+    })
+
+    await newCoupon.save();
+
+    res.json({ success: true })
+
+  } catch (error) {
+    console.log(error.toString())
+  }
+}
+
+//@desc get referral coupons 
+//GET /coupon/referral?page
 export const getCoupons = async (req, res) => {
   try {
     // Extract pagination parameters from query

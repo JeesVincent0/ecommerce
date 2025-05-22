@@ -10,6 +10,7 @@ const pendingUserSchema = new mongoose.Schema({
     default: Date.now,
     expires: 300
   },
+  referralUrl: { type: String, default: null}
 });
 
 const PendingUser = mongoose.model('PendingUser', pendingUserSchema)
