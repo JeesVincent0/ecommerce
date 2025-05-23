@@ -16,7 +16,7 @@ import adminRoutes from './routes/adminRoutes.js'
 import { connectDB } from './config/dbConnection.js';
 import { endPoints, showJWT } from './middleware/gobalMiddleware.js';
 import './config/passport.js'
-import { editProduct } from './controllers/adminControllers.js';
+import logger from './utils/logger.js';
 
 //main variable setting
 const app = express()
@@ -27,6 +27,15 @@ const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/ecommerce'
 //setting path variables
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Log unhandled errors
+process.on('unhandledRejection', (err) => {
+  logger.critical(`Unhandled Rejection: ${err.message}`);
+});
+
+process.on('uncaughtException', (err) => {
+  logger.critical(`Uncaught Exception: ${err.message}`);
+});
 
 
 //body parse middleware

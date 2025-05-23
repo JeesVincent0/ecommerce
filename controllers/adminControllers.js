@@ -750,16 +750,8 @@ export const toggleProductStatus = async (req, res) => {
   }
 };
 
-//@desc get all coupons
+//@desc get all referral coupons for list in the admin panel
 // GET /coupon
-// export const getCoupons = async (req, res) => {
-//   try {
-//     const coupons = await Coupon.find();
-//     res.json({ success: true, coupons })
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: "Something went wrong" });
-//   }
-// }
 export const getReferralCoupons = async (req, res) => {
   try {
     // Extract pagination parameters from query
@@ -794,6 +786,8 @@ export const getReferralCoupons = async (req, res) => {
   }
 };
 
+//@desc get referral coupon data for edit
+//GET /coupon/referral/edit
 export const getReferralCoupon = async (req, res) => {
   try {
     const couponId = req.query.couponId;
@@ -808,21 +802,22 @@ export const getReferralCoupon = async (req, res) => {
   }
 }
 
+//@desc save edited referral coupon data
+//PATCH /coupon/referral/edit
 export const saveReferralCoupon = async (req, res) => {
   try {
     let { id, code, totalUsageLimit, discountType, discountValue, minPurchase, maxDiscount, offerDays } = req.body;
-    console.log({ id, code, totalUsageLimit, discountType, discountValue, minPurchase, maxDiscount, offerDays })
 
     const existingCoupon = await referralCoupon.findOne({ code, _id: { $ne: id } });
     if (existingCoupon) {
       return res.status(400).json({ success: false, message: "Coupon code already exists." });
     }
 
-    if(discountType === "fixed") {
+    if (discountType === "fixed") {
       maxDiscount = 0;
     }
 
-    const updated = await referralCoupon.updateOne(
+    await referralCoupon.updateOne(
       { _id: id },
       {
         $set: {
@@ -835,6 +830,37 @@ export const saveReferralCoupon = async (req, res) => {
   } catch (error) {
     console.log(error.toString())
     res.status(500).json({ success: false, message: "Something went wrong" })
+  }
+}
+
+//@desc bolock and unblock referral coupon
+// PATCH blockReferralCoupon
+export const blockReferralCoupon = async (req, res) => {
+  try {
+    const { couponId } = req.body;
+
+    if (!couponId) {
+      return res.status(400).json({ success: false, message: "Coupon ID is required" });
+    }
+
+    const coupon = await referralCoupon.findById(couponId);
+    if (!coupon) {
+      return res.status(404).json({ success: false, message: "Coupon not found" });
+    }
+
+    // Toggle between 'active' and 'inactive'
+    const newStatus = coupon.status === "active" ? "inactive" : "active";
+
+    await referralCoupon.updateOne({ _id: couponId }, { status: newStatus });
+
+    res.status(200).json({
+      success: true,
+      message: `Coupon ${newStatus === "inactive" ? "blocked" : "unblocked"} successfully`,
+      newStatus
+    });
+  } catch (error) {
+    console.log(error.toString());
+    res.status(500).json({ success: true, message: "Something went wrong" })
   }
 }
 
@@ -895,6 +921,32 @@ export const getCoupons = async (req, res) => {
     res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
+
+//@desc search referral coupons
+// GET /coupon/referral/search?
+export const searchReferralCoupons = async (req, res) => {
+  try {
+    const query = req.query.query;
+
+    if (!query) {
+      return res.status(400).json({ success: false, message: "Search query is required" });
+    }
+
+    // Case-insensitive search on coupon code
+    const coupons = await referralCoupon.find({
+      $or: [
+        { code: { $regex: query, $options: 'i' } },
+        { discountType: { $regex: query, $options: 'i' } },
+        { status: { $regex: query, $options: 'i' } }
+      ]
+    });
+
+    res.json({ success: true, coupons });
+  } catch (error) {
+    console.log(error.toString());
+    res.status(500).json({ success: true, message: "Something went wrong"})
+  }
+}
 
 //@desc add new coupon
 //POST /coupon/add

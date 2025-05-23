@@ -1,0 +1,49 @@
+[2025-05-23T15:22:02.157Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:22:38.991Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:22:39.206Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:23:03.138Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:23:03.478Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:23:19.612Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:23:23.388Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:23:23.574Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:23:23.739Z] [URLPATH : GET /myprofile ] - DEBUG: Random
+[2025-05-23T15:42:42.969Z] [URLPATH : [object Object] ] - DEBUG: GET /myprofile
+[2025-05-23T15:42:46.607Z] [URLPATH : [object Object] ] - DEBUG: GET /myprofile
+[2025-05-23T15:42:55.153Z] [URLPATH : [object Object] ] - DEBUG: GET /myprofile
+[2025-05-23T16:11:14.079Z] ERROR: MongoServerError: E11000 duplicate key error collection: ecommerce.users index: email_1 dup key: { email: "jhdf@hgc.jkhvg" }
+[2025-05-23T16:12:46.774Z] ERROR: TypeError: Cannot read properties of null (reading '_id')
+[2025-05-23T16:13:50.962Z] ERROR: MongoServerError: E11000 duplicate key error collection: ecommerce.users index: email_1 dup key: { email: "jhdf@hgc.jkhvgkjfghf" }
+[2025-05-23T16:13:50.963Z] ERROR: MongoServerError: E11000 duplicate key error collection: ecommerce.users index: email_1 dup key: { email: "jhdf@hgc.jkhvgkjfghf" }
+[2025-05-23T16:15:01.713Z] ERROR: TypeError: Cannot read properties of null (reading '_id')
+[2025-05-23T16:15:01.714Z] ERROR: TypeError: Cannot read properties of null (reading '_id')
+[2025-05-23T16:17:40.383Z] ERROR: MongoServerError: E11000 duplicate key error collection: ecommerce.users index: email_1 dup key: { email: "jhdf@hgc.jkhvgkjfghfvhvhghg" }
+[2025-05-23T16:17:40.383Z] ERROR: MongoServerError: E11000 duplicate key error collection: ecommerce.users index: email_1 dup key: { email: "jhdf@hgc.jkhvgkjfghfvhvhghg" }
+[2025-05-23T16:18:15.912Z] [URLPATH : [object Object] ] - DEBUG: OTP sended to email - [OTP - 404236] [email - utyjgdfc@uyg.oiuhgf]
+[2025-05-23T16:19:08.535Z] ERROR: TypeError: Cannot read properties of null (reading '_id')
+[2025-05-23T16:19:08.536Z] ERROR: TypeError: Cannot read properties of null (reading '_id')
+[2025-05-23T16:20:42.995Z] INFO: OTP sended to email - [OTP - 437277] [email - kjhg@dfv.sdcv]
+[2025-05-23T16:21:03.643Z] ERROR: TypeError: Cannot read properties of null (reading '_id')
+[2025-05-23T16:21:03.644Z] ERROR: TypeError: Cannot read properties of null (reading '_id')
+[2025-05-23T16:23:14.059Z] ERROR: MongoServerError: E11000 duplicate key error collection: ecommerce.users index: email_1 dup key: { email: "kjhg@dfv.sdcv" }
+[2025-05-23T16:23:14.059Z] ERROR: MongoServerError: E11000 duplicate key error collection: ecommerce.users index: email_1 dup key: { email: "kjhg@dfv.sdcv" }
+[2025-05-23T16:23:32.633Z] INFO: OTP sended to email - [OTP - 618497] [email - kjhg@dfv.sdcvlkjhg]
+[2025-05-23T16:42:59.399Z] INFO: OTP sended to email - [OTP - 994657] [email - wer@sd.df]
+[2025-05-23T16:43:14.785Z] ERROR: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+[2025-05-23T16:43:14.786Z] ERROR: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+[2025-05-23T16:44:14.373Z] ERROR: Error: Wrong OTP entered
+[2025-05-23T16:44:14.373Z] ERROR: Error: Wrong OTP entered
+[2025-05-23T16:44:35.804Z] INFO: OTP sended to email - [OTP - 653433] [email - xc@sd.sd]
+[2025-05-23T16:45:00.783Z] ERROR: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+[2025-05-23T16:45:00.784Z] ERROR: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+[2025-05-23T17:01:54.934Z] INFO: Get coupon code from user undefined
+[2025-05-23T17:02:25.989Z] INFO: Get coupon code from user asdf
+[2025-05-23T17:02:30.039Z] INFO: Get coupon code from user asdf
+[2025-05-23T17:02:45.210Z] INFO: Get coupon code from user - asdf
+[2025-05-23T17:02:57.959Z] INFO: Get coupon code from user - [code: asdf]
+[2025-05-23T17:15:25.601Z] INFO: Get coupon code from user - [referalCode: asdf]
+[2025-05-23T17:19:19.268Z] INFO: Get coupon code from user - [referalCode: ]
+[2025-05-23T17:19:40.629Z] INFO: Get coupon code from user - [referalCode: mb0pyy1j8vy7z3]
+[2025-05-23T17:19:51.211Z] INFO: GET /myprofile
+[2025-05-23T17:21:49.568Z] INFO: GET /myprofile
+[2025-05-23T17:21:49.780Z] INFO: GET /myprofile
+[2025-05-23T17:22:05.719Z] INFO: GET /myprofile

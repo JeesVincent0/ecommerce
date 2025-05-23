@@ -217,7 +217,7 @@ function referralCouponSearch() {
     .then(data => {
         if (data.success) {
             // For search results, we don't use pagination
-            renderCouponTable(data.coupons, {
+            renderReferralCouponTable(data.coupons, {
                 totalCoupons: data.coupons.length,
                 totalPages: 1,
                 currentPage: 1,

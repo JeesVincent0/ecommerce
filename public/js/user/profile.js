@@ -6,6 +6,7 @@
 //     categoryButton.classList.remove("bg-gray-400");
 // }
 
+
 function hideAddressButton() {
     const productsButton = document.getElementById("addressButton")
     productsButton.classList.remove("bg-gray-400")
@@ -48,7 +49,7 @@ function myProfile() {
     })
         .then((res) => res.json())
         .then((data) => {
-            renderMyProfile(data.user)
+            renderMyProfile(data.user, data.coupons)
         })
 }
 
@@ -88,8 +89,16 @@ function accessHeading() {
     return heading
 }
 
+const formatDate = (isoString) => {
+  const date = new Date(isoString);
+  const day = String(date.getDate()).padStart(2, '0');      // dd
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // mm
+  const year = String(date.getFullYear()).slice(2);         // yy
+  return `${day}-${month}-${year}`;
+};
+
 //this function is for render user details in my profile section
-function renderMyProfile(user) {
+function renderMyProfile(user, coupons) {
 
     //access sections render page
     const mainSecion = accessMainSection()
@@ -176,14 +185,6 @@ function renderMyProfile(user) {
             </div>
         </div>
 
-        <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Referral & Rewards System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
 <body class="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 p-8">
     <!-- Referral Section -->
     <div class="bg-white rounded-2xl shadow-xl p-8 backdrop-blur-sm border border-white/20 max-w-4xl mx-auto">
@@ -274,7 +275,7 @@ function renderMyProfile(user) {
                 <div class="flex justify-center mb-6">
                     <div class="bg-white rounded-lg px-6 py-3 border-2 border-yellow-300 shadow-md">
                         <div class="text-center">
-                            <div class="text-2xl font-bold text-orange-600" id="totalRewards">3</div>
+                            <div class="text-2xl font-bold text-orange-600" id="totalRewards">${coupons.length}</div>
                             <div class="text-sm text-gray-600">Total Rewards Earned</div>
                         </div>
                     </div>
@@ -282,127 +283,63 @@ function renderMyProfile(user) {
 
                 <!-- Coupon Cards -->
                 <div id="couponContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Coupon Card 1 -->
-                    <div class="bg-white rounded-xl shadow-lg border-2 border-yellow-300 overflow-hidden transform hover:scale-105 transition-all duration-200">
-                        <div class="bg-gradient-to-r from-yellow-400 to-orange-400 px-4 py-2">
-                            <div class="flex items-center justify-between">
-                                <span class="text-white font-bold text-sm">20% OFF</span>
-                                <div class="w-2 h-6 bg-white rounded-full"></div>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="mb-3">
-                                <div class="text-xs text-gray-500 mb-1">Coupon Code</div>
-                                <div class="font-mono text-lg font-bold text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-center">SAVE20OFF</div>
-                            </div>
-                            <div class="text-xs text-gray-600 mb-3">
-                                <div class="flex justify-between mb-1">
-                                    <span>Earned:</span>
-                                    <span class="font-semibold">Jan 15, 2025</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Expires:</span>
-                                    <span class="font-semibold text-red-600">Feb 15, 2025</span>
-                                </div>
-                            </div>
-                            <button class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm">
-                                Copy Code
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Coupon Card 2 -->
-                    <div class="bg-white rounded-xl shadow-lg border-2 border-purple-300 overflow-hidden transform hover:scale-105 transition-all duration-200">
-                        <div class="bg-gradient-to-r from-purple-400 to-pink-400 px-4 py-2">
-                            <div class="flex items-center justify-between">
-                                <span class="text-white font-bold text-sm">$10 OFF</span>
-                                <div class="w-2 h-6 bg-white rounded-full"></div>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="mb-3">
-                                <div class="text-xs text-gray-500 mb-1">Coupon Code</div>
-                                <div class="font-mono text-lg font-bold text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-center">GET10CASH</div>
-                            </div>
-                            <div class="text-xs text-gray-600 mb-3">
-                                <div class="flex justify-between mb-1">
-                                    <span>Earned:</span>
-                                    <span class="font-semibold">Jan 10, 2025</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Expires:</span>
-                                    <span class="font-semibold text-red-600">Mar 10, 2025</span>
-                                </div>
-                            </div>
-                            <button class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm">
-                                Copy Code
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Coupon Card 3 -->
-                    <div class="bg-white rounded-xl shadow-lg border-2 border-green-300 overflow-hidden transform hover:scale-105 transition-all duration-200">
-                        <div class="bg-gradient-to-r from-green-400 to-emerald-400 px-4 py-2">
-                            <div class="flex items-center justify-between">
-                                <span class="text-white font-bold text-sm">15% OFF</span>
-                                <div class="w-2 h-6 bg-white rounded-full"></div>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="mb-3">
-                                <div class="text-xs text-gray-500 mb-1">Coupon Code</div>
-                                <div class="font-mono text-lg font-bold text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-center">FRIEND15</div>
-                            </div>
-                            <div class="text-xs text-gray-600 mb-3">
-                                <div class="flex justify-between mb-1">
-                                    <span>Earned:</span>
-                                    <span class="font-semibold">Dec 28, 2024</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Expires:</span>
-                                    <span class="font-semibold text-red-600">Jan 28, 2025</span>
-                                </div>
-                            </div>
-                            <button class="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm">
-                                Copy Code
-                            </button>
-                        </div>
-                    </div>
+    
                 </div>
 
-                <!-- No Rewards State (Hidden by default, show when no coupons) -->
-                <div id="noRewardsState" class="text-center py-8 hidden">
-                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                        </svg>
-                    </div>
-                    <h4 class="text-lg font-semibold text-gray-600 mb-2">No Rewards Yet</h4>
-                    <p class="text-gray-500">Start sharing your referral link to earn coupon codes!</p>
-                </div>
-
-                <!-- Referral Stats -->
-                <div class="mt-8 bg-white rounded-xl p-6 border border-yellow-200">
-                    <h4 class="text-lg font-bold text-gray-800 mb-4 text-center">Referral Statistics</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="text-center p-4 bg-blue-50 rounded-lg">
-                            <div class="text-2xl font-bold text-blue-600">12</div>
-                            <div class="text-sm text-gray-600">Total Referrals</div>
-                        </div>
-                        <div class="text-center p-4 bg-green-50 rounded-lg">
-                            <div class="text-2xl font-bold text-green-600">3</div>
-                            <div class="text-sm text-gray-600">Successful Signups</div>
-                        </div>
-                        <div class="text-center p-4 bg-orange-50 rounded-lg">
-                            <div class="text-2xl font-bold text-orange-600">$45</div>
-                            <div class="text-sm text-gray-600">Total Rewards Value</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
+    </body>
 `
+    const couponContainer = document.getElementById("couponContainer");
+    couponContainer.innerHTML = "";
+    coupons.forEach(coupon => {
+        const currentUserId = user._id;
+
+        const applicableUser = coupon.applicableUsers.find(
+            u => u.userId === currentUserId
+        );
+
+        const startDate = applicableUser.startedDate;
+        const expiryDate = applicableUser.expiryDate;
+        const limit = applicableUser.limit;
+
+        couponContainer.innerHTML += `
+        <!-- Coupon Card 1 -->
+        <div class="bg-white rounded-xl shadow-lg border-2 border-yellow-300 overflow-hidden transform hover:scale-105 transition-all duration-200">
+            <div class="bg-gradient-to-r from-yellow-400 to-orange-400 px-4 py-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-white font-bold text-sm">Coupons : ${limit}</span>
+                    <div class="w-2 h-6 bg-white rounded-full"></div>
+                </div>
+            </div>
+            <div class="p-4">
+                <div class="mb-3">
+                    <div class="text-xs text-gray-500 mb-1">Coupon Code</div>
+                    <div class="font-mono text-lg font-bold text-gray-800 bg-gray-100 px-3 py-2 rounded-lg text-center">${coupon.code}</div>
+                </div>
+                <div class="text-xs text-gray-600 mb-3">
+                    <div class="flex justify-between mb-1">
+                        <span>Offer:</span>
+                        <span class="font-semibold">${coupon.discountValue}${coupon.discountType === 'fixed' ? '/-' : '%'}</span>
+                    </div>
+                    <div class="flex justify-between mb-1">
+                        <span>Earned:</span>
+                        <span class="font-semibold">${formatDate(startDate)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Expires:</span>
+                        <span class="font-semibold text-red-600">${formatDate(expiryDate)}</span>
+                    </div>
+                </div>
+                <button class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm">
+                    Copy Code
+                </button>
+            </div>
+        </div>
+        `
+
+    });
     user.addresses.forEach(address => {
         addressSection.innerHTML += `
                         <div class="space-y-3 mt-6 p-3 m-10 relative">
@@ -465,7 +402,7 @@ function renderMyProfile(user) {
 </button>
 `;
 
-setupReferralEventListeners()
+    setupReferralEventListeners()
 }
 
 function setupReferralEventListeners() {
@@ -478,10 +415,10 @@ function setupReferralEventListeners() {
         const copyBtn = document.getElementById('copyBtn');
         const copySuccess = document.getElementById('copySuccess');
 
-               document.querySelectorAll('#couponContainer button').forEach(button => {
-            button.addEventListener('click', function() {
+        document.querySelectorAll('#couponContainer button').forEach(button => {
+            button.addEventListener('click', function () {
                 const couponCode = this.parentElement.querySelector('.font-mono').textContent;
-                navigator.clipboard.writeText(couponCode).then(function() {
+                navigator.clipboard.writeText(couponCode).then(function () {
                     // Change button text temporarily
                     const originalText = button.textContent;
                     button.textContent = 'Copied!';
@@ -502,14 +439,14 @@ function setupReferralEventListeners() {
 
         generateBtn.addEventListener('click', async function () {
             console.log("triggered");
-            
+
             // Show loading state
             generateBtn.disabled = true;
             generateBtn.innerHTML = `
                 <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent inline-block mr-2"></div>
                 Generating...
             `;
-            
+
             if (loadingDiv) loadingDiv.classList.remove('hidden');
             if (referralDiv) referralDiv.classList.add('hidden');
 
@@ -548,9 +485,9 @@ function setupReferralEventListeners() {
 
         // Copy button event listener
         if (copyBtn) {
-            copyBtn.addEventListener('click', function() {
+            copyBtn.addEventListener('click', function () {
                 if (referralUrl) {
-                    navigator.clipboard.writeText(referralUrl.textContent).then(function() {
+                    navigator.clipboard.writeText(referralUrl.textContent).then(function () {
                         if (copySuccess) {
                             copySuccess.classList.remove('hidden');
                             setTimeout(() => {
@@ -723,7 +660,7 @@ function renderEditProfile(user) {
     </div>
 `
 
-editImagePreview()
+    editImagePreview()
 
     document.getElementById('profilePic').addEventListener('change', function (e) {
         const file = e.target.files[0];
@@ -756,26 +693,26 @@ editImagePreview()
 }
 
 function editImagePreview() {
-            // Image preview functionality
-        document.getElementById('profilePic').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('previewImage').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+    // Image preview functionality
+    document.getElementById('profilePic').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('previewImage').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
-        // Form submission handler
-        document.getElementById('editProfileForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Add loading state to button
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalContent = submitBtn.innerHTML;
-            submitBtn.innerHTML = `
+    // Form submission handler
+    document.getElementById('editProfileForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Add loading state to button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = `
                 <span class="flex items-center justify-center">
                     <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -784,28 +721,28 @@ function editImagePreview() {
                     Saving...
                 </span>
             `;
-            submitBtn.disabled = true;
+        submitBtn.disabled = true;
 
-            // Simulate API call
-            setTimeout(() => {
-                submitBtn.innerHTML = originalContent;
-                submitBtn.disabled = false;
-                
-                // Show success message (you can customize this)
-                // alert('Profile updated successfully!');
-            }, 0);
+        // Simulate API call
+        setTimeout(() => {
+            submitBtn.innerHTML = originalContent;
+            submitBtn.disabled = false;
+
+            // Show success message (you can customize this)
+            // alert('Profile updated successfully!');
+        }, 0);
+    });
+
+    // Add smooth focus transitions
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('focus', function () {
+            this.parentElement.classList.add('transform', 'scale-105');
         });
 
-        // Add smooth focus transitions
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.classList.add('transform', 'scale-105');
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.classList.remove('transform', 'scale-105');
-            });
+        input.addEventListener('blur', function () {
+            this.parentElement.classList.remove('transform', 'scale-105');
         });
+    });
 }
 
 function changePassword() {

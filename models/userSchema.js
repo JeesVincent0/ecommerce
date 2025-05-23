@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
     isActive: { type: Boolean, default: true },
     isAdmin: { type: Boolean, default: false },
     referralUrl: { type: String, default: null },
+    referalCode: { type: String, default: null },
 }, { timestamps: true })
 
 const User = mongoose.model('User', userSchema)

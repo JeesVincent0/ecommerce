@@ -54,7 +54,9 @@ const referralCouponSchema = new mongoose.Schema({
   applicableUsers: [
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    startedDate: { type: Date }
+    startedDate: { type: Date },
+    expiryDate: { type: Date },
+    limit: { type: Number}
   }
 ]
 

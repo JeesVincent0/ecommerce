@@ -25,9 +25,11 @@ import generateInvoice from '../utils/generateInvoice.js'
 import Wallet from '../models/walletSchema.js';
 import Wishlist from '../models/whishlistSchma.js';
 import Coupon from "../models/couponSchema.js"
+import referralCoupon from "../models/referralCouponSchema.js"
 
 import crypto, { privateDecrypt } from "crypto"
 import instance from "../utils/razorpay.js"
+import logger from '../utils/logger.js';
 
 //@desc get page not found
 //GET /notfound
@@ -109,16 +111,159 @@ export const verifyOtp = async (req, res) => {
 
         await newUser.save()
 
-        const deletePending = await PendingUser.findOneAndDelete({ email: tempUser.email })
+        const availableCoupons = await referralCoupon.aggregate([
+            {
+                $match: {
+                    status: 'active',
+                    totalUsageLimit: { $gt: 0 }
+                }
+            },
+            { $sample: { size: 1 } }
+        ]);
+        const referalCode = tempUser.referralUrl;
+        const user = await User.findOne({ referalCode })
 
+        if (user) {
+            const coupon = availableCoupons[0];
+
+            const startDate = new Date();
+            const expiryDate = new Date();
+            expiryDate.setDate(startDate.getDate() + coupon.offerDays);
+
+            const existingCoupon = await referralCoupon.findOne({
+                _id: coupon._id,
+                "applicableUsers.userId": user._id
+            });
+
+            if (existingCoupon) {
+
+                await referralCoupon.updateOne(
+                    { _id: coupon._id, "applicableUsers.userId": user._id },
+                    {
+                        $inc: {
+                            "applicableUsers.$.limit": 1,
+                            totalUsageLimit: -1
+                        }
+                    }
+                );
+            } else {
+
+                await referralCoupon.updateOne(
+                    { _id: coupon._id },
+                    {
+                        $push: {
+                            applicableUsers: {
+                                userId: user._id,
+                                startedDate: startDate,
+                                expiryDate,
+                                limit: 1
+                            }
+                        },
+                        $inc: {
+                            totalUsageLimit: -1
+                        }
+                    }
+                );
+            }
+        } else {
+            res.json({ success: true, redirectUrl: '/referralcode' })
+        }
+
+        await PendingUser.findOneAndDelete({ email: tempUser.email })
 
         res.json({ success: true, redirectUrl: '/home' })
 
     } catch (error) {
 
+        logger.error(error.toString())
+        logger.error(error)
+
         if (error.message === 'Wrong OTP entered') {
             res.json({ success: false, message: 'Wrong OTP entered' })
         }
+    }
+}
+
+//@desc render check referral code page after user signup without referral url
+// GET /referralcode 
+export const renderReferralPage = (req, res) => {
+    try {
+        res.render("user/referralCode")
+    } catch (error) {
+        logger.error(`${error.toString()} - [PATH - ${req.method} ${req.originalUrl} ]`)
+        res.status(500).json({ success: false, message: "Something went wrong" })
+    }
+}
+
+//@desc check manualy entered referral code agter successfull signup
+//POST /referralcode
+export const checkReferralCode = async (req, res) => {
+    try {
+        const referalCode = req.body.code
+        logger.info(`Get coupon code from user - [referalCode: ${referalCode}]`)
+
+        const user = await User.findOne({ referalCode })
+
+        if (user) {
+            const availableCoupons = await referralCoupon.aggregate([
+                {
+                    $match: {
+                        status: 'active',
+                        totalUsageLimit: { $gt: 0 }
+                    }
+                },
+                { $sample: { size: 1 } }
+            ]);
+            const coupon = availableCoupons[0];
+
+            const startDate = new Date();
+            const expiryDate = new Date();
+            expiryDate.setDate(startDate.getDate() + coupon.offerDays);
+
+            const existingCoupon = await referralCoupon.findOne({
+                _id: coupon._id,
+                "applicableUsers.userId": user._id
+            });
+
+            if (existingCoupon) {
+
+                await referralCoupon.updateOne(
+                    { _id: coupon._id, "applicableUsers.userId": user._id },
+                    {
+                        $inc: {
+                            "applicableUsers.$.limit": 1,
+                            totalUsageLimit: -1
+                        }
+                    }
+                );
+            } else {
+
+                await referralCoupon.updateOne(
+                    { _id: coupon._id },
+                    {
+                        $push: {
+                            applicableUsers: {
+                                userId: user._id,
+                                startedDate: startDate,
+                                expiryDate,
+                                limit: 1
+                            }
+                        },
+                        $inc: {
+                            totalUsageLimit: -1
+                        }
+                    }
+                );
+            }
+            res.json({ success: true, redirectUrl: "/home" })
+        } else {
+            res.json({ success: false, message: "Coupon code not valid" })
+        }
+
+
+    } catch (error) {
+        logger.error(`${error.toString()} - [PATH - ${req.method} ${req.originalUrl} ]`)
+        res.status(500).json({ success: false, message: "Something went wrong" });
     }
 }
 
@@ -663,8 +808,12 @@ export const getProfile = async (req, res) => {
 
         const email = decoded.userEmail;
 
-        const user = await User.findOne({ email }).populate('addresses');
-        res.json({ success: true, user: user })
+        const user = await User.findOne({ email }, { profileImage: 0 }).populate('addresses');
+
+        const coupons = await referralCoupon.find({ applicableUsers: { $elemMatch: { userId: user._id, limit: { $gt: 0 } }} });
+
+
+        res.json({ success: true, user, coupons })
 
     } catch (error) {
         console.log(error.message)
@@ -685,8 +834,8 @@ export const otpSend = async (req, res) => {
 
         const sendotp = await sendOtp(email, otp)
         if (sendotp) {
-            const remove = await PendingUser.deleteOne({ email })
-            const create = await PendingUser.create({ email, otp })
+            await PendingUser.deleteOne({ email })
+            await PendingUser.create({ email, otp })
             res.json({ success: true, message: "Otp sended successfully" });
         }
     } catch (error) {
@@ -1191,55 +1340,71 @@ export const verifyCoupon = async (req, res) => {
         const email = decoded.userEmail;
         const user = await User.findOne({ email });
 
+        let updatedOrder
+        let totalItems
+        let coupon
+
         const now = new Date();
 
-        //chekcing coupon valid or not
-        const coupon = await Coupon.findOne({ code, status: "active", startDate: { $lte: now }, expiryDate: { $gte: now } });
-        if (!coupon) {
-            res.status(401).json({ success: false, message: "Coupon not valid" })
-        }
+        //getting normal offer coupon
+        const normalCoupon = await Coupon.findOne({ code, status: "active", startDate: { $lte: now }, expiryDate: { $gte: now } });
 
-        //getting order document for edit amount and add coupon details
-        const order = await Order.findOne({ _id: orderId });
+        //getting refarral offer coupon
+        const referralcoupon = await referralCoupon.findOne({ code, status: "active", applicableUsers: { $elemMatch: { userId: user._id, startedDate: { $lte: now }, expiryDate: { $gte: now } } } });
 
-        //checking the customer purchase amount and coupon minimum purchase value
-        if (order.grandTotal < coupon.minPurchase) {
-            res.status(401).json({ success: false, message: `Minimum purchese ₹${coupon.minPurchase}` })
-        }
-
-        //checking if the user used the coupon or not and also checking user coupon usage limit too...
-        const userUsed = coupon.usedBy.find(
-            (entry) => entry.userId.toString() === user._id.toString()
-        );
-
-        if (userUsed && userUsed.usageCount >= coupon.usageLimitPerUser) {
-            return res.status(401).json({ success: false, message: `Coupon usage limit reached (max ${coupon.usageLimitPerUser} times)`, });
-        }
-
-        //calculating the coupon discount and updating in the order document
-        let grandTotal1 = 0;
-        if (coupon.discountType === "fixed") {
-            grandTotal1 = order.grandTotal - coupon.discountValue
+        if (normalCoupon) {
+            coupon = normalCoupon;
+        } else if (referralcoupon) {
+            coupon = referralcoupon
         } else {
-            if (((coupon.discountValue / 100) * order.grandTotal) <= coupon.maxDiscount) {
-                grandTotal1 = Math.floor(order.grandTotal - ((coupon.discountValue / 100) * order.grandTotal));
-            } else {
-                grandTotal1 = order.grandTotal - coupon.maxDiscount;
+            res.json({ success: false, message: "Coupon not valid" })
+        }
+
+        if (coupon) {
+
+            //getting order document for edit amount and add coupon details
+            const order = await Order.findOne({ _id: orderId });
+
+            //checking the customer purchase amount and coupon minimum purchase value
+            if (order.grandTotal < coupon.minPurchase) {
+                res.status(401).json({ success: false, message: `Minimum purchese ₹${coupon.minPurchase}` })
             }
 
-        }
+            //checking if the user used the coupon or not and also checking user coupon usage limit too...
+            const userUsed = coupon.usedBy.find(
+                (entry) => entry.userId.toString() === user._id.toString()
+            );
 
-        if (!order.coupon.code && !order.coupon.discountAmount) {
-            await Order.updateOne({ _id: order._id }, { $set: { grandTotal: grandTotal1, 'coupon.code': coupon.code, 'coupon.discountAmount': order.grandTotal - grandTotal1 } });
-        }
+            if (userUsed && userUsed.usageCount >= coupon.usageLimitPerUser) {
+                return res.status(401).json({ success: false, message: `Coupon usage limit reached (max ${coupon.usageLimitPerUser} times)`, });
+            }
 
-        const updatedOrder = await Order.findOne({ _id: orderId })
-        const totalItems = updatedOrder.items.reduce((sum, item) => sum + item.quantity, 0);
+            //calculating the coupon discount and updating in the order document
+            let grandTotal1 = 0;
+            if (coupon.discountType === "fixed") {
+                grandTotal1 = order.grandTotal - coupon.discountValue
+            } else {
+                if (((coupon.discountValue / 100) * order.grandTotal) <= coupon.maxDiscount) {
+                    grandTotal1 = Math.floor(order.grandTotal - ((coupon.discountValue / 100) * order.grandTotal));
+                } else {
+                    grandTotal1 = order.grandTotal - coupon.maxDiscount;
+                }
+
+            }
+
+            if (!order.coupon.code && !order.coupon.discountAmount) {
+                await Order.updateOne({ _id: order._id }, { $set: { grandTotal: grandTotal1, 'coupon.code': coupon.code, 'coupon.discountAmount': order.grandTotal - grandTotal1 } });
+            }
+
+            updatedOrder = await Order.findOne({ _id: orderId })
+            totalItems = updatedOrder.items.reduce((sum, item) => sum + item.quantity, 0);
+        }
 
         res.json({ success: true, message: "Coupon added succesfully", totalItems, totalPrice: updatedOrder.totalAmount, grandTotal: updatedOrder.grandTotal })
 
 
     } catch (error) {
+        console.log(error.toString());
         res.status(500).json({ success: false, message: "Try after sometimes" })
     }
 }
@@ -1305,6 +1470,7 @@ export const paymentMethods = async (req, res) => {
 
         const couponCode = order.coupon.code;
         const userId = user._id
+
         // Find the coupon
         const coupon = await Coupon.findOne({ code: couponCode });
 
@@ -1324,7 +1490,19 @@ export const paymentMethods = async (req, res) => {
             await Coupon.updateMany({ code: couponCode }, { $inc: { totalUsageLimit: -1, usedCount: 1 } })
         }
 
-        // Step 2: Check if user already used the coupon
+        const referralcoupon = await referralCoupon.findOne({ code: couponCode });
+
+        if (referralcoupon) {
+            const updated = await referralCoupon.updateOne(
+                {
+                    code: couponCode,
+                    "applicableUsers.userId": user._id  // Match the user inside the array
+                },
+                {
+                    $inc: { "applicableUsers.$.limit": -1 }  // Decrease the limit by 1
+                }
+            );
+        }
 
 
         // Clear the cart
@@ -1377,6 +1555,23 @@ export const verifyPayment = async (req, res) => {
             await coupon.save();
             await Coupon.updateMany({ code: couponCode }, { $inc: { totalUsageLimit: -1, usedCount: 1 } })
         }
+
+        const referralcoupon = await referralCoupon.findOne({ code: couponCode });
+
+        if (referralcoupon) {
+            const updated = await referralCoupon.updateOne(
+                {
+                    code: couponCode,
+                    "applicableUsers.userId": userId  // Match the user inside the array
+                },
+                {
+                    $inc: { "applicableUsers.$.limit": -1 }  // Decrease the limit by 1
+                }
+            );
+
+            console.log('Coupon limit decreased:', updated);
+        }
+
 
 
         // Clear the cart
@@ -1854,10 +2049,11 @@ export const generateReferalUrl = async (req, res) => {
         const email = decoded.userEmail;
         const user = await User.findOne({ email });
         const userId = user._id;
- 
-        const referralUrl = "http://localhost:3000/signup?ref=" + Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
 
-        const userDetails = await User.findOneAndUpdate({ _id: userId }, { $set: { referralUrl }}, {new: true})
+        const referalCode = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+        const referralUrl = "http://localhost:3000/signup?ref=" + referalCode;
+
+        const userDetails = await User.findOneAndUpdate({ _id: userId }, { $set: { referralUrl, referalCode } }, { new: true })
         console.log(userDetails)
         res.json({ success: true, referralUrl })
 
