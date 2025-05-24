@@ -96,3 +96,9 @@ function accessReferralCouponSection() {
     referralCouponList.innerHTML = "";
     return referralCouponList;
 }
+
+function accessSalesReportSection() {
+    const salesReportList = document.getElementById("salesReport");
+    salesReportList.innerHTML = "";
+    return salesReportList
+}

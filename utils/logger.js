@@ -24,9 +24,10 @@ const logger = {
     writeToFile('debug', msg);
   },
   info: (msg) => {
-    const log = `[${getTime()}] INFO: ${msg}`;
+    const formattedMsg = typeof msg === 'object' ? JSON.stringify(msg) : msg;
+    const log = `[${getTime()}] INFO: ${formattedMsg}`;
     console.warn(log);
-    writeToFile('info', msg);
+    writeToFile('info', formattedMsg);
   },
   warning: (msg) => {
     const log = `[${getTime()}] WARNING: ${msg}`;

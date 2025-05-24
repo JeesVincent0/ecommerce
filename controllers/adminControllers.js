@@ -1,16 +1,21 @@
 import User from "../models/userSchema.js"
-import bcrypt, { hash } from 'bcrypt'
+import bcrypt from 'bcrypt'
 import { createToken } from "./JWT.js"
 import Category from "../models/categorySchema.js"
 import slugify from "slugify"
 import Product from "../models/productSchema.js"
-import mongoose, { Types } from "mongoose"
+import mongoose from "mongoose"
 import path from "path"
-import fs, { stat } from 'fs'
+import fs from 'fs'
 import Order from "../models/ordersSchema.js"
 import Wallet from "../models/walletSchema.js"
 import Coupon from "../models/couponSchema.js"
+import logger from '../utils/logger.js';
 import referralCoupon from "../models/referralCouponSchema.js"
+import PDFDocument from "pdfkit"
+import moment from "moment"
+import ExcelJS from "exceljs";
+import { salesReportData } from "../utils/getSalesReportData.js"
 
 //@desc render admin login page
 //GET /adminlogin
@@ -944,7 +949,7 @@ export const searchReferralCoupons = async (req, res) => {
     res.json({ success: true, coupons });
   } catch (error) {
     console.log(error.toString());
-    res.status(500).json({ success: true, message: "Something went wrong"})
+    res.status(500).json({ success: true, message: "Something went wrong" })
   }
 }
 
@@ -1127,3 +1132,436 @@ export const approveRefund = async (req, res) => {
     res.status(500).json({ success: false, message: "Something went wrong" })
   }
 }
+
+// @desc Get Sales Report
+// @route GET /salesreport?page=1&limit=10
+export const getSalesReport = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const startDateRaw = req.query.startDate;
+    const endDateRaw = req.query.endDate;
+
+    // getting sales filtered data, funciton inside the untils forlder
+    const report = await salesReportData(startDateRaw, endDateRaw, skip, limit);
+
+    res.status(200).json({
+      success: true,
+      orders: report.orders,
+      pagination: {
+        totalOrders: report.totalOrders,
+        totalPages: Math.ceil(report.totalOrders / limit),
+        currentPage: page,
+        hasNextPage: page * limit < report.totalOrders,
+        hasPrevPage: page > 1,
+      },
+      summary: report.summary,
+    });
+  } catch (error) {
+    console.error('Sales Report Error:', error);
+    res.status(500).json({ success: false, message: 'Something went wrong' });
+  }
+};
+
+//@desc download salesreport in pdf
+//router /salesreport/pdf/download
+export const getSalesReportPdf = async (req, res) => {
+  try {
+    const { startDate: startDateRaw, endDate: endDateRaw } = req.query;
+    const report = await salesReportData(startDateRaw, endDateRaw);
+
+    // Setup response
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=sales-report-${moment().format("YYYY-MM-DD")}.pdf`);
+
+    // PDF config
+    const doc = new PDFDocument({
+      margin: 50,
+      size: "A4",
+      info: {
+        Title: "Sales Report",
+        Author: "Your Company",
+        Subject: "Sales Performance Report",
+        CreationDate: new Date()
+      }
+    });
+    doc.pipe(res);
+
+    const colors = {
+      primary: "#2563eb",
+      secondary: "#64748b",
+      accent: "#10b981",
+      background: "#f8fafc",
+      text: "#1e293b",
+      border: "#e2e8f0"
+    };
+
+    const pageWidth = doc.page.width - 100;
+
+    const drawLine = (x1, y1, x2, y2, color = colors.border, width = 1) => {
+      doc.strokeColor(color).lineWidth(width).moveTo(x1, y1).lineTo(x2, y2).stroke();
+    };
+
+    const drawBox = (x, y, width, height, fillColor, strokeColor = null) => {
+      doc.rect(x, y, width, height);
+      if (fillColor) doc.fillColor(fillColor).fill();
+      if (strokeColor) doc.strokeColor(strokeColor).stroke();
+    };
+
+    // ====== HEADER ======
+    drawBox(50, 50, pageWidth, 80, colors.primary);
+    doc.fillColor("white").font("Helvetica-Bold").fontSize(24).text("SALES REPORT", 70, 75, { align: "left" });
+    doc.font("Helvetica").fontSize(12).text(`Generated on ${moment().format("MMMM DD, YYYY")}`, 70, 105);
+
+    // ====== SUMMARY CARDS ======
+    const cardY = 160;
+    const cardWidth = (pageWidth - 40) / 4; // Changed to 4 cards
+    const cardHeight = 80;
+
+    const summaryCards = [
+      {
+        label: "TOTAL ORDERS",
+        value: report.totalOrders.toLocaleString(),
+        color: colors.primary
+      },
+      {
+        label: "TOTAL SALES",
+        value: `₹${report.summary.totalSales.toLocaleString()}`,
+        color: colors.accent
+      },
+      {
+        label: "TOTAL DISCOUNT",
+        value: `₹${report.summary.totalDiscount.toLocaleString()}`,
+        color: "#f59e0b"
+      },
+      {
+        label: "FINAL AMOUNT",
+        value: `₹${report.summary.finalAmount.toLocaleString()}`,
+        color: "#10b981"
+      }
+    ];
+
+    summaryCards.forEach((card, i) => {
+      const x = 50 + i * (cardWidth + 10);
+      drawBox(x, cardY, cardWidth, cardHeight, colors.background, colors.border);
+      doc.fillColor(colors.text).font("Helvetica-Bold").fontSize(12).text(card.label, x + 10, cardY + 15);
+      doc.fillColor(card.color).fontSize(20).text(card.value, x + 10, cardY + 35);
+    });
+
+    doc.y = cardY + cardHeight + 30;
+    doc.fillColor(colors.text).fontSize(12).text(`Report Period: ${report.dateRange}`, 50, doc.y);
+
+    // ====== TABLE HEADER ======
+    doc.y += 40;
+    doc.font("Helvetica-Bold").fontSize(16).text("Order Details", 50, doc.y);
+    doc.y += 25;
+
+    const tableTop = doc.y;
+    const headers = [
+      { text: "Order ID", x: 50, width: 70 },
+      { text: "Customer", x: 130, width: 120 },
+      { text: "Date", x: 260, width: 80 },
+      { text: "Payment", x: 350, width: 70 },
+      { text: "Total", x: 430, width: 70, align: "right" },
+      { text: "Final", x: 510, width: 70, align: "right" }
+    ];
+
+    drawBox(50, tableTop, pageWidth, 30, colors.primary);
+    doc.fillColor("white").fontSize(10);
+    headers.forEach(h => {
+      doc.text(h.text, h.x, tableTop + 10, {
+        width: h.width,
+        align: h.align || "left"
+      });
+    });
+
+    // ====== TABLE ROWS ======
+    let currentY = tableTop + 35;
+    const rowHeight = 25;
+
+    report.orders.forEach((order, index) => {
+      if (currentY > doc.page.height - 100) {
+        doc.addPage();
+        currentY = 50;
+
+        // Repeat header
+        drawBox(50, currentY, pageWidth, 30, colors.primary);
+        doc.fillColor("white").fontSize(10);
+        headers.forEach(h => {
+          doc.text(h.text, h.x, currentY + 10, {
+            width: h.width,
+            align: h.align || "left"
+          });
+        });
+        currentY += 35;
+      }
+
+      const rowColor = index % 2 === 0 ? "white" : colors.background;
+      drawBox(50, currentY - 5, pageWidth, rowHeight, rowColor);
+
+      // Truncate customer name if too long
+      const customerName = order.userName?.length > 15 ? order.userName.slice(0, 12) + "..." : order.userName || "Unknown";
+      
+      // Format payment method
+      const paymentMethod = order.paymentMethod?.length > 8 ? order.paymentMethod.slice(0, 8) : order.paymentMethod || "N/A";
+
+      doc.fillColor(colors.text).font("Helvetica").fontSize(9);
+      
+      // Order ID
+      doc.text(order.orderId || "N/A", 50, currentY, { width: 70 });
+      
+      // Customer Name
+      doc.text(customerName, 130, currentY, { width: 120 });
+      
+      // Date
+      doc.text(moment(order.placedAt).format("MMM DD, YYYY"), 260, currentY, { width: 80 });
+      
+      // Payment Method
+      doc.text(paymentMethod, 350, currentY, { width: 70 });
+
+      // Total Amount
+      doc.fillColor(colors.secondary).font("Helvetica-Bold");
+      doc.text(`₹${order.totalAmount.toLocaleString()}`, 430, currentY, {
+        width: 70,
+        align: "right"
+      });
+
+      // Final Amount (Grand Total)
+      doc.fillColor(colors.accent);
+      doc.text(`₹${order.grandTotal.toLocaleString()}`, 510, currentY, {
+        width: 70,
+        align: "right"
+      });
+
+      currentY += rowHeight;
+    });
+
+    // ====== SUMMARY SECTION ======
+    if (currentY > doc.page.height - 150) {
+      doc.addPage();
+      currentY = 50;
+    }
+
+    currentY += 30;
+    doc.fillColor(colors.text).font("Helvetica-Bold").fontSize(14).text("Summary", 50, currentY);
+    currentY += 25;
+
+    const summaryData = [
+      { label: "Total Orders:", value: report.totalOrders.toLocaleString() },
+      { label: "Total Sales Amount:", value: `₹${report.summary.totalSales.toLocaleString()}` },
+      { label: "Total Discounts:", value: `₹${report.summary.totalDiscount.toLocaleString()}` },
+      { label: "Final Revenue:", value: `₹${report.summary.finalAmount.toLocaleString()}` },
+      { 
+        label: "Average Order Value:", 
+        value: `₹${report.totalOrders ? (report.summary.finalAmount / report.totalOrders).toLocaleString("en-IN", { maximumFractionDigits: 2 }) : "0"}` 
+      }
+    ];
+
+    summaryData.forEach(item => {
+      doc.fillColor(colors.text).font("Helvetica").fontSize(11);
+      doc.text(item.label, 50, currentY, { width: 200 });
+      doc.fillColor(colors.accent).font("Helvetica-Bold");
+      doc.text(item.value, 250, currentY);
+      currentY += 20;
+    });
+
+    // ====== FOOTER ======
+    const footerY = doc.page.height - 60;
+    drawLine(50, footerY - 10, pageWidth + 50, footerY - 10);
+
+    doc.fontSize(8).fillColor(colors.secondary)
+      .text(`Generated by Your Company • ${moment().format("MMMM DD, YYYY [at] HH:mm")}`, 50, footerY, {
+        width: pageWidth,
+        align: "center"
+      });
+
+    // ====== PAGE NUMBERS ======
+    const totalPages = doc.bufferedPageRange().count;
+    for (let i = 0; i < totalPages; i++) {
+      doc.switchToPage(i);
+      doc.fontSize(8).fillColor(colors.secondary)
+        .text(`Page ${i + 1} of ${totalPages}`, doc.page.width - 100, doc.page.height - 30, {
+          align: "right"
+        });
+    }
+
+    doc.end();
+
+  } catch (err) {
+    console.error("Error generating PDF:", err);
+    res.status(500).json({
+      error: "Failed to generate sales report",
+      message: err.message
+    });
+  }
+};
+
+//@desc douwnload sales report in excel 
+//router /salesreport/excel/download
+export const downloadSalesReportExcel = async (req, res) => {
+  try {
+    const { startDate: startDateRaw, endDate: endDateRaw } = req.query;
+    
+    // Set default dates if not provided
+    const defaultStartDate = startDateRaw || '2000-01-01';
+    const defaultEndDate = endDateRaw || new Date().toISOString().split('T')[0];
+    
+    const report = await salesReportData(defaultStartDate, defaultEndDate);
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Sales Report");
+
+    // Title and summary section
+    sheet.mergeCells("A1", "G1");
+    sheet.getCell("A1").value = "SALES REPORT";
+    sheet.getCell("A1").font = { size: 18, bold: true };
+    sheet.getCell("A1").alignment = { horizontal: 'center' };
+    
+    // Add generated date
+    sheet.mergeCells("A2", "G2");
+    sheet.getCell("A2").value = `Generated on: ${new Date().toLocaleDateString('en-IN', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`;
+    sheet.getCell("A2").alignment = { horizontal: 'center' };
+    sheet.getCell("A2").font = { size: 10, italic: true };
+
+    // Summary Cards
+    sheet.getRow(4).values = [`Report Period: ${report.dateRange || `${defaultStartDate} - ${defaultEndDate}`}`];
+    sheet.getCell("A4").font = { bold: true, size: 12 };
+    
+    sheet.getRow(5).values = [`Total Orders: ${report.totalOrders || 0}`];
+    sheet.getCell("A5").font = { bold: true };
+    
+    sheet.getRow(6).values = [`Total Sales: ₹${(report.summary?.totalSales || 0).toLocaleString('en-IN')}`];
+    sheet.getCell("A6").font = { bold: true };
+    
+    sheet.getRow(7).values = [`Total Discount: ₹${(report.summary?.totalDiscount || 0).toLocaleString('en-IN')}`];
+    sheet.getCell("A7").font = { bold: true };
+    
+    sheet.getRow(8).values = [`Final Revenue: ₹${(report.summary?.finalAmount || 0).toLocaleString('en-IN')}`];
+    sheet.getCell("A8").font = { bold: true };
+    
+    const avgOrderValue = report.totalOrders ? (report.summary?.finalAmount || 0) / report.totalOrders : 0;
+    sheet.getRow(9).values = [`Average Order Value: ₹${avgOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`];
+    sheet.getCell("A9").font = { bold: true };
+
+    // Table Header (starting from row 11)
+    const headerRow = sheet.getRow(11);
+    headerRow.values = [
+      "Order ID", 
+      "Customer Name", 
+      "Date", 
+      "Payment Method",
+      "Total Amount", 
+      "Discount",
+      "Grand Total"
+    ];
+    
+    // Style header row
+    headerRow.font = { bold: true, color: { argb: 'FFFFFF' } };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '2563eb' }
+    };
+    headerRow.height = 25;
+
+    // Table Rows
+    let rowIndex = 12;
+    (report.orders || []).forEach((order) => {
+      const row = sheet.addRow([
+        order.orderId || "N/A",
+        order.userName || "Unknown",
+        order.placedAt ? new Date(order.placedAt).toLocaleDateString('en-IN') : "N/A",
+        order.paymentMethod || "N/A",
+        order.totalAmount || 0,
+        (order.coupon?.discountAmount || 0),
+        order.grandTotal || 0,
+      ]);
+      
+      // Alternate row colors
+      if (rowIndex % 2 === 0) {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'F8FAFC' }
+        };
+      }
+      
+      // Format currency columns
+      row.getCell(5).numFmt = '₹#,##0.00'; // Total Amount
+      row.getCell(6).numFmt = '₹#,##0.00'; // Discount
+      row.getCell(7).numFmt = '₹#,##0.00'; // Grand Total
+      
+      rowIndex++;
+    });
+
+    // Column formatting and widths
+    const columnWidths = [15, 25, 15, 18, 15, 15, 15]; // Order ID, Customer, Date, Payment, Total, Discount, Grand Total
+    sheet.columns.forEach((col, index) => {
+      col.width = columnWidths[index] || 15;
+    });
+
+    // Add borders to all used cells
+    const lastRow = sheet.lastRow?.number || 11;
+    for (let row = 1; row <= lastRow; row++) {
+      for (let col = 1; col <= 7; col++) {
+        const cell = sheet.getCell(row, col);
+        if (row >= 11) { // Only add borders to table area
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        }
+      }
+    }
+
+    // Summary totals at the bottom
+    const summaryStartRow = lastRow + 2;
+    sheet.getCell(summaryStartRow, 1).value = "SUMMARY";
+    sheet.getCell(summaryStartRow, 1).font = { bold: true, size: 14 };
+    
+    sheet.getCell(summaryStartRow + 1, 5).value = "Total Sales:";
+    sheet.getCell(summaryStartRow + 1, 5).font = { bold: true };
+    sheet.getCell(summaryStartRow + 1, 7).value = report.summary?.totalSales || 0;
+    sheet.getCell(summaryStartRow + 1, 7).numFmt = '₹#,##0.00';
+    sheet.getCell(summaryStartRow + 1, 7).font = { bold: true };
+    
+    sheet.getCell(summaryStartRow + 2, 5).value = "Total Discount:";
+    sheet.getCell(summaryStartRow + 2, 5).font = { bold: true };
+    sheet.getCell(summaryStartRow + 2, 7).value = report.summary?.totalDiscount || 0;
+    sheet.getCell(summaryStartRow + 2, 7).numFmt = '₹#,##0.00';
+    sheet.getCell(summaryStartRow + 2, 7).font = { bold: true };
+    
+    sheet.getCell(summaryStartRow + 3, 5).value = "Final Revenue:";
+    sheet.getCell(summaryStartRow + 3, 5).font = { bold: true };
+    sheet.getCell(summaryStartRow + 3, 7).value = report.summary?.finalAmount || 0;
+    sheet.getCell(summaryStartRow + 3, 7).numFmt = '₹#,##0.00';
+    sheet.getCell(summaryStartRow + 3, 7).font = { bold: true, color: { argb: '10b981' } };
+
+    // Generate filename with date range
+    const filename = `sales-report-${defaultStartDate}-to-${defaultEndDate}.xlsx`;
+
+    // Send as download
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+    
+  } catch (err) {
+    console.error("Error generating Excel report:", err);
+    res.status(500).json({
+      error: "Failed to generate Excel report",
+      message: err.message
+    });
+  }
+};

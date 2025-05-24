@@ -47,3 +47,52 @@
 [2025-05-23T17:21:49.568Z] INFO: GET /myprofile
 [2025-05-23T17:21:49.780Z] INFO: GET /myprofile
 [2025-05-23T17:22:05.719Z] INFO: GET /myprofile
+[2025-05-24T07:06:51.251Z] INFO: [object Object]
+[2025-05-24T07:09:52.093Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:12:02.283Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:13:56.367Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:14:15.911Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:14:36.825Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:15:37.790Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:17:47.099Z] INFO: {"_id":null,"totalSales":5760,"totalDiscount":584,"finalAmount":5176}
+[2025-05-24T07:19:52.560Z] INFO: {"_id":null,"totalSales":5760,"totalDiscount":584,"finalAmount":5176}
+[2025-05-24T07:22:35.097Z] INFO: {"_id":null,"totalSales":5760,"totalDiscount":584,"finalAmount":5176}
+[2025-05-24T07:22:44.623Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:30:57.540Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:31:02.093Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:35:03.377Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:35:40.727Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:36:11.914Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:37:38.989Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:38:06.061Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T07:39:16.484Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:25:13.677Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:27:11.347Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:28:20.546Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:37:34.709Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:39:29.359Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:18.782Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:33.847Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:35.897Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:37.494Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:38.798Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:47.203Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:49.472Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:53.592Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:54.742Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:41:55.464Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T08:52:24.349Z] INFO: {"_id":null,"totalSales":3840,"totalDiscount":584,"finalAmount":3256}
+[2025-05-24T14:49:45.856Z] CRITICAL: Unhandled Rejection: req is not defined
+[2025-05-24T14:50:16.116Z] CRITICAL: Unhandled Rejection: req is not defined
+[2025-05-24T14:50:16.931Z] CRITICAL: Unhandled Rejection: req is not defined
+[2025-05-24T14:50:17.150Z] CRITICAL: Unhandled Rejection: req is not defined
+[2025-05-24T14:50:20.427Z] CRITICAL: Unhandled Rejection: req is not defined
+[2025-05-24T14:50:54.612Z] CRITICAL: Unhandled Rejection: req is not defined
+[2025-05-24T14:50:58.602Z] CRITICAL: Unhandled Rejection: req is not defined
+[2025-05-24T14:51:00.073Z] CRITICAL: Unhandled Rejection: req is not defined
+[2025-05-24T14:53:24.971Z] ERROR: ReferenceError: limit is not defined
+[2025-05-24T15:01:47.896Z] CRITICAL: Uncaught Exception: write after end
+[2025-05-24T15:01:49.828Z] CRITICAL: Uncaught Exception: write after end
+[2025-05-24T15:03:41.118Z] CRITICAL: Uncaught Exception: write after end
+[2025-05-24T15:03:43.428Z] CRITICAL: Uncaught Exception: write after end
+[2025-05-24T15:04:22.637Z] CRITICAL: Uncaught Exception: write after end

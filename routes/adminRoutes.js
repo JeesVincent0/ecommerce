@@ -1,5 +1,5 @@
 import express from 'express'
-import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons, approveRefund, getReferralCoupons, addReferralCoupon, getReferralCoupon, saveReferralCoupon, blockReferralCoupon, searchReferralCoupons } from '../controllers/adminControllers.js'
+import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons, approveRefund, getReferralCoupons, addReferralCoupon, getReferralCoupon, saveReferralCoupon, blockReferralCoupon, searchReferralCoupons, getSalesReport, getSalesReportPdf, downloadSalesReportExcel } from '../controllers/adminControllers.js'
 import { productImageUpload, redirectIfAuthenticatedAdmin, verifyAdminJWT } from '../middleware/routerMiddleware.js'
 
 const router = express.Router()
@@ -118,5 +118,14 @@ router.patch("/coupon/referral/block", blockReferralCoupon);
 
 //This router for search referral coupon
 router.get("/coupon/referral/search", searchReferralCoupons)
+
+//get sales report
+router.get("/salesreport", getSalesReport);
+
+//download sales report in pdf
+router.get("/salesreport/pdf/download", getSalesReportPdf);
+
+//download sales report in excel
+router.get("/salesreport/excel/download", downloadSalesReportExcel);
 
 export default router
