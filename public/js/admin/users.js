@@ -9,6 +9,7 @@ window.addEventListener("DOMContentLoaded", () => {
         hideCategoryList();
         hideEditCategorySection();
         hideAddCategorySection();
+        accessSalesReportSection();
          const orderSection = document.getElementById("orderSection")
     orderSection.classList.add("hidden")
 

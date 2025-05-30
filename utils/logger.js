@@ -19,9 +19,10 @@ function writeToFile(level, message) {
 
 const logger = {
   debug: (msg) => {
-    const log = `[${getTime()}] DEBUG: ${msg}`;
+    const formattedMsg = typeof msg === 'object' ? JSON.stringify(msg) : msg;
+    const log = `[${getTime()}] DEBUG: ${formattedMsg}`;
     console.warn(log);
-    writeToFile('debug', msg);
+    writeToFile('debug', formattedMsg);
   },
   info: (msg) => {
     const formattedMsg = typeof msg === 'object' ? JSON.stringify(msg) : msg;

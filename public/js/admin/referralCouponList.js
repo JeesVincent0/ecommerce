@@ -6,6 +6,7 @@ function referralCouponList() {
     hideAddCategorySection();
     hideProductList();
     accessCouponSection()
+    accessSalesReportSection()
 
     const orderSection = document.getElementById("orderSection");
     orderSection.classList.add("hidden");

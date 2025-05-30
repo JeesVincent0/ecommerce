@@ -68,6 +68,7 @@ function loadCategoryList(categories) {
         categoriesContainer.innerHTML += `        
         <td class="py-3 px-6">${category.name}</td>
         <td class="py-3 px-6">${category.slug}</td>
+        <td class="py-3 px-6">${category.offers}</td>
         <td class="py-3 px-6 ${category.status === 'active' ? 'text-green-600' : 'text-red-600'}">
           ${category.status === 'active' ? 'Active' : 'Blocked'}
         </td>

@@ -102,3 +102,9 @@ function accessSalesReportSection() {
     salesReportList.innerHTML = "";
     return salesReportList
 }
+
+function accessDashBoardSection() {
+    const dashBoard = document.getElementById("dashBoard");
+    dashBoard.innerHTML = "";
+    return dashBoard
+}

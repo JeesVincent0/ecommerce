@@ -6,6 +6,7 @@ function productList() {
   hideCategoryList();
   hideEditCategorySection();
   hideAddCategorySection();
+  accessSalesReportSection()
 
   //changing side button color
   hideCategoryButton();

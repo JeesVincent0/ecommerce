@@ -175,7 +175,8 @@ function renderSalesTable(orders, summary, pagination) {
                     <th class="py-3 px-6 text-left">Payment ⬍</th>
                     <th class="py-3 px-6 text-left">Items ⬍</th>
                     <th class="py-3 px-6 text-left">Total ₹ ⬍</th>
-                    <th class="py-3 px-6 text-left">Offer ₹ ⬍</th>
+                    <th class="py-3 px-6 text-left">Dicount ₹ ⬍</th>
+                    <th class="py-3 px-6 text-left">Coupon offer ₹ ⬍</th>
                     <th class="py-3 px-6 text-left">Final ₹ ⬍</th>
                     <th class="py-3 px-6 text-left">Status</th>
                 </tr>
@@ -210,6 +211,7 @@ function renderSalesTable(orders, summary, pagination) {
     </div>`;
     const salesReportTableBody = document.getElementById("salesReportTableBody");
     salesReportTableBody.innerHTML = "";
+    console.log(orders)
 
     orders.forEach(order => {
         const row = document.createElement("tr");
@@ -220,8 +222,9 @@ function renderSalesTable(orders, summary, pagination) {
             <td class="px-6 py-4">${order.userName}</td>
             <td class="px-6 py-4">${new Date(order.placedAt).toLocaleDateString()}</td>
             <td class="px-6 py-4 capitalize">${order.paymentMethod}</td>
-            <td class="px-6 py-4">${order.items.reduce((sum, item) => sum + item.quantity, 0)}</td>
-            <td class="px-6 py-4">₹${order.totalAmount}</td>
+            <td class="px-6 py-4">${order.totalItems}</td>
+            <td class="px-6 py-4">₹${order.totalMRP}</td>
+            <td class="px-6 py-4 text-red-600">₹${order.totalMRP - order.totalAmount}</td>
             <td class="px-6 py-4 text-red-600">₹${order.coupon?.discountAmount || 0}</td>
             <td class="px-6 py-4 font-semibold">₹${order.grandTotal}</td>
             <td class="px-6 py-4 capitalize text-green-600">${order.orderStatus}</td>
@@ -240,7 +243,8 @@ function renderSalesTable(orders, summary, pagination) {
         <td class="px-6 py-4"></td>
         <td class="px-6 py-4"></td>
         <td class="px-6 py-4 font-semibold">TOTAL</td>
-        <td class="px-6 py-4">₹${summary.totalSales}</td>
+        <td class="px-6 py-4">₹${summary.totalMRP}</td>
+        <td class="px-6 py-4 text-red-600">₹${summary.totalMRP - summary.finalAmount}</td>
         <td class="px-6 py-4 text-red-600">₹${summary?.totalDiscount || 0}</td>
         <td class="px-6 py-4 font-semibold">₹${summary.finalAmount}</td>
         <td class="px-6 py-4"></td>

@@ -1,12 +1,9 @@
-import logger from "../utils/logger.js"
 import Order from "../models/ordersSchema.js";
 
 export const salesReportData = async (startDateRaw, endDateRaw, skip = 0, limit = 1000) => {
     try {
-        // Base filter: only delivered orders
         const filter = { orderStatus: 'delivered' };
 
-        // Helper to check valid date string
         const isValidDate = (dateStr) => {
             const d = new Date(dateStr);
             return !isNaN(d.getTime());
@@ -29,7 +26,7 @@ export const salesReportData = async (startDateRaw, endDateRaw, skip = 0, limit 
 
         const totalOrders = await Order.countDocuments(filter);
 
-        const orders = await Order.find(filter)
+        const rawOrders = await Order.find(filter)
             .sort({ placedAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -37,22 +34,51 @@ export const salesReportData = async (startDateRaw, endDateRaw, skip = 0, limit 
                 'orderId userName placedAt paymentMethod items totalAmount coupon.discountAmount grandTotal orderStatus'
             );
 
+        // Calculate totalItems and totalMRP per order
+        const orders = rawOrders.map(order => {
+            const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+            const totalMRP = order.items.reduce((sum, item) => sum + item.productPrice * item.quantity, 0);
+
+            return {
+                ...order._doc,
+                totalItems,
+                totalMRP
+            };
+        });
+
+        // Summary including totalMRP
         const summary = await Order.aggregate([
             { $match: filter },
+            { $unwind: '$items' },
             {
                 $group: {
                     _id: null,
                     totalSales: { $sum: '$totalAmount' },
                     totalDiscount: { $sum: '$coupon.discountAmount' },
                     finalAmount: { $sum: '$grandTotal' },
-                },
+                    totalMRP: {
+                        $sum: {
+                            $multiply: ['$items.productPrice', '$items.quantity']
+                        }
+                    }
+                }
             },
+            {
+                $project: {
+                    _id: 0,
+                    totalSales: 1,
+                    totalDiscount: 1,
+                    finalAmount: 1,
+                    totalMRP: 1
+                }
+            }
         ]);
 
         const salesSummary = summary[0] || {
             totalSales: 0,
             totalDiscount: 0,
             finalAmount: 0,
+            totalMRP: 0
         };
 
         return {
@@ -63,6 +89,6 @@ export const salesReportData = async (startDateRaw, endDateRaw, skip = 0, limit 
         };
 
     } catch (error) {
-        logger.error(`${error.toString()}`)
+        console.error(error.toString());
     }
-}
+};

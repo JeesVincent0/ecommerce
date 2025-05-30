@@ -134,7 +134,7 @@
               
               <div class="p-4">
                 <h3 class="font-semibold text-gray-800 mb-1 truncate"><%= item.productId.product_name %></h3>
-                <p class="text-indigo-600 font-medium mb-3">$<%= item.productId.last_price %></p>
+                <p class="text-indigo-600 font-medium mb-3">Rs.<%= item.productId.mrp %></p>
                 
                 <div class="flex space-x-2">
                   <button onclick="addToCart('<%= item.productId._id %>')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition-colors duration-200 flex items-center justify-center">
@@ -251,7 +251,7 @@
     }
 
     function addToCart(productId) {
-      fetch("/cart/add", {
+      fetch(`/add-to-cart/${productId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -261,9 +261,9 @@
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            alert("Product added to cart successfully!");
+            location.reload();
           } else {
-            alert("Failed to add product to cart");
+            
           }
         })
         .catch(err => console.error("Error:", err));

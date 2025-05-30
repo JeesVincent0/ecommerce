@@ -54,7 +54,7 @@ function renderEditCategoryForm(category) {
         <label for="categoryOffers" class="block text-sm font-medium text-gray-700">Offers (%)</label>
         <input type="number" id="categoryOffers1"
             class="mt-2 border rounded-lg py-2 pl-3 pr-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter any special offers for this category in numbers"
+            placeholder="${category.offers}"
             name="offers">
     </div>
 

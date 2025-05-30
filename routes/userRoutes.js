@@ -4,7 +4,8 @@ import passport from 'passport'
 import multer from 'multer'
 
 //importing local modules
-import { addToCart, addToWishlist, cancelOrder, cancelOrderItem, cancelOrderItemController, checkmail, checkotp, checkOut, checkReferralCode, createAddress, createNewPassword, createNewUser, createOrder, decreamentItem, deleteAddress, deleteItem, editProfile, forgottonPassword, generateReferalUrl, getAddress, getCartDetails, getCreatePassword,  getHome,  getInvoice,  getLogin, getOrders, getOrdersAdmin, getProducts, getProfile, getProfilePic, getWallet, googleCallback, listProducts, logout, notfound, ordersPage, otpPage, otpSend, otpVerify, passwordChange, paymentMethods, productDetail, removeFromWishlist, renderCart, renderFailed, renderProfile, renderReferralPage, renderSuccess, renderWishlist, returnOrder, signUpPage, updateAddress, updateOrderStatus, userLogout, verifyCoupon, verifyLogin, verifyOtp, verifyPayment } from '../controllers/userControllers.js'
+import userOrderController from '../controllers/userControllers/userOrders.js'
+import { addToCart, addToWishlist, cancelOrderItemController, checkmail, checkotp, checkReferralCode, createAddress, createNewPassword, createNewUser, decreamentItem, deleteAddress, deleteItem, editProfile, forgottonPassword, generateReferalUrl, getAddress, getCreatePassword,  getHome,  getInvoice,  getLogin, getOrdersAdmin, getProducts, getProfile, getProfilePic, getWallet, googleCallback, listProducts, logout, notfound, otpPage, otpSend, otpVerify, passwordChange, paymentMethods, productDetail, removeFromWishlist, renderCart, renderFailed, renderProfile, renderReferralPage, renderSuccess, renderWishlist, signUpPage, updateAddress, updateOrderItemStatus, userLogout, verifyCoupon, verifyLogin, verifyOtp, verifyPayment } from '../controllers/userControllers.js'
 import { redirectIfAuthenticated, verifyUserJWT } from '../middleware/routerMiddleware.js'
 
 //setting router to a variable
@@ -104,47 +105,33 @@ router.get("/cart", renderCart);
 //add product to cart
 router.post("/add-to-cart/:id", addToCart);
 
-//get cart details
-router.get("/get-cart", getCartDetails);
-
 //decreament items quantity
 router.post("/decrement-cart/:id", decreamentItem);
 
 //delete cart items
 router.delete("/delete-item/:id", deleteItem);
 
-//checkout from cart
-router.get("/checkout", checkOut);
-
-//create order collection using cart details and address selcted
-router.post("/select-address", createOrder);
-
 //select order payment method
 router.post("/place-order", paymentMethods);
 
-//get order page
-router.get("/orders", ordersPage);
 
-//get all orders
-router.get("/get-orders", getOrders)
+
+
 
 //for admin list all orders
 router.get("/get-orders-admin", getOrdersAdmin)
 
 // PUT route to update order status
-router.put('/orders/:id/status', updateOrderStatus);
+router.put('/orders/status', updateOrderItemStatus);
 
-//cancelling full order
-router.put('/orders/:id/cancel', cancelOrder);
 
-//cancell one spesific order from the order
-router.patch("/user/order/item/cancel", cancelOrderItem)
+
+// //cancell one spesific order from the order
+// router.patch("/user/order/item/cancel", cancelOrderItem)
 
 //cancelling one item from a order
 router.patch('/order/item/cancel', cancelOrderItemController);
 
-//return request
-router.put("/orders/:id/return", returnOrder);
 
 // Route to download invoice
 router.get('/orders/:id/invoice', getInvoice);
@@ -185,6 +172,33 @@ router.post("/referralcode", checkReferralCode);
 //signUp with google setup
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email']}))
 router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/'}), googleCallback)
+
+
+
+
+
+
+//@desc router for orders
+//get order page
+router.get("/orders", userOrderController.ordersPage);
+
+//get all orders
+router.get("/get-orders", userOrderController.getOrders)
+
+//cancelling order items
+router.put('/orders/:id/cancel', userOrderController.cancelOrder);
+
+//return request
+router.put("/orders/:id/return", userOrderController.returnOrder);
+
+//get cart details
+router.get("/get-cart", userOrderController.getCartDetails);
+
+//checkout from cart
+router.get("/checkout", userOrderController.checkOut);
+
+//create order collection using cart details and address selcted
+router.post("/select-address", userOrderController.createOrder);
 
 
 export default router

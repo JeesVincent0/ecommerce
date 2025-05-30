@@ -9,13 +9,18 @@ passport.use( new googleStratergy({
     callbackURL: '/auth/google/callback'
 },
 async (accessToken, refreshToken, profile, done) => {
+
+        const referalCode = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+        const referralUrl = "http://localhost:3000/signup?ref=" + referalCode;
     
     let user = await User.findOne({ googleId: profile.id });
     if(!user) {
         user = await User.create({
             googleId: profile.id,
             email: profile.emails[0].value,
-            name: profile.displayName
+            name: profile.displayName,
+            referralUrl,
+            referalCode
         })
     }
     return done(null, user)

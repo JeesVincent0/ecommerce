@@ -195,20 +195,10 @@ function renderMyProfile(user, coupons) {
                 </svg>
             </div>
             <h2 class="text-2xl font-bold text-gray-900 mb-2">Share & Earn</h2>
-            <p class="text-gray-600 max-w-md mx-auto">Generate your unique referral link and earn rewards when friends join using your link.</p>
+            <p class="text-gray-600 max-w-md mx-auto">Earn rewards when friends join using your link.</p>
         </div>
         
-        <div class="max-w-md mx-auto">
-            <button 
-                id="generateBtn" 
-                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none mb-6"
-            >
-                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Create New Referral Link
-            </button>
-        </div>
+
         
         <!-- Loading State -->
         <div id="loadingDiv" class="text-center py-8 hidden">
@@ -234,17 +224,12 @@ function renderMyProfile(user, coupons) {
                     <code id="referralUrl" class="text-blue-600 text-sm break-all select-all font-mono">${user.referralUrl}</code>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <button 
-                        id="copyBtn" 
-                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                        Copy Link
-                    </button>
+
+                <div class="bg-white border-2 border-green-200 rounded-lg p-4 mb-4">
+                    <code id="referralCode" class="text-blue-600 text-sm break-all select-all font-mono">${user.referalCode}</code>
                 </div>
+                
+
             </div>
             
             <!-- Success Message -->
@@ -616,23 +601,26 @@ function renderEditProfile(user) {
                     </div>
                 </div>
 
-                <!-- Additional Options -->
-                <div class="bg-gray-50/50 rounded-xl p-4 space-y-3">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Preferences
-                    </h3>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600">Email notifications</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                    </div>
+                <!-- Password Field (Initially Hidden) -->
+                <div id="passwordSection" class="hidden">
+                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            Current Password
+                            <span class="text-red-500 ml-1">*</span>
+                        </span>
+                    </label>
+                    <input type="password" 
+                           name="password" 
+                           id="password" 
+                           placeholder="Enter your current password to change email"
+                           class="w-full px-4 py-3 bg-red-50 border border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all placeholder-gray-400" />
+                    <p class="text-xs text-red-600 mt-1">Password is required when changing your email address</p>
                 </div>
+
+                <!-- Additional Options -->
 
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-4 pt-6">
@@ -662,6 +650,10 @@ function renderEditProfile(user) {
 
     editImagePreview()
 
+    // Store original email for comparison
+    const originalEmail = user.email;
+
+    // Handle profile picture preview
     document.getElementById('profilePic').addEventListener('change', function (e) {
         const file = e.target.files[0];
         if (file) {
@@ -669,11 +661,44 @@ function renderEditProfile(user) {
         }
     });
 
+    // Monitor email field changes
+    document.getElementById('email').addEventListener('input', function (e) {
+        const newEmail = e.target.value.trim();
+        const passwordSection = document.getElementById('passwordSection');
+        const passwordField = document.getElementById('password');
+        
+        if (newEmail && newEmail !== originalEmail) {
+            // Show password field if email is being changed
+            passwordSection.classList.remove('hidden');
+            passwordField.required = true;
+        } else {
+            // Hide password field if email is not changed or empty
+            passwordSection.classList.add('hidden');
+            passwordField.required = false;
+            passwordField.value = '';
+        }
+    });
+
+    // Handle form submission
     document.getElementById('editProfileForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
         const form = e.target;
         const formData = new FormData(form);
+        const newEmail = formData.get('email');
+        
+        // Check if email is being changed and password is required
+        if (newEmail && newEmail !== originalEmail) {
+            const password = formData.get('password');
+            if (!password || password.trim() === '') {
+                alert('Password is required when changing your email address.');
+                document.getElementById('password').focus();
+                return;
+            }
+        }
+
+        // Add original email to form data for backend reference
+        formData.append('originalEmail', originalEmail);
 
         fetch('/edit-profile', {
             method: 'PATCH',
@@ -683,10 +708,19 @@ function renderEditProfile(user) {
             .then(data => {
                 if (data.success) {
                     myProfile()
+                } else {
+                    // Handle specific error messages
+                    if (data.error === 'Invalid password') {
+                        alert('Incorrect password. Please try again.');
+                        document.getElementById('password').focus();
+                    } else {
+                        alert(data.error || 'An error occurred while updating your profile.');
+                    }
                 }
             })
             .catch(err => {
                 console.error("Error:", err);
+                alert('Network error. Please try again.');
             });
     });
 
@@ -1514,13 +1548,16 @@ function filterAllTransactions(type) {
 
 
 function deleteAddress(addressId) {
-    fetch(`/address/${addressId}`, {
-        method: "DELETE"
-    })
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.success) {
-                myProfile();
-            }
+    if(confirm("Are you sure to delete this addrees")) {
+
+        fetch(`/address/${addressId}`, {
+            method: "DELETE"
         })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) {
+                    myProfile();
+                }
+            })
+    }
 }

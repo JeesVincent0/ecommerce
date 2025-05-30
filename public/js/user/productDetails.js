@@ -41,9 +41,9 @@ const cartAPI = {
           ...options.headers
         }
       });
-
+      console.log("jadlksfda", response)
       if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
+        throw new Error(`Request failed with status ${response.message}`);
       }
 
       return await response.json();
@@ -131,7 +131,7 @@ const cartAPI = {
 // Cart UI Controller - Handles UI updates
 const cartUI = {
   // Main cart rendering
-  renderCartItems(cart) {
+  renderCartItems(cart, coupons) {
     if (!cart || !cart.items || !cart.items.length) {
       this.renderEmptyCart();
       return;
@@ -194,7 +194,7 @@ const cartUI = {
     cartState.totalItems = totalItems;
 
     // Render order summary
-    this.renderOrderSummary(totalItems, totalPrice, totalPrice);
+    this.renderOrderSummary(totalItems, totalPrice, totalPrice, coupons);
   },
 
   renderEmptyCart() {
@@ -217,7 +217,8 @@ const cartUI = {
     sideSection.innerHTML = '';
   },
 
-  renderOrderSummary(totalItems, totalPrice, grandTotal = totalPrice) {
+  renderOrderSummary(totalItems, totalPrice, grandTotal = totalPrice, coupons) {
+    console.log(coupons)
     const sideSection = domHelpers.accessSideSection();
 
     sideSection.innerHTML = `
@@ -242,25 +243,32 @@ const cartUI = {
           <span class="text-green-600 font-medium">₹${grandTotal - totalPrice}</span>
         </div>
 
-        <!-- Apply coupon -->
-        <div class="w-full max-w-md mx-auto mt-6 hidden" id="applyCoupon">
-          <label for="coupon" class="block text-sm font-medium text-gray-700 mb-1" id="couponLabel">Coupon Code</label>
-          <div class="relative">
-            <input
-              type="text"
-              id="couponCode"
-              name="coupon"
-              placeholder="Enter coupon"
-              class="w-full pr-20 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onclick="applyCoupon()"
-              class="absolute right-1 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
+<!-- Apply coupon -->
+<div class="w-full max-w-md mx-auto mt-6 hidden" id="applyCoupon">
+  <label for="coupon" class="block text-sm font-medium text-gray-700 mb-1" id="couponLabel">Coupon Code</label>
+  <div class="relative">
+    <input
+      type="text"
+      id="couponCode"
+      name="coupon"
+      placeholder="Enter coupon"
+      class="w-full pr-20 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <button
+      onclick="applyCoupon()"
+      class="absolute right-1 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded-md hover:bg-blue-700"
+    >
+      Apply
+    </button>
+  </div>
+  <div class="max-h-48 overflow-y-auto space-y-2 mt-3">
+    ${coupons ? coupons.map(coupon => `
+      <div class="px-4 py-2 border rounded-lg bg-gray-100 text-sm text-gray-800 flex justify-between items-center">
+        <span>${coupon.code}</span>
+      </div>
+    `).join("") : ""}
+  </div>
+</div>
 
 
         <hr class="my-3" />
@@ -545,23 +553,10 @@ const cartUI = {
             </label>
 
             <!-- Razorpay (Coming Soon) -->
-            <label class="flex items-center p-4 border rounded-xl bg-gray-100 cursor-not-allowed opacity-60">
+            <label class="flex items-center p-4 border-2 border-green-500 rounded-xl cursor-pointer hover:bg-green-50 transition-colors duration-200">
               <input type="radio" name="paymentMethod" value="razorpay" class="form-radio">
-              <span class="ml-3 text-gray-500">Razorpay </span>
+              <span class="ml-3 font-medium text-gray-800">Razorpay </span>
             </label>
-
-            <!-- Google Pay (Coming Soon) -->
-            <label class="flex items-center p-4 border rounded-xl bg-gray-100 cursor-not-allowed opacity-60">
-              <input type="radio" name="paymentMethod" value="googlepay" class="form-radio" disabled>
-              <span class="ml-3 text-gray-500">Google Pay (Coming Soon)</span>
-            </label>
-
-            <!-- Paytm (Coming Soon) -->
-            <label class="flex items-center p-4 border rounded-xl bg-gray-100 cursor-not-allowed opacity-60">
-              <input type="radio" name="paymentMethod" value="paytm" class="form-radio" disabled>
-              <span class="ml-3 text-gray-500">Paytm (Coming Soon)</span>
-            </label>
-          </div>
         </form>
       </div>`;
   },
@@ -719,7 +714,7 @@ const cartActions = {
     const response = await cartAPI.getCart();
 
     if (response.success) {
-      cartUI.renderCartItems(response.cart);
+      cartUI.renderCartItems(response.cart, response.coupons);
     } else {
       cartUI.renderEmptyCart();
       cartUI.showToast('Failed to load cart', 'error');
@@ -929,6 +924,7 @@ const cartActions = {
     const response = await cartAPI.placeOrder(paymentMethod, orderId);
 
     if (response.success) {
+      console.log(response)
       if (paymentMethod === 'cod') {
         // Cash on delivery - redirect to success page
         window.location.href = '/order-success';
@@ -942,40 +938,45 @@ const cartActions = {
   },
 
   initializeRazorpay(paymentData) {
-    const options = {
-      key: paymentData.key,
-      amount: paymentData.amount,
-      currency: 'INR',
-      order_id: paymentData.razorpayOrderId,
-      handler: async (response) => {
-        // Verify payment on callback
-        const verifyData = {
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_signature: response.razorpay_signature,
-          orderId: paymentData.orderId
-        };
+  const options = {
+    key: paymentData.key,
+    amount: paymentData.amount,
+    currency: 'INR',
+    order_id: paymentData.razorpayOrderId,
+    handler: async (response) => {
+      // Verify payment on callback
+      const verifyData = {
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature,
+        orderId: paymentData.orderId
+      };
 
-        const verifyResponse = await cartAPI.verifyPayment(verifyData);
+      const verifyResponse = await cartAPI.verifyPayment(verifyData);
 
-        if (verifyResponse.success) {
-          window.location.href = '/order-success';
-        } else {
-          window.location.href = '/order-failed';
-        }
-      },
-      theme: { color: '#3399cc' }
-    };
+      if (verifyResponse.success) {
+        window.location.href = '/order-success';
+      } else {
+        window.location.href = '/order-failed';
+      }
+    },
+    modal: {
+      ondismiss: function () {
+        window.location.href = '/order-failed';
+      }
+    },
+    theme: { color: '#3399cc' }
+  };
 
-    try {
-      const rzp = new Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error('Razorpay initialization failed:', error);
-      cartUI.showToast('Payment gateway initialization failed', 'error');
-    }
-  },
-
+  try {
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch (error) {
+    console.error('Razorpay initialization failed:', error);
+    cartUI.showToast('Payment gateway initialization failed', 'error');
+  }
+}
+,
   // Wishlist actions
   async addToWishlist(productId) {
     const response = await cartAPI.addToWishlist(productId);
@@ -1036,19 +1037,19 @@ async function checkOutFinal() {
 
   const orderIdInput = document.querySelector('input[name="orderId"]');
   const orderId = orderIdInput ? orderIdInput.value : null;
-    const response = await cartAPI.placeOrder(paymentMethod, orderId);
+  const response = await cartAPI.placeOrder(paymentMethod, orderId);
 
-    if (response.success) {
-      if (paymentMethod === 'cod') {
-        // Cash on delivery - redirect to success page
-        window.location.href = '/order-success';
-      } else if (response.razorpayOrderId) {
-        // Online payment - initialize payment gateway
-        cartActions.initializeRazorpay(response);
-      }
-    } else {
-      cartUI.showToast('Failed to place order', 'error');
+  if (response.success) {
+    if (paymentMethod === 'cod') {
+      // Cash on delivery - redirect to success page
+      window.location.href = '/order-success';
+    } else if (response.razorpayOrderId) {
+      // Online payment - initialize payment gateway
+      cartActions.initializeRazorpay(response);
     }
+  } else {
+    cartUI.showToast('Failed to place order', 'error');
+  }
   // fetch("/place-order", {
   //   method: "POST",
   //   headers: { "Content-Type": "application/json" },

@@ -1,5 +1,5 @@
 import express from 'express'
-import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons, approveRefund, getReferralCoupons, addReferralCoupon, getReferralCoupon, saveReferralCoupon, blockReferralCoupon, searchReferralCoupons, getSalesReport, getSalesReportPdf, downloadSalesReportExcel } from '../controllers/adminControllers.js'
+import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons, approveRefund, getReferralCoupons, addReferralCoupon, getReferralCoupon, saveReferralCoupon, blockReferralCoupon, searchReferralCoupons, getSalesReport, getSalesReportPdf, downloadSalesReportExcel, dashBoardData, getSalesChartData } from '../controllers/adminControllers.js'
 import { productImageUpload, redirectIfAuthenticatedAdmin, verifyAdminJWT } from '../middleware/routerMiddleware.js'
 
 const router = express.Router()
@@ -68,7 +68,7 @@ router.post('/product/edit',  productImageUpload, editProduct);
 //product delete
 router.delete("/product/delete/:id", deleteProduct);
 
-// Backend (Express)
+
 // router.put('/orders/:orderId/status', updateOrderStatus)
 
 //block and unblock category
@@ -127,5 +127,11 @@ router.get("/salesreport/pdf/download", getSalesReportPdf);
 
 //download sales report in excel
 router.get("/salesreport/excel/download", downloadSalesReportExcel);
+
+//get data for admin dashborde
+router.get("/dashboard", dashBoardData)
+
+//get sales report for admin dashboard
+router.get('/sales-chart-data', getSalesChartData);
 
 export default router

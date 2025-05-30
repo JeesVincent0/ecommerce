@@ -109,7 +109,12 @@ export const verifyOtp = async (req, res) => {
             hashPassword: tempUser.hashPassword
         })
 
-        await newUser.save()
+        const userSaved = await newUser.save()
+
+        const referalCode1 = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+        const referralUrl = "http://localhost:3000/signup?ref=" + referalCode1;
+
+        const userDetails = await User.findOneAndUpdate({ _id: userSaved._id }, { $set: { referralUrl, referalCode: referalCode1 } }, { new: true })
 
         const availableCoupons = await referralCoupon.aggregate([
             {
@@ -810,7 +815,7 @@ export const getProfile = async (req, res) => {
 
         const user = await User.findOne({ email }, { profileImage: 0 }).populate('addresses');
 
-        const coupons = await referralCoupon.find({ applicableUsers: { $elemMatch: { userId: user._id, limit: { $gt: 0 } }} });
+        const coupons = await referralCoupon.find({ applicableUsers: { $elemMatch: { userId: user._id, limit: { $gt: 0 } } } });
 
 
         res.json({ success: true, user, coupons })
@@ -904,23 +909,70 @@ export const passwordChange = async (req, res) => {
 
 //@desc save changes for my profile
 //PATCH /edit-profile
+
 export const editProfile = async (req, res) => {
     try {
-        const { name, email, phone } = req.body;
+        const { name, email, phone, password, originalEmail } = req.body;
         const imageBuffer = req.file?.buffer;
         const contentType = req.file?.mimetype;
 
         const token = req.cookies.jwt;
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const currentUserEmail = decoded.userEmail;
 
-        const email1 = decoded.userEmail;
+        // Find the current user
+        const currentUser = await User.findOne({ email: currentUserEmail });
+        if (!currentUser) {
+            return res.status(404).json({ success: false, error: "User not found" });
+        }
 
+        // Check if email is being changed
+        const isEmailChanging = email && email !== currentUserEmail;
+
+        // If email is being changed, verify password
+        if (isEmailChanging) {
+            // Check if user has a password (not a Google user)
+            if (!currentUser.hashPassword) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Cannot change email for Google authenticated accounts without setting a password first"
+                });
+            }
+
+            // Verify password is provided
+            if (!password) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Password is required to change email address"
+                });
+            }
+
+            // Verify password is correct
+            const isPasswordValid = await bcrypt.compare(password, currentUser.hashPassword);
+            if (!isPasswordValid) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Invalid password"
+                });
+            }
+
+            // Check if new email already exists
+            const existingUser = await User.findOne({ email: email });
+            if (existingUser && existingUser._id.toString() !== currentUser._id.toString()) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Email address is already in use"
+                });
+            }
+        }
+
+        // Build update data
         const updateData = {};
+        if (name && name.trim()) updateData.name = name.trim();
+        if (phone && phone.trim()) updateData.phone = phone.trim();
+        if (email && email.trim()) updateData.email = email.trim();
 
-        if (name) updateData.name = name;
-        if (phone) updateData.phone = phone;
-        if (email) updateData.email = email;
-
+        // Handle profile image
         if (req.file) {
             updateData.profileImage = {
                 data: imageBuffer,
@@ -928,26 +980,65 @@ export const editProfile = async (req, res) => {
             };
         }
 
+        // Update user
         const updatedUser = await User.findOneAndUpdate(
-            { email: email1 },
+            { email: currentUserEmail },
             updateData,
-            { new: true }
+            { new: true, runValidators: true }
         );
 
         if (!updatedUser) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ success: false, error: "Failed to update user" });
         }
 
-        if (email) {
-            const token = createToken(email, '1h')
-            res.cookie("jwt", token, { httpOnly: true })
+        // If email was changed, create new JWT token with new email
+        if (isEmailChanging) {
+            const newToken = createToken(email, '1h');
+            res.cookie("jwt", newToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict'
+            });
         }
 
-        res.json({ success: true, user: updatedUser });
+        // Return success response (exclude sensitive data)
+        const { hashPassword, ...userWithoutPassword } = updatedUser.toObject();
+
+        res.json({
+            success: true,
+            user: userWithoutPassword,
+            message: isEmailChanging ? "Profile updated successfully. Please log in again if needed." : "Profile updated successfully"
+        });
 
     } catch (error) {
-        console.log(error.toString());
-        res.status(500).json({ success: false, message: "Something went wrong" });
+        console.error("Edit Profile Error:", error);
+
+        // Handle specific MongoDB errors
+        if (error.code === 11000) {
+            return res.status(400).json({
+                success: false,
+                error: "Email address is already in use"
+            });
+        }
+
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid data provided"
+            });
+        }
+
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({
+                success: false,
+                error: "Invalid authentication token"
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            error: "Something went wrong. Please try again."
+        });
     }
 };
 
@@ -1148,28 +1239,6 @@ export const addToCart = async (req, res) => {
     }
 };
 
-
-
-//@desc get cart details 
-//GET /get-cart
-export const getCartDetails = async (req, res) => {
-    try {
-
-        const token = req.cookies.jwt
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const email = decoded.userEmail;
-        const userId = await User.findOne({ email }).select("_id")
-
-        const cart = await Cart.findOne({ userId: userId._id }).populate('items.productId')
-
-
-        res.json({ success: true, cart })
-    } catch (error) {
-        console.log(error.toString())
-        res.json({ success: false })
-    }
-}
-
 // @desc Decrement item quantity in cart
 // @route POST /decrement-cart/:id
 export const decreamentItem = async (req, res) => {
@@ -1235,98 +1304,6 @@ export const deleteItem = async (req, res) => {
     }
 };
 
-//@desc checkout from cart
-//GET /checkout
-export const checkOut = async (req, res) => {
-    try {
-
-        const token = req.cookies.jwt;
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const email = decoded.userEmail;
-
-        const user = await User.findOne({ email }).select('_id');
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-        const cart = await Cart.findOne({ userId: user._id });
-        if (!cart || !cart.items || cart.items.length === 0) {
-            return res.status(400).json({ success: false, message: 'Cart is empty' });
-        }
-
-
-        const address = await Address.find({ userId: user._id });
-
-        res.json({ success: true, address });
-
-
-
-    } catch (error) {
-        console.log(error.toString())
-        res.status(500).json({ success: false })
-    }
-}
-
-//@desc create new order
-//POST /select-address
-export const createOrder = async (req, res) => {
-    try {
-        const token = req.cookies.jwt;
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const email = decoded.userEmail;
-
-        const user = await User.findOne({ email });
-        const cart = await Cart.findOne({ userId: user._id }).populate('items.productId');
-
-        if (!cart || cart.items.length === 0) {
-            return res.status(400).json({ success: false, message: 'Cart is empty' });
-        }
-
-        // Use selected addressId from frontend
-        const { addressId } = req.body;
-
-        const shippingAddress = await Address.findOne({ _id: addressId, userId: user._id });
-        if (!shippingAddress) {
-            return res.status(400).json({ success: false, message: 'Shipping address not found' });
-        }
-
-        // Calculate total
-        const totalAmount = cart.items.reduce((sum, item) => {
-            return sum + (item.priceAtTime * item.quantity);
-        }, 0);
-
-        const newOrder = new Order({
-            orderId: generateOrderId(),
-            userId: user._id,
-            userName: user.name,
-            items: cart.items.map(item => ({
-                productId: item.productId._id,
-                quantity: item.quantity,
-                priceAtPurchase: item.priceAtTime
-            })),
-            shippingAddress: {
-                housename: shippingAddress.housename,
-                street: shippingAddress.street,
-                city: shippingAddress.city,
-                state: shippingAddress.state,
-                postalCode: shippingAddress.postalCode,
-                label: shippingAddress.label,
-                phone: user.phone
-            },
-            totalAmount,
-            grandTotal: totalAmount,
-            orderStatus: 'failed'
-        });
-
-        await newOrder.save();
-
-        res.status(200).json({ success: true, orderId: newOrder._id, message: 'Order placed successfully' });
-    } catch (error) {
-        console.log(error.toString())
-        res.status(500).json({ success: false, message: "Something went wrong" })
-    }
-}
-
 //@desc verify coupon
 //POST /checkcoupon
 export const verifyCoupon = async (req, res) => {
@@ -1334,11 +1311,13 @@ export const verifyCoupon = async (req, res) => {
 
         const { code, orderId } = req.body;
 
+
         //gettion user from JWT token for check user used the coupon
         const token = req.cookies.jwt;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const email = decoded.userEmail;
         const user = await User.findOne({ email });
+
 
         let updatedOrder
         let totalItems
@@ -1360,10 +1339,12 @@ export const verifyCoupon = async (req, res) => {
             res.json({ success: false, message: "Coupon not valid" })
         }
 
+
         if (coupon) {
 
             //getting order document for edit amount and add coupon details
             const order = await Order.findOne({ _id: orderId });
+            logger.info(order)
 
             //checking the customer purchase amount and coupon minimum purchase value
             if (order.grandTotal < coupon.minPurchase) {
@@ -1412,9 +1393,7 @@ export const verifyCoupon = async (req, res) => {
 //@desc select payment method
 //POST /place-order
 export const paymentMethods = async (req, res) => {
-
     const { orderId, paymentMethod } = req.body;
-
 
     if (!orderId || !paymentMethod) {
         return res.status(400).json({ success: false, message: "Missing order ID or payment method." });
@@ -1424,21 +1403,69 @@ export const paymentMethods = async (req, res) => {
         const order = await Order.findById(orderId).populate("items.productId");
         if (!order) return res.status(404).json({ success: false, message: "Order not found." });
 
+        // Enforce payment method rule (COD only if total <= 1000)
+        if (paymentMethod === 'cod' && order.grandTotal > 1000) {
+            return res.status(400).json({
+                success: false,
+                message: "COD is allowed only for orders below ₹1000. Please select an online payment method."
+            });
+        }
 
-        //getting user for get user _id
+        // Get user
         const token = req.cookies.jwt;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const email = decoded.userEmail;
         const user = await User.findOne({ email });
 
-        //creating new orderID
-        const orderId1 = generateOrderId();
+        // Check stock
+        const updatedItems = [];
+        const removedProducts = [];
 
+        for (const item of order.items) {
+            const product = await Product.findById(item.productId._id);
+            if (!product || product.stock < item.quantity) {
+                removedProducts.push(product?.product_name || "Unknown Product");
+            } else {
+                updatedItems.push(item);
+            }
+        }
+
+        // If stock is not enough
+        if (removedProducts.length > 0) {
+            // Remove items from order and save
+            order.items = updatedItems;
+            await order.save();
+
+            // Also update user's cart
+            const cart = await Cart.findOne({ userId: user._id });
+            if (cart) {
+                cart.items = cart.items.filter(cartItem =>
+                    updatedItems.some(orderItem => orderItem.productId._id.toString() === cartItem.productId.toString())
+                );
+                await cart.save();
+            }
+
+            return res.status(400).json({
+                success: false,
+                message: "Some products were removed due to insufficient stock",
+                removedProducts
+            });
+        }
+
+        // Proceed with payment
+        const newOrderId = generateOrderId();
         order.paymentMethod = paymentMethod;
         order.orderPlaced = true;
-        order.orderId = orderId1;
+        order.orderId = newOrderId;
         order.orderStatus = "placed";
 
+        //Set each item's orderStatus to "processing"
+        order.items = order.items.map(item => ({
+            ...item.toObject(),
+            orderStatus: "processing"
+        }));
+
+        // Decrease product stock
         for (let item of order.items) {
             const product = await Product.findById(item.productId._id);
             if (product) {
@@ -1448,15 +1475,13 @@ export const paymentMethods = async (req, res) => {
             }
         }
 
-        await order.save();
-
+        // Razorpay Payment
         if (paymentMethod === "razorpay") {
             const razorpayOrder = await instance.orders.create({
-                amount: order.grandTotal * 100,
+                amount: Math.round(order.grandTotal * 100),
                 currency: "INR",
-                receipt: `receipt_${orderId1}`,
+                receipt: `receipt_${newOrderId}`,
             });
-
 
             return res.json({
                 success: true,
@@ -1468,46 +1493,45 @@ export const paymentMethods = async (req, res) => {
             });
         }
 
-        const couponCode = order.coupon.code;
-        const userId = user._id
+        await order.save();
 
-        // Find the coupon
-        const coupon = await Coupon.findOne({ code: couponCode });
+        // Handle Coupon Use
+        const couponCode = order?.coupon?.code;
+        const userId = user._id;
 
-        if (coupon) {
-            const userIndex = coupon.usedBy.findIndex(entry => entry.userId.toString() === userId.toString());
+        if (couponCode) {
+            const coupon = await Coupon.findOne({ code: couponCode });
+            if (coupon) {
+                const userIndex = coupon.usedBy.findIndex(entry => entry.userId.toString() === userId.toString());
 
-            if (userIndex !== -1) {
-                // User exists, increment usageCount
-                coupon.usedBy[userIndex].usageCount += 1;
-            } else {
-                // New user, add to usedBy array
-                coupon.usedBy.push({ userId, usageCount: 1 });
+                if (userIndex !== -1) {
+                    coupon.usedBy[userIndex].usageCount += 1;
+                } else {
+                    coupon.usedBy.push({ userId, usageCount: 1 });
+                }
+
+                await coupon.save();
+                await Coupon.updateMany({ code: couponCode }, { $inc: { totalUsageLimit: -1, usedCount: 1 } });
             }
 
-            // Save the updated coupon
-            await coupon.save();
-            await Coupon.updateMany({ code: couponCode }, { $inc: { totalUsageLimit: -1, usedCount: 1 } })
+            const refCoupon = await referralCoupon.findOne({ code: couponCode });
+            if (refCoupon) {
+                await referralCoupon.updateOne(
+                    { code: couponCode, "applicableUsers.userId": userId },
+                    { $inc: { "applicableUsers.$.limit": -1 } }
+                );
+            }
         }
 
-        const referralcoupon = await referralCoupon.findOne({ code: couponCode });
-
-        if (referralcoupon) {
-            const updated = await referralCoupon.updateOne(
-                {
-                    code: couponCode,
-                    "applicableUsers.userId": user._id  // Match the user inside the array
-                },
-                {
-                    $inc: { "applicableUsers.$.limit": -1 }  // Decrease the limit by 1
-                }
-            );
-        }
-
-
-        // Clear the cart
+        // Clear cart
         await Cart.findOneAndUpdate({ userId: user._id }, { items: [] });
-        return res.json({ success: true, message: "Order placed with Cash on Delivery", razorpayOrderId: false, cod: true });
+
+        return res.json({
+            success: true,
+            message: "Order placed with Cash on Delivery",
+            razorpayOrderId: false,
+            cod: true
+        });
 
     } catch (err) {
         console.error("Error placing order:", err);
@@ -1533,7 +1557,25 @@ export const verifyPayment = async (req, res) => {
         .digest("hex");
 
     if (expectedSignature === razorpay_signature) {
-        const order = await Order.findByIdAndUpdate(orderId, { paymentStatus: "paid" }, { new: true });
+
+        const order = await Order.findById(orderId).populate("items.productId");
+
+        // Proceed with payment
+        const newOrderId = generateOrderId();
+        order.orderPlaced = true;
+        order.orderId = newOrderId;
+        order.orderStatus = "placed";
+        order.paymentMethod = "razorpay";
+        order.paymentStatus = "paid";
+
+        //Set each item's orderStatus to "processing"
+        order.items = order.items.map(item => ({
+            ...item.toObject(),
+            orderStatus: "processing"
+        }));
+
+        await order.save();
+
         const couponCode = order.coupon.code;
         const userId = user._id
         // Step 1: Find the coupon
@@ -1591,38 +1633,6 @@ export const renderFailed = (req, res) => {
         res.status(500).json({ success: false, message: "Something went wrong" })
     }
 }
-
-//@desc render orders page
-//GET /orders
-export const ordersPage = async (req, res) => {
-    try {
-        res.render("user/orders")
-    } catch (error) {
-        console.log(error.toString())
-        res.status(500).json({ success: false, message: "Something went wrong" })
-    }
-}
-
-//@desc get all orders
-//GET /get-orders
-export const getOrders = async (req, res) => {
-    try {
-        const token = req.cookies.jwt;
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const email = decoded.userEmail;
-        const user = await User.findOne({ email }).select("_id");
-
-        const orders = await Order.find({ userId: user._id })
-            .sort({ placedAt: -1 })
-            .populate({ path: "items.productId", select: "product_name price images" })
-            .populate({ path: "userId", select: "name email" });
-
-        res.json({ success: true, orders });
-    } catch (error) {
-        console.log("Populate error:", error.toString());
-        res.status(500).json({ success: false, message: "Something went wrong" });
-    }
-};
 
 export const cancelOrderItemController = async (req, res) => {
     try {
@@ -1708,105 +1718,49 @@ export const getOrdersAdmin = async (req, res) => {
     }
 };
 
-
-export const updateOrderStatus = async (req, res) => {
+//@desc change one item status
+//router PUT /orders/status
+export const updateOrderItemStatus = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { status } = req.body;
+        const { status, orderId, productId } = req.body;
 
-        console.log("changing status is here", id, status);
-
-        const order = await Order.findById(id);
-
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
+        if (!orderId || !productId || !status) {
+            return res.status(400).json({ success: false, message: 'Missing orderId, productId or status' });
         }
-
-        const previousStatus = order.orderStatus;
-
-        // Only increase stock if changing to 'cancelled' or 'returned'
-        if ((status === 'cancelled' || status === 'returned') && previousStatus !== status) {
-            for (const item of order.items) {
-                await Product.findByIdAndUpdate(item.productId, {
-                    $inc: { stock: item.quantity } // Increment stock
-                });
-            }
-        }
-
-        order.orderStatus = status;
-        await order.save();
-
-        res.json({ success: true, message: 'Order status updated' });
-    } catch (error) {
-        console.error('Update error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-};
-
-//@desc cancell order
-// PUT /orders/:id/cancel
-export const cancelOrder = async (req, res) => {
-    try {
-        const orderId = req.params.id;
 
         const order = await Order.findById(orderId);
-        console.log(order)
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        if (order.orderStatus === 'delivered' || order.orderStatus === 'cancelled') {
-            return res.status(400).json({ success: false, message: 'Cannot cancel this order' });
+        const item = order.items.find(
+            item => item.productId.toString() === productId.toString()
+        );
+
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'Product not found in order' });
         }
 
-        // Restore stock for each product in the order
-        await Promise.all(order.items.map(async (item) => {
-            const product = await Product.findById(item.productId);
+        const previousStatus = item.orderStatus;
+
+        // Restore stock if status changes to 'cancelled' or 'returned'
+        if ((status === 'cancelled' || status === 'returned') && previousStatus !== status) {
+            const product = await Product.findById(productId);
             if (product) {
                 product.stock += item.quantity;
                 await product.save();
             }
-        }));
+        }
 
-        // Update order status
-        order.orderStatus = 'cancelled';
+        // Update item status
+        item.orderStatus = status;
         await order.save();
 
-        res.json({ success: true, message: 'Order cancelled and product stock updated' });
-    } catch (err) {
-        console.error(err.toString());
-        res.status(500).json({ success: false, message: 'Something went wrong' });
-    }
-};
+        res.json({ success: true, message: 'Item status updated successfully' });
 
-
-export const returnOrder = async (req, res) => {
-    try {
-        const orderId = req.params.id;
-        const { reason } = req.body;
-
-        if (!reason) {
-            return res.status(400).json({ success: false, message: "Return reason is required" });
-        }
-
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ success: false, message: "Order not found" });
-        }
-
-        if (order.orderStatus !== "delivered") {
-            return res.status(400).json({ success: false, message: "Only delivered orders can be returned" });
-        }
-
-        order.returnRequest = true;
-        order.returnReason = reason;
-
-        await order.save();
-
-        res.status(200).json({ success: true, message: "Return request saved successfully" });
-    } catch (err) {
-        console.error("Error in returnOrder:", err);
-        res.status(500).json({ success: false, message: "Server error" });
+    } catch (error) {
+        console.error('Update error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
@@ -1875,7 +1829,6 @@ export const renderSuccess = (req, res) => {
 // POST /user/order/item/cancel
 export const cancelOrderItem = async (req, res) => {
     try {
-
         const { orderId, itemId } = req.body;
         const productId = itemId;
 
@@ -1898,30 +1851,37 @@ export const cancelOrderItem = async (req, res) => {
 
         const removedItem = order.items[itemIndex];
 
-        //Remove item from original order
+        // Remove item from original order
         order.items.splice(itemIndex, 1);
 
-        //Update stock
+        // Recalculate totals for remaining items
+        const newTotal = order.items.reduce((sum, item) => sum + (item.priceAtPurchase * item.quantity), 0);
+
+        order.totalAmount = newTotal;
+        order.grandTotal = newTotal; // Adjust if you have taxes/discounts
+
+        // Update stock for removed item
         const product = await Product.findById(productId);
         if (product) {
             product.stock += removedItem.quantity;
             await product.save();
         }
 
-        //Handle original order (save or delete)
+        // Handle original order (save or delete)
         if (order.items.length > 0) {
             await order.save();
         } else {
             await Order.findByIdAndDelete(orderId);
         }
 
-        //Create new order with the removed item and status = 'cancelled'
+        // Create new cancelled order with removed item
         const cancelledOrder = new Order({
             userId: order.userId,
             userName: order.userName,
             items: [removedItem],
             shippingAddress: order.shippingAddress,
             totalAmount: removedItem.priceAtPurchase * removedItem.quantity,
+            grandTotal: removedItem.priceAtPurchase * removedItem.quantity,
             paymentMethod: order.paymentMethod,
             paymentStatus: order.paymentStatus,
             orderStatus: 'cancelled',
@@ -1934,10 +1894,11 @@ export const cancelOrderItem = async (req, res) => {
         res.json({ success: true, message: 'Item moved to cancelled order and removed from original order' });
 
     } catch (err) {
-        console.error(" Error in cancelOrderItem:", err);
+        console.error("Error in cancelOrderItem:", err);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
+
 
 //@desc render wishlist in user side
 // GET /wishlist

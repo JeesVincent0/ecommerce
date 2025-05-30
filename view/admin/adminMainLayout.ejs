@@ -8,7 +8,27 @@
     <link rel="stylesheet" href="/css/output.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom scrollbar styles */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
 
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
 
 </head>
 
@@ -40,6 +60,11 @@
     <!-- Left Sidebar -->
     <div class="fixed top-16 left-0 w-[20%] h-[calc(100vh-4rem)] bg-white text-gray-800 p-4 space-y-2">
 
+        <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="dashBoard()"
+            id="dashBoardButton">
+            Dashboard
+        </button>
+
         <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" id="usersButton">
             Users
         </button>
@@ -62,8 +87,8 @@
             id="couponButton">
             Coupon
         </button>
-        <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="referralCouponList()"
-            id="couponButton">
+        <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400"
+            onclick="referralCouponList()" id="couponButton">
             Referral Offer
         </button>
         <button class="w-full text-left px-4 py-2 rounded-lg  bg-gray-200 hover:bg-gray-400" onclick="salesReport()"
@@ -115,9 +140,8 @@
                         <th class="py-3 px-6 text-left cursor-pointer" onclick="sortTable1(1)">Order ID ⬍</th>
                         <th class="py-3 px-6 text-left cursor-pointer" onclick="sortTable1(2)">Date ⬍</th>
                         <th class="py-3 px-6 text-left">Total</th>
-                        <th class="py-3 px-6 text-left">Status</th>
                         <th class="py-3 px-6 text-left">Actions</th>
-                        <th class="py-3 px-6 text-left">Notofication</th>
+                        <th class="py-3 px-6 text-left">Notification</th>
                     </tr>
                 </thead>
                 <tbody id="orderTableBody" class="text-gray-700 text-sm">
@@ -174,6 +198,9 @@
         <div id="salesReport">
 
         </div>
+        <div id="dashBoard">
+
+        </div>
 
 
         <script src="/js/admin/users.js"></script>
@@ -188,6 +215,7 @@
         <script src="/js/admin/coupon.js"></script>
         <script src="/js/admin/referralCouponList.js"></script>
         <script src="/js/admin/salesReport.js"></script>
+        <script src="/js/admin/dashBoard.js"></script>
 
         <!-- In <head> -->
 

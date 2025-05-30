@@ -5,6 +5,7 @@ function couponList() {
     hideEditCategorySection();
     hideAddCategorySection();
     hideProductList();
+    accessSalesReportSection();
 
     const orderSection = document.getElementById("orderSection");
     orderSection.classList.add("hidden");
@@ -235,7 +236,114 @@ function couponSearch() {
     });
 }
 
-// The remaining functions stay the same as they don't interact with pagination
+// Date validation functions
+function validateCouponDates(startDate, expiryDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+    
+    const start = new Date(startDate);
+    const expiry = new Date(expiryDate);
+    
+    // Check if start date is in the future
+    if (start > today) {
+        return {
+            isValid: false,
+            message: "Start date cannot be a future date"
+        };
+    }
+    
+    // Check if expiry date is before start date
+    if (expiry <= start) {
+        return {
+            isValid: false,
+            message: "End date must be after start date"
+        };
+    }
+    
+    return {
+        isValid: true,
+        message: ""
+    };
+}
+
+function showValidationError(fieldName, message) {
+    // Remove any existing error messages
+    clearValidationErrors();
+    
+    // Find the field and add error styling
+    const field = document.querySelector(`input[name="${fieldName}"]`);
+    const label = field.previousElementSibling;
+    
+    // Add error styling to field
+    field.classList.add('border-red-500', 'focus:ring-red-500');
+    field.classList.remove('focus:ring-blue-500');
+    
+    // Create and show error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'text-red-500 text-sm mt-1 validation-error';
+    errorDiv.textContent = message;
+    field.parentNode.appendChild(errorDiv);
+    
+    // Optionally change label color
+    if (label) {
+        label.classList.add('text-red-500');
+    }
+}
+
+function clearValidationErrors() {
+    // Remove all error messages
+    const errorElements = document.querySelectorAll('.validation-error');
+    errorElements.forEach(element => element.remove());
+    
+    // Reset field styling
+    const fields = document.querySelectorAll('input[name="startDate"], input[name="expiryDate"]');
+    fields.forEach(field => {
+        field.classList.remove('border-red-500', 'focus:ring-red-500');
+        field.classList.add('focus:ring-blue-500');
+        
+        const label = field.previousElementSibling;
+        if (label) {
+            label.classList.remove('text-red-500');
+        }
+    });
+}
+
+// Add real-time validation on date input change
+function addDateInputListeners() {
+    const startDateInput = document.querySelector('input[name="startDate"]');
+    const expiryDateInput = document.querySelector('input[name="expiryDate"]');
+    
+    if (startDateInput && expiryDateInput) {
+        startDateInput.addEventListener('change', function() {
+            clearValidationErrors();
+            if (this.value && expiryDateInput.value) {
+                const validation = validateCouponDates(this.value, expiryDateInput.value);
+                if (!validation.isValid) {
+                    if (validation.message.includes("Start date")) {
+                        showValidationError('startDate', validation.message);
+                    } else if (validation.message.includes("End date")) {
+                        showValidationError('expiryDate', validation.message);
+                    }
+                }
+            }
+        });
+        
+        expiryDateInput.addEventListener('change', function() {
+            clearValidationErrors();
+            if (startDateInput.value && this.value) {
+                const validation = validateCouponDates(startDateInput.value, this.value);
+                if (!validation.isValid) {
+                    if (validation.message.includes("Start date")) {
+                        showValidationError('startDate', validation.message);
+                    } else if (validation.message.includes("End date")) {
+                        showValidationError('expiryDate', validation.message);
+                    }
+                }
+            }
+        });
+    }
+}
+
 function createCoupon() {
     const couponSection = accessCouponSection();
     couponSection.innerHTML = `
@@ -316,6 +424,9 @@ function createCoupon() {
     </form>
     </div>
     `;
+    
+    // Add date input listeners after form is rendered
+    setTimeout(() => addDateInputListeners(), 100);
 }
 
 function handleDiscountTypeChange(select) {
@@ -334,6 +445,25 @@ function handleDiscountTypeChange(select) {
 function saveCoupon() {
     const form = document.getElementById("addCouponForm");
     const formData = new FormData(form);
+    
+    const startDate = formData.get('startDate');
+    const expiryDate = formData.get('expiryDate');
+    
+    // Clear previous validation errors
+    clearValidationErrors();
+    
+    // Validate dates
+    const validation = validateCouponDates(startDate, expiryDate);
+    
+    if (!validation.isValid) {
+        // Determine which field to highlight based on the error
+        if (validation.message.includes("Start date")) {
+            showValidationError('startDate', validation.message);
+        } else if (validation.message.includes("End date")) {
+            showValidationError('expiryDate', validation.message);
+        }
+        return; // Stop form submission
+    }
 
     fetch("/coupon/add", {
         method: "POST",
@@ -470,11 +600,33 @@ function renderCouponEditForm(coupon) {
     </form>
     </div>
     `;
+    
+    // Add date input listeners after form is rendered
+    setTimeout(() => addDateInputListeners(), 100);
 }
 
 function saveEditedCoupon() {
     const form = document.getElementById("editCouponForm");
     const formData = new FormData(form);
+    
+    const startDate = formData.get('startDate');
+    const expiryDate = formData.get('expiryDate');
+    
+    // Clear previous validation errors
+    clearValidationErrors();
+    
+    // Validate dates
+    const validation = validateCouponDates(startDate, expiryDate);
+    
+    if (!validation.isValid) {
+        // Determine which field to highlight based on the error
+        if (validation.message.includes("Start date")) {
+            showValidationError('startDate', validation.message);
+        } else if (validation.message.includes("End date")) {
+            showValidationError('expiryDate', validation.message);
+        }
+        return; // Stop form submission
+    }
 
     fetch("/coupon/edit", {
         method: "PATCH",
