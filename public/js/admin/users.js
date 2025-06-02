@@ -10,6 +10,7 @@ window.addEventListener("DOMContentLoaded", () => {
         hideEditCategorySection();
         hideAddCategorySection();
         accessSalesReportSection();
+        accessDashBoardSection()
          const orderSection = document.getElementById("orderSection")
     orderSection.classList.add("hidden")
 
@@ -58,7 +59,7 @@ function loadUsers(page = 1, limit = 9) {
             renderPagination(data.totalPages, page, loadUsers);
         })
         .catch((err) => {
-            console.log(err.message)
+           
         })
 }
 
@@ -183,10 +184,8 @@ async function blockUser(email) {
             headers: { "Content-Type": "application/json" },
         })
         const data = await res.json();
-        console.log(data.message || "User Blocked")
         return true
     } catch (error) {
-        console.log(error.message)
         return false
     }
 }
@@ -200,11 +199,9 @@ async function UnBlockUser(email) {
             headers: { "Content-Type": "application/json" }
         })
         const data = await res.json()
-        console.log(data.message || "User unblocked")
 
         return true
     } catch (error) {
-        console.log(error.message)
     }
 }
 
@@ -212,7 +209,7 @@ async function UnBlockUser(email) {
 //this function for search bar for user search
 function userSearch(page = 1, limit = 9) {
     const searchKey = document.getElementById("searchInput").value.trim()
-    console.log("user search", searchKey)
+   
 
     fetch(`/users/search?key=${searchKey}&page=${page}&limit=${limit}`, {
         method: "GET",
@@ -223,7 +220,7 @@ function userSearch(page = 1, limit = 9) {
             renderUsers(data.users)
             renderPagination(data.totalPages, page, userSearch)
         })
-        .catch((error) => console.log(error.message))
+        .catch((error) => {})
 }
 
 //this button function is for search clear button
@@ -280,7 +277,6 @@ function view(email) {
 
 
 function renderUserDetails(details) {
-    console.log(details);
 
     const user = details.user;
     const orders = details.orders;

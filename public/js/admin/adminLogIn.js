@@ -47,23 +47,23 @@ document.getElementById("login").addEventListener("click", (e) => {
     })
     .then((res) => res.json())
     .then((data) => {
-        console.log(data)
+
 
         if(!data.email && !data.password) {
             //if email not matching DOM will change
             emailLabelField.innerText = "Wrong email";
             emailLabelField.style.color = "red";
             emailField.style.borderColor = "red";
-            console.log("a")
+
         } else if(!data.password && data.email) {
             //if password not matching DOM will change
             passLabelField.innerText = "Wrong password";
             passLabelField.style.color = "red";
             passwordField.style.borderColor = "red";
-            console.log("b")
+
 
         } else if(data.success && data.redirectUrl) {
-            console.log("c")
+
             window.location.href = data.redirectUrl
         }
     })

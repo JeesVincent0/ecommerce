@@ -6,6 +6,7 @@ function couponList() {
     hideAddCategorySection();
     hideProductList();
     accessSalesReportSection();
+    accessDashBoardSection();
 
     const orderSection = document.getElementById("orderSection");
     orderSection.classList.add("hidden");

@@ -92,18 +92,18 @@ function renderOrderCard(orders) {
         <p><strong>Date:</strong> ${formattedDate}</p>
       </div>
     `;
-    
+
     // Add click event to individual card
     card.addEventListener("click", () => {
       // Remove active class from all cards
       document.querySelectorAll("[data-id]").forEach(c => c.classList.remove("ring-2", "ring-blue-500"));
       // Add active class to clicked card
       card.classList.add("ring-2", "ring-blue-500");
-      
+
       currentOrderId = order._id;
       renderOrderDetails(order);
     });
-    
+
     ordersCard.appendChild(card);
   });
 }
@@ -129,6 +129,24 @@ function renderOrderDetails(order) {
           </div>
 
         </div>
+        ${(() => {
+      let html = "";
+      order.items.some(item => {
+        if (item.orderStatus === "delivered") {
+          html = `
+                <div id="returnSection">
+                    <button onclick="downloadInvoice('${order._id}')"
+                        class="text-sm mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl">
+                        Download Invoice
+                    </button>
+                </div>
+            `;
+          return true; // Stop loop
+        }
+        return false;
+      });
+      return html;
+    })()}
       </div>
 
       <!-- Address & Payment -->
@@ -159,8 +177,8 @@ function renderOrderDetails(order) {
 
       <!-- Total -->
       <div class="bg-white shadow rounded-2xl p-6 text-right">
-        <p class="text-lg font-semibold text-green-800">Coupon Discount: ₹${order.coupon?.discountAmount || 0}</p>
-        <p class="text-lg font-semibold text-gray-800">Grand Total: ₹${order.grandTotal}</p>
+        <p class="text-lg font-semibold text-green-800">Coupon Discount: ₹${(order.coupon?.discountAmount).toFixed(2) || 0}</p>
+        <p class="text-lg font-semibold text-gray-800">Grand Total: ₹${(order.grandTotal).toFixed(2)}</p>
       </div>
     </div>
   `;
@@ -168,10 +186,10 @@ function renderOrderDetails(order) {
 
 // Render individual order item
 function renderOrderItem(item, orderId) {
-  const image = (item.productId.images && item.productId.images.length > 0) 
-    ? item.productId.images[0] 
+  const image = (item.productId.images && item.productId.images.length > 0)
+    ? item.productId.images[0]
     : 'default-image.jpg';
-    
+
   return `
     <div class="flex items-center gap-4 border-b pb-4">
       <div class="w-24 h-24">
@@ -200,7 +218,7 @@ function renderOrderItem(item, orderId) {
 // Render item-level actions
 function renderItemActions(item, orderId) {
   let actions = '';
-  
+
   if (!["delivered", "cancelled", "returned", "failed", "shipped"].includes(item.orderStatus)) {
     actions += `
       <div id="cancelSection-${item.productId._id}" class="space-y-2">
@@ -235,7 +253,7 @@ function renderItemActions(item, orderId) {
 // Show cancel confirmation inline for items
 function showItemCancelConfirmation(orderId, productId) {
   const cancelSection = document.getElementById(`cancelSection-${productId}`);
-  
+
   cancelSection.innerHTML = `
     <div class="space-y-2 p-3 bg-red-50 rounded-xl border border-red-200">
       <p class="text-sm text-red-700 font-medium">Cancel this item?</p>
@@ -256,7 +274,7 @@ function showItemCancelConfirmation(orderId, productId) {
 // Hide cancel confirmation and restore original button
 function hideCancelConfirmation(productId) {
   const cancelSection = document.getElementById(`cancelSection-${productId}`);
-  
+
   cancelSection.innerHTML = `
     <button class="text-sm bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition-colors"
         onclick="showItemCancelConfirmation('${cancelSection.dataset.orderId}', '${productId}')">
@@ -326,7 +344,7 @@ function showReturnInput(orderId, productId = null) {
       </div>
     </div>
   `;
-  
+
   document.body.appendChild(modal);
 }
 
@@ -346,8 +364,8 @@ function submitReturnReason(orderId, productId = null) {
     return;
   }
 
-  const body = productId 
-    ? JSON.stringify({ reason, productId }) 
+  const body = productId
+    ? JSON.stringify({ reason, productId })
     : JSON.stringify({ reason });
 
   fetch(`/orders/${orderId}/return`, {
@@ -399,7 +417,7 @@ function downloadInvoice(orderId) {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      
+
       showSuccessMessage('Invoice downloaded successfully');
     })
     .catch(err => {
@@ -424,14 +442,13 @@ function showErrorMessage(message) {
 
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
-  toast.className = `fixed top-4 right-4 p-4 rounded-xl text-white z-50 ${
-    type === 'success' ? 'bg-green-500' : 
+  toast.className = `fixed top-4 right-4 p-4 rounded-xl text-white z-50 ${type === 'success' ? 'bg-green-500' :
     type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-  }`;
+    }`;
   toast.textContent = message;
-  
+
   document.body.appendChild(toast);
-  
+
   setTimeout(() => {
     toast.remove();
   }, 3000);
@@ -447,7 +464,7 @@ async function handleRazorpay(orderId) {
     });
 
     const data = await res.json();
-    
+
     if (data.success) {
       // Handle successful payment initialization
       return data;

@@ -1,5 +1,5 @@
 import express from 'express'
-import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons, approveRefund, getReferralCoupons, addReferralCoupon, getReferralCoupon, saveReferralCoupon, blockReferralCoupon, searchReferralCoupons, getSalesReport, getSalesReportPdf, downloadSalesReportExcel, dashBoardData, getSalesChartData } from '../controllers/adminControllers.js'
+import { blockUser, getAdminLogin, verifyAdminLogin, getAdminHome, getUsers, unBlockUser, getUsersSearch, createNewCategory, getCategoryList, getCategorySearch, editCategoryForm, editCategory, statusCategory, getProducts, getProductsSearch, getCategoryNames, getChildCategory, addNewProduct, getProductData, editProduct, deleteProduct, handleReturnRequest, updateOrderStatus, toggleCategoryStatus, getUserDetailsAndOrders, toggleProductStatus, getCoupons, addCoupon, getCoupon, saveCoupon, blockCoupon, searchCoupons, approveRefund, getReferralCoupons, addReferralCoupon, getReferralCoupon, saveReferralCoupon, blockReferralCoupon, searchReferralCoupons, getSalesReport, getSalesReportPdf, downloadSalesReportExcel, dashBoardData, getSalesChartData, getBrands } from '../controllers/adminControllers.js'
 import { productImageUpload, redirectIfAuthenticatedAdmin, verifyAdminJWT } from '../middleware/routerMiddleware.js'
 
 const router = express.Router()
@@ -57,6 +57,9 @@ router.get("/product/category", getChildCategory)
 
 //add new product
 router.post("/product/add", productImageUpload, addNewProduct);
+
+//get brand for add or edit product form
+router.get("/product/brands", getBrands);
 
 //get product data for edit form
 router.get("/product/:id", getProductData);

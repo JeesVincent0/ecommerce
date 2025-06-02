@@ -39,9 +39,14 @@ function addProduct() {
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Brand</label>
-        <input type="text" name="brand"
+        <input list="brandList" name="brand"
           class="mt-2 border rounded-lg py-2 pl-3 pr-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Enter Brand Name" required>
+
+        <!-- Existing brands go here -->
+        <datalist id="brandList">
+          <!-- Add more brand options dynamically if needed -->
+        </datalist>
       </div>
 
       <div>
@@ -115,13 +120,35 @@ function addProduct() {
       }
     });
 
+    fetch("/product/brands", {
+      method: "GET",
+      headers: { "Content-Type" : "application/json" },
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        renderBrandOptions(data.brands)
+      }
+    })
+
   setupImageUploadValidation();
+}
+
+function renderBrandOptions(brands) {
+
+  const brandList = document.getElementById("brandList");
+  brandList.innerHTML = "";
+
+  brands.forEach(brand => {
+    brandList.innerHTML += `
+    <option value="${brand.name}"></option>`
+  });
 }
 
 window.onload = setupImageUploadValidation;
 
 function setupImageUploadValidation(existingImages = []) {
- console.log("product images",existingImages)
+
 
   const imageInput = document.getElementById("imageUploadAdd");
   const previewContainer = document.getElementById("imagePreview");

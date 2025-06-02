@@ -2,6 +2,8 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("categoryButton").addEventListener("click", (e) => {
         e.preventDefault();
 
+        accessDashBoardSection();
+
         const orderSection = document.getElementById("orderSection")
         orderSection.classList.add("hidden")
         const addButton = document.getElementById("addButton");
@@ -50,8 +52,7 @@ function loadCategory(page = 1, limit = 5) {
     })
         .then((res) => res.json())
         .then((data) => {
-            console.log(data)
-            console.log(page)
+
             loadCategoryList(data.categoryList)
             pagination(data.totalPages, page, loadCategory)
         })
@@ -116,8 +117,6 @@ function pagination(totalPages, currentPage, callback) {
 //this function for search bar for user search
 function categorySearch(page = 1, limit = 2) {
     const searchKey = document.getElementById("searchInputCat").value.trim()
-    console.log(searchKey)
-    console.log("category search", searchKey)
 
     fetch(`/category/search?key=${searchKey}&page=${page}&limit=${limit}`, {
         method: "GET",
@@ -125,11 +124,11 @@ function categorySearch(page = 1, limit = 2) {
     })
         .then((res) => res.json())
         .then((data) => {
-            console.log("search data", data)
+
             loadCategoryList(data.categoryList)
             pagination(data.totalPages, page, categorySearch)
         })
-        .catch((error) => console.log(error.message))
+
 }
 
 //this button function is for search clear button

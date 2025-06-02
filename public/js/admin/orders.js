@@ -20,6 +20,8 @@ function orderList() {
     hideProductList();
     hideCategoryList();
     accessSalesReportSection();
+    accessDashBoardSection();
+    accessCouponSection();
 
     // Hide navigation buttons
     hideUserButton();
@@ -703,31 +705,7 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-/**
- * Show success message
- */
-function showSuccessMessage(message) {
-  // Implement your preferred notification system
-  console.log('Success:', message);
-  // Example: You might want to show a toast notification here
-}
 
-/**
- * Show error message
- */
-function showErrorMessage(message) {
-  // Implement your preferred notification system
-  console.error('Error:', message);
-  // Example: You might want to show a toast notification here
-}
-
-/**
- * Update pagination (placeholder - implement based on your UI)
- */
-function updatePagination(totalPages, currentPage) {
-  // Implement pagination UI updates here
-  console.log(`Pagination: ${currentPage} of ${totalPages}`);
-}
 
 // Export main function for backward compatibility
 window.orderLlist = orderList; // Fixed typo

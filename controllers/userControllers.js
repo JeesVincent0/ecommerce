@@ -51,7 +51,6 @@ export const createNewUser = async (req, res) => {
 
         //Getting user details from req.body
         const { name, email, password, referralUrl } = req.body
-        console.log({ name, email, password, referralUrl })
 
         //checking the email already taken or not
         const checkemail = await User.findOne({ email: email })
@@ -438,7 +437,7 @@ export const createNewPassword = async (req, res) => {
         const hash = await bcrypt.hash(password, salt)
 
         const changingPass = await User.updateOne({ email: decoded.userEmail }, { $set: { hashPassword: hash } })
-        console.log("password is ", password)
+        
         if (changingPass) {
             res.status(200).json({ success: true, redirectUrl: '/home' })
         }
@@ -798,7 +797,7 @@ export const renderProfile = async (req, res) => {
         res.render("user/profile")
 
     } catch (error) {
-        console.log(error.message)
+        logger.error(error.message)
         res.status(500).json({ message: "Someting went wrong", err: error.message })
     }
 }
@@ -821,7 +820,7 @@ export const getProfile = async (req, res) => {
         res.json({ success: true, user, coupons })
 
     } catch (error) {
-        console.log(error.message)
+        logger.error(error.message)
         res.json({ error: error.message })
     }
 }
@@ -844,7 +843,7 @@ export const otpSend = async (req, res) => {
             res.json({ success: true, message: "Otp sended successfully" });
         }
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
         res.json({ success: true, message: "Something went wrong" })
     }
 }
@@ -867,7 +866,7 @@ export const otpVerify = async (req, res) => {
         }
 
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
     }
 }
 
@@ -901,7 +900,7 @@ export const passwordChange = async (req, res) => {
         res.json({ success: true, message: "Password updated successfully" });
 
     } catch (error) {
-        console.log(error.toString());
+        logger.error(error.toString());
         res.status(500).json({ success: false, message: 'Something went wrong' });
     }
 };
@@ -1055,7 +1054,7 @@ export const getProfilePic = async (req, res) => {
             res.status(404).send('No image');
         }
     } catch (error) {
-        console.log(error.message)
+        logger.error(error.message)
         res.json({ success: false, message: "Something went wrong" })
     }
 }
@@ -1068,7 +1067,7 @@ export const getAddress = async (req, res) => {
         const address = await Address.findById(id)
         res.json({ success: true, address })
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
         res.json({ success: false })
     }
 }
@@ -1099,7 +1098,7 @@ export const updateAddress = async (req, res) => {
 
         res.json({ success: true })
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
         res.json({ success: true })
     }
 }
@@ -1114,7 +1113,7 @@ export const deleteAddress = async (req, res) => {
         res.json({ success: true })
 
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
         res.status(500).json({ success: false, message: "Something went wrong" })
     }
 }
@@ -1146,7 +1145,7 @@ export const createAddress = async (req, res) => {
 
         res.json({ success: true })
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
         res.json({ success: false })
     }
 }
@@ -1157,7 +1156,7 @@ export const renderCart = (req, res) => {
     try {
         res.render("user/cart")
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
         res.json({ success: false })
     }
 }
@@ -1234,7 +1233,7 @@ export const addToCart = async (req, res) => {
         res.json({ success: true });
 
     } catch (error) {
-        console.log(error.toString());
+        logger.error(error.toString());
         res.status(500).json({ success: false, message: "Something went wrong" });
     }
 };
@@ -1299,7 +1298,7 @@ export const deleteItem = async (req, res) => {
 
         return res.json({ success: true, message: 'Item removed from cart' });
     } catch (error) {
-        console.log(error.toString());
+        logger.error(error.toString());
         return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
@@ -1385,7 +1384,7 @@ export const verifyCoupon = async (req, res) => {
 
 
     } catch (error) {
-        console.log(error.toString());
+        logger.error(error.toString());
         res.status(500).json({ success: false, message: "Try after sometimes" })
     }
 }
@@ -1465,16 +1464,6 @@ export const paymentMethods = async (req, res) => {
             orderStatus: "processing"
         }));
 
-        // Decrease product stock
-        for (let item of order.items) {
-            const product = await Product.findById(item.productId._id);
-            if (product) {
-                product.stock -= item.quantity;
-                if (product.stock < 0) product.stock = 0;
-                await product.save();
-            }
-        }
-
         // Razorpay Payment
         if (paymentMethod === "razorpay") {
             const razorpayOrder = await instance.orders.create({
@@ -1491,6 +1480,16 @@ export const paymentMethods = async (req, res) => {
                 orderId: order._id,
                 cod: false
             });
+        }
+
+                // Decrease product stock
+        for (let item of order.items) {
+            const product = await Product.findById(item.productId._id);
+            if (product) {
+                product.stock -= item.quantity;
+                if (product.stock < 0) product.stock = 0;
+                await product.save();
+            }
         }
 
         await order.save();
@@ -1576,6 +1575,16 @@ export const verifyPayment = async (req, res) => {
 
         await order.save();
 
+                // Decrease product stock
+        for (let item of order.items) {
+            const product = await Product.findById(item.productId._id);
+            if (product) {
+                product.stock -= item.quantity;
+                if (product.stock < 0) product.stock = 0;
+                await product.save();
+            }
+        }
+
         const couponCode = order.coupon.code;
         const userId = user._id
         // Step 1: Find the coupon
@@ -1611,7 +1620,6 @@ export const verifyPayment = async (req, res) => {
                 }
             );
 
-            console.log('Coupon limit decreased:', updated);
         }
 
 
@@ -1713,7 +1721,7 @@ export const getOrdersAdmin = async (req, res) => {
             totalOrders,
         });
     } catch (error) {
-        console.log(error.toString());
+        logger.error(error.toString());
         res.status(500).json({ success: false, message: "Something went wrong" });
     }
 };
@@ -1721,47 +1729,86 @@ export const getOrdersAdmin = async (req, res) => {
 //@desc change one item status
 //router PUT /orders/status
 export const updateOrderItemStatus = async (req, res) => {
-    try {
-        const { status, orderId, productId } = req.body;
+  try {
+    const { status, orderId, productId } = req.body;
 
-        if (!orderId || !productId || !status) {
-            return res.status(400).json({ success: false, message: 'Missing orderId, productId or status' });
-        }
-
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' });
-        }
-
-        const item = order.items.find(
-            item => item.productId.toString() === productId.toString()
-        );
-
-        if (!item) {
-            return res.status(404).json({ success: false, message: 'Product not found in order' });
-        }
-
-        const previousStatus = item.orderStatus;
-
-        // Restore stock if status changes to 'cancelled' or 'returned'
-        if ((status === 'cancelled' || status === 'returned') && previousStatus !== status) {
-            const product = await Product.findById(productId);
-            if (product) {
-                product.stock += item.quantity;
-                await product.save();
-            }
-        }
-
-        // Update item status
-        item.orderStatus = status;
-        await order.save();
-
-        res.json({ success: true, message: 'Item status updated successfully' });
-
-    } catch (error) {
-        console.error('Update error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+    if (!orderId || !productId || !status) {
+      return res.status(400).json({ success: false, message: 'Missing orderId, productId or status' });
     }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const item = order.items.find(
+      (item) => item.productId.toString() === productId.toString()
+    );
+
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Product not found in order' });
+    }
+
+    const previousStatus = item.orderStatus;
+
+    //Restore stock only if transitioning from a valid state to cancelled/returned
+    if (
+      ['cancelled', 'returned'].includes(status) &&
+      !['cancelled', 'returned'].includes(previousStatus)
+    ) {
+      const product = await Product.findById(productId);
+      if (product) {
+        product.stock += item.quantity;
+        await product.save();
+      }
+    }
+
+    //Update item status
+    item.orderStatus = status;
+
+    //Recalculate totals (exclude cancelled items)
+    const validItems = order.items.filter(i => i.orderStatus !== 'cancelled');
+
+    const updatedTotalAmount = validItems.reduce((sum, i) => {
+      return sum + (i.priceAtPurchase * i.quantity);
+    }, 0);
+
+    //Recalculate discount if coupon exists
+    let discountAmount = 0;
+
+    if (order.coupon && order.coupon.code) {
+      const coupon = await Coupon.findOne({ code: order.coupon.code });
+
+      if (coupon) {
+        if (coupon.discountType === 'fixed') {
+          discountAmount = coupon.discountValue;
+        } else if (coupon.discountType === 'percentage') {
+          const percentage = (coupon.discountValue / 100) * updatedTotalAmount;
+          discountAmount = coupon.maxDiscount
+            ? Math.min(percentage, coupon.maxDiscount)
+            : percentage;
+        }
+
+        // Ensure discount doesn't exceed the updated total
+        if (discountAmount > updatedTotalAmount) {
+          discountAmount = updatedTotalAmount;
+        }
+      }
+    }
+
+    //Update order totals
+    order.totalAmount = updatedTotalAmount;
+    order.grandTotal = updatedTotalAmount - discountAmount;
+    order.coupon.discountAmount = discountAmount;
+
+    await order.save();
+
+    res.json({ success: true, message: 'Item status updated and order totals adjusted successfully' });
+
+  } catch (error) {
+    console.error('Update error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 };
 
 export const getInvoice = async (req, res) => {
@@ -1919,7 +1966,7 @@ export const renderWishlist = async (req, res) => {
         const wishlistProducts = wishlist ? wishlist.products.map(item => item.productId) : [];
         res.render("user/wishlist", { wishlist })
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
         res.status(500).json({ success: false, message: "Something went wrong" })
     }
 }
@@ -1975,7 +2022,6 @@ export const removeFromWishlist = async (req, res) => {
     try {
         const { productId } = req.body;
 
-        console.log(productId)
 
         const token = req.cookies.jwt;
         if (!token) return res.status(401).json({ success: false, message: "No token provided" });
@@ -2015,11 +2061,11 @@ export const generateReferalUrl = async (req, res) => {
         const referralUrl = "http://localhost:3000/signup?ref=" + referalCode;
 
         const userDetails = await User.findOneAndUpdate({ _id: userId }, { $set: { referralUrl, referalCode } }, { new: true })
-        console.log(userDetails)
+
         res.json({ success: true, referralUrl })
 
     } catch (error) {
-        console.log(error.toString())
+        logger.error(error.toString())
         res.status(500).json({ success: false, message: "Something went wrong" })
     }
 }

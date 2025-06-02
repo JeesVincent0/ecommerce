@@ -23,7 +23,6 @@ document.getElementById('sendButton').addEventListener('click', (e) => {
     .then((res) => res.json())
     .then((data) => {
 
-        console.log('data come', data)
         document.getElementById('loaderOverlay').classList.add('hidden')
         document.getElementById('mainsection').classList.remove('hidden')
         //email validation
@@ -34,7 +33,7 @@ document.getElementById('sendButton').addEventListener('click', (e) => {
         }
     })
     .catch((error) => {
-        console.log(error)
+
     })
 })
 
@@ -65,16 +64,15 @@ document.getElementById('verify').addEventListener('click', (e) => {
     })
     .then((res) => res.json())
     .then((data) => {
-        console.log('otp data - ', data)
+
         if(!data.success) {
             otpField.style.borderColor = 'red'
             otpLabelField.innerText = 'Wrong OTP'
             otpLabelField.style.color = 'red'
         } else if(data.success) {
-            console.log('otp success')
             window.location.href = data.redirectUrl
         }
         
     })
-    .catch((error) => console.log(error.message))
+
 })

@@ -1,5 +1,5 @@
 function editCat(slug) {
-    console.log(slug)
+
 
     //disable serc
     const searchBarContainer = document.getElementById("searchBarContainer");
@@ -18,10 +18,10 @@ function editCat(slug) {
     })
         .then((res) => res.json())
         .then((data) => {
-            console.log(data)
+
             renderEditCategoryForm(data.category)
         })
-        .catch((error) => console.log(error.message))
+
 }
 
 function renderEditCategoryForm(category) {
@@ -79,7 +79,6 @@ function saveCategory(slug) {
     const categoryStatus = document.getElementById("categoryStatus1").value
     const offers = document.getElementById("categoryOffers1").value.trim();
 
-    console.log(categoryName, categoryDiscription, categoryStatus)
 
     fetch("/category/edit", {
         method: "PATCH",
@@ -96,5 +95,5 @@ function saveCategory(slug) {
                 categoryLabel.innerText = "Use another name"
             }
         })
-        .catch((error) => console.log(error.message))
+
 }

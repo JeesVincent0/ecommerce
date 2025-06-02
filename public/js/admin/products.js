@@ -2,6 +2,7 @@
 function productList() {
 
   //hide other section
+  accessDashBoardSection();
   hideUserSection();
   hideCategoryList();
   hideEditCategorySection();
@@ -129,7 +130,7 @@ function productSearch(page = 1, limit = 9) {
       renderProducts(data.product)
       productPagination(data.totalPages, page, productSearch)
     })
-    .catch((error) => console.log(error.message))
+    .catch((error) => {})
 }
 
 //this button function is for search clear button

@@ -7,10 +7,11 @@ function editProduct(productId) {
     .then((data) => {
       renderEditForm(data.product); // Render form with existing product data
     })
-    .catch((error) => console.log(error.message));
+
 }
 
 function renderEditForm(product) {
+  accessDashBoardSection();
   const productListingSection1 = document.getElementById("categoriesContainer2");
   productListingSection1.innerHTML = ""
   const productmainsection = document.getElementById("productmainsection")
@@ -127,10 +128,9 @@ function renderEditForm(product) {
   })
     .then((res) => res.json())
     .then((data) => {
-      console.log(data)
       if (data.categoyNames) {
         let categories = Array.isArray(data.categoyNames) ? data.categoyNames : [data.categoyNames]
-        console.log(categories)
+
         categories.forEach(category => {
           if (category.slug !== product.slug) {
             categoryCanteiner.innerHTML += `<option value="${category.slug}">${category.slug}</option>`
@@ -168,11 +168,6 @@ function saveProduct1() {
   // Append existing image paths as JSON string
   formData.append("existingImages", JSON.stringify(existingImages));
 
-  for (let pair of formData.entries()) {
-    console.log(pair[0], pair[1]);
-  }
-
-
   fetch("/product/edit", {
     method: "POST",
     body: formData
@@ -180,8 +175,8 @@ function saveProduct1() {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-      selectedFiles = [];  // Clear after successful submit
-      productList()
+        selectedFiles = [];  // Clear after successful submit
+        productList()
       }
     })
     .catch(err => {

@@ -1,145 +1,138 @@
-
 <%- include('../partials/head') %>
 
-<body class="bg-gray-50 font-sans">
-  <!-- Top Navbar -->
-  <header class="fixed top-0 left-0 w-full bg-gradient-to-r from-indigo-900 to-indigo-700 text-white shadow-lg z-50">
-    <div class="container mx-auto flex items-center justify-between h-16 px-4 md:px-6">
-      <div class="flex items-center space-x-6">
-        <span class="text-3xl font-extrabold tracking-tight">SHOPPI</span>
-        <a href="/home" class="text-white opacity-90 hover:opacity-100 transition-opacity duration-200 hover:underline">Home</a>
-      </div>
+  <body class="bg-gray-50 font-sans">
+    <!-- Top Navbar -->
+    <header class="fixed top-0 left-0 w-full bg-gradient-to-r from-indigo-900 to-indigo-700 text-white shadow-lg z-50">
+      <div class="container mx-auto flex items-center justify-between h-16 px-4 md:px-6">
+        <div class="flex items-center space-x-6">
+          <span class="text-3xl font-extrabold tracking-tight">SHOPPI</span>
+          <nav class="hidden md:flex items-center space-x-6">
+            <a href="/home"
+              class="text-white/90 hover:text-white transition-colors duration-200 hover:underline">Home</a>
+            <a href="/cart"
+              class="text-white/90 hover:text-white transition-colors duration-200 hover:underline">Cart</a>
+            <a href="/orders"
+              class="text-white/90 hover:text-white transition-colors duration-200 hover:underline">Orders</a>
+            <a href="/wishlist"
+              class="text-white/90 hover:text-white transition-colors duration-200 hover:underline">Wishlist</a>
+          </nav>
+        </div>
 
-      <!-- Search Bar -->
-      <div id="userSearchDiv" class="flex-1 max-w-md mx-4">
-        <div class="relative">
-          <input 
-            id="userSearch" 
-            type="text" 
-            value="<%= key %>" 
-            oninput="toggleClearButtonProducts()"
-            class="w-full bg-white/10 backdrop-blur-sm border border-indigo-400/30 px-4 py-2 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all duration-200" 
-            placeholder="Search products..."
-          />
-          
-          <button 
-            id="clearSearchButton" 
-            onclick="clearSearchProduct()"
-            class="absolute right-16 top-1/2 -translate-y-1/2 text-indigo-200 hover:text-white hidden" 
-            aria-label="Clear search">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          </button>
-          
-          <button 
-            onclick="productSearch()"
-            class="absolute right-0 top-0 h-full px-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-r-lg transition-colors duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+        <!-- Search Bar -->
+        <div id="userSearchDiv" class="flex-1 max-w-md mx-4">
+          <div class="relative">
+            <input id="userSearch" type="text" value="<%= key %>" oninput="toggleClearButtonProducts()"
+              class="w-full bg-white/10 backdrop-blur-sm border border-indigo-400/30 px-4 py-2 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all duration-200"
+              placeholder="Search products..." />
+
+            <button id="clearSearchButton" onclick="clearSearchProduct()"
+              class="absolute right-16 top-1/2 -translate-y-1/2 text-indigo-200 hover:text-white hidden"
+              aria-label="Clear search">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+
+            <button onclick="productSearch()"
+              class="absolute right-0 top-0 h-full px-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-r-lg transition-colors duration-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                  clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Could add cart or user profile icons here -->
+        <div class="flex items-center space-x-4">
+          <button class="text-white hover:text-indigo-200 transition-colors duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </button>
         </div>
       </div>
+    </header>
 
-      <!-- Could add cart or user profile icons here -->
-      <div class="flex items-center space-x-4">
-        <button class="text-white hover:text-indigo-200 transition-colors duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  </header>
+    <div class="flex flex-col md:flex-row pt-16">
+      <!-- Left Sidebar Filter -->
+      <aside class="w-full md:w-64 lg:w-72 p-4 md:fixed md:h-[calc(100vh-4rem)] overflow-y-auto bg-white shadow-sm">
+        <div class="sticky top-0 space-y-6 pb-6">
+          <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">Filters</h2>
 
-  <div class="flex flex-col md:flex-row pt-16">
-    <!-- Left Sidebar Filter -->
-    <aside class="w-full md:w-64 lg:w-72 p-4 md:fixed md:h-[calc(100vh-4rem)] overflow-y-auto bg-white shadow-sm">
-      <div class="sticky top-0 space-y-6 pb-6">
-        <h2 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">Filters</h2>
-        
-        <form id="filterForm" class="space-y-4">
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">Sort by Price</label>
-            <select 
-              name="priceSort"
-              class="w-full p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
-              <option value="" selected>Select</option>
-              <option value="1">Price: Low to High</option>
-              <option value="2">Price: High to Low</option>
-            </select>
+          <form id="filterForm" class="space-y-4">
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-700">Sort by Price</label>
+              <select name="priceSort"
+                class="w-full p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                <option value="" selected>Select</option>
+                <option value="1">Price: Low to High</option>
+                <option value="2">Price: High to Low</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-700">Sort by Name</label>
+              <select name="nameSort"
+                class="w-full p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                <option value="" selected>Select</option>
+                <option value="1">Name: A - Z</option>
+                <option value="2">Name: Z - A</option>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-700">Category</label>
+              <select name="category_slug"
+                class="w-full p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                <option value="" selected>All Categories</option>
+                <div id="categoryOptionsUser"></div>
+              </select>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-700">Price Range</label>
+              <div class="flex items-center space-x-2">
+                <input type="text" name="minPrice" placeholder="Min"
+                  class="w-1/2 p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" />
+                <span class="text-gray-500">-</span>
+                <input type="text" name="maxPrice" placeholder="Max"
+                  class="w-1/2 p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" />
+              </div>
+            </div>
+
+            <button type="button" id="productsButton" onclick="applyFilter()"
+              class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 focus:ring-offset-indigo-200 text-white rounded-lg transition ease-in duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md">
+              Apply Filters
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 md:ml-64 lg:ml-72 p-4 md:p-6">
+        <div class="max-w-7xl mx-auto">
+          <h1 class="text-2xl font-bold text-gray-800 mb-6">Product Collection</h1>
+
+          <div id="productContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Products will be loaded here -->
           </div>
-          
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">Sort by Name</label>
-            <select 
-              name="nameSort"
-              class="w-full p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
-              <option value="" selected>Select</option>
-              <option value="1">Name: A - Z</option>
-              <option value="2">Name: Z - A</option>
-            </select>
-          </div>
-          
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">Category</label>
-            <select 
-              name="category_slug"
-              class="w-full p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
-              <option value="" selected>All Categories</option>
-              <div id="categoryOptionsUser"></div>
-            </select>
-          </div>
-          
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">Price Range</label>
-            <div class="flex items-center space-x-2">
-              <input 
-                type="text" 
-                name="minPrice"
-                placeholder="Min"
-                class="w-1/2 p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
-              />
-              <span class="text-gray-500">-</span>
-              <input 
-                type="text" 
-                name="maxPrice"
-                placeholder="Max"
-                class="w-1/2 p-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
-              />
+
+          <div class="mt-12 pb-12">
+            <div id="paginationContainer" class="flex justify-center space-x-2">
+              <!-- Pagination buttons will be created here -->
             </div>
           </div>
-          
-          <button 
-            type="button"
-            id="productsButton"
-            onclick="applyFilter()"
-            class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 focus:ring-offset-indigo-200 text-white rounded-lg transition ease-in duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md">
-            Apply Filters
-          </button>
-        </form>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 md:ml-64 lg:ml-72 p-4 md:p-6">
-      <div class="max-w-7xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Product Collection</h1>
-        
-        <div id="productContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <!-- Products will be loaded here -->
         </div>
-        
-        <div class="mt-12 pb-12">
-          <div id="paginationContainer" class="flex justify-center space-x-2">
-            <!-- Pagination buttons will be created here -->
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
+      </main>
+    </div>
 
-  <script src="/js/productList.js"></script>
-</body>
-</html>
+    <script src="/js/productList.js"></script>
+  </body>
+
+  </html>

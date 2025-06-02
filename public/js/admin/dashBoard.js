@@ -1,3 +1,5 @@
+dashBoard();
+
 function dashBoard() {
 
     //hide other sections
@@ -8,6 +10,7 @@ function dashBoard() {
     hideProductList();
     accessCouponSection();
     accessReferralCouponSection();
+    accessSalesReportSection();
 
     const orderSection = document.getElementById("orderSection");
     orderSection.classList.add("hidden");
@@ -132,7 +135,7 @@ function renderDashBoard() {
             <div class="group relative bg-white backdrop-blur-xl border border-gray-200 rounded-lg p-8 w-full sm:max-w-md lg:w-[30%] xl:w-[30%] hover:bg-gray-50 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/10 shadow-lg">
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-teal-500/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div class="relative z-10">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Sales</h3>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Revenue</h3>
                     <div class="flex justify-center">
                         <canvas id="sampleBar3" width="280" height="280" class="drop-shadow-lg"></canvas>
                     </div>
@@ -214,7 +217,7 @@ function getDashBoardData() {
 
     // Build query parameters
     let queryParams = '';
-    console.log("Params - ", queryParams)
+
     if (startDate) queryParams += `startDate=${startDate}`;
     if (endDate) queryParams += `&endDate=${endDate}`;
 
@@ -225,14 +228,11 @@ function getDashBoardData() {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                console.log("data from backend",data)
+
                 getChartData(data)
                 fetchSalesChartData()
-            } else {
-                console.log("Server responce failed")
             }
         })
-        .catch(error => console.log(error))
 }
 
 // Date Filter Functions
@@ -439,10 +439,10 @@ function getChartData(data) {
     donutChart3 = new Chart(ctx2, {
         type: 'doughnut',
         data: {
-            labels: [`MRP: ${data.pricingStats.totalMRP}/-`, `Offer: ${data.pricingStats.totalOffers}/-`,],
+            labels: [`MRP: ${data.pricingStats.totalMRP}/-`, `Offer: ${(data.pricingStats.productDiscount + data.pricingStats.proportionalCouponDiscount)}/-`,],
             datasets: [{
                 label: 'Offers Ratio',
-                data: [data.pricingStats.totalMRP, data.pricingStats.totalOffers],
+                data: [data.pricingStats.totalMRP, (data.pricingStats.productDiscount + data.pricingStats.proportionalCouponDiscount)],
                 backgroundColor: [
                     'rgba(16, 185, 129, 0.8)',
                     'rgba(255,64,25, 0.8)',
@@ -491,8 +491,9 @@ function getChartData(data) {
 
     // Function to load products
     function loadProducts() {
-        console.log("loadProducts")
+
         const container = document.getElementById('products-container');
+        container.innerHTML = ""
 
         data.topProducts.forEach((product, index) => {
             const productDiv = document.createElement('div');
@@ -532,121 +533,12 @@ function getChartData(data) {
                     </div>
                 `;
 
-            // Add click event listener
-            productDiv.addEventListener('click', function () {
-                alert(`Clicked on ${product.name} - $${product.price}`);
-            });
-
             container.appendChild(productDiv);
         });
     }
 
     // Load products when page loads
     loadProducts();
-
-    // Mock data for top 10 categories
-    const categories = [
-        {
-            id: 1,
-            name: "Electronics & Accessories",
-            totalSales: 28500,
-            revenue: 1250000,
-            products: 145,
-            icon: "💻",
-            growth: 15.2,
-            avgRating: 4.6
-        },
-        {
-            id: 2,
-            name: "Home & Garden",
-            totalSales: 24800,
-            revenue: 980000,
-            products: 210,
-            icon: "🏡",
-            growth: 12.8,
-            avgRating: 4.4
-        },
-        {
-            id: 3,
-            name: "Fashion & Clothing",
-            totalSales: 22100,
-            revenue: 890000,
-            products: 320,
-            icon: "👕",
-            growth: 8.9,
-            avgRating: 4.3
-        },
-        {
-            id: 4,
-            name: "Sports & Fitness",
-            totalSales: 19600,
-            revenue: 750000,
-            products: 180,
-            icon: "⚽",
-            growth: 18.5,
-            avgRating: 4.5
-        },
-        {
-            id: 5,
-            name: "Health & Beauty",
-            totalSales: 18200,
-            revenue: 680000,
-            products: 155,
-            icon: "💄",
-            growth: 22.1,
-            avgRating: 4.7
-        },
-        {
-            id: 6,
-            name: "Books & Media",
-            totalSales: 16800,
-            revenue: 420000,
-            products: 890,
-            icon: "📚",
-            growth: 5.3,
-            avgRating: 4.8
-        },
-        {
-            id: 7,
-            name: "Automotive",
-            totalSales: 14500,
-            revenue: 920000,
-            products: 95,
-            icon: "🚗",
-            growth: 11.7,
-            avgRating: 4.2
-        },
-        {
-            id: 8,
-            name: "Toys & Games",
-            totalSales: 13200,
-            revenue: 380000,
-            products: 275,
-            icon: "🎮",
-            growth: 25.4,
-            avgRating: 4.6
-        },
-        {
-            id: 9,
-            name: "Kitchen & Dining",
-            totalSales: 12900,
-            revenue: 520000,
-            products: 165,
-            icon: "🍽️",
-            growth: 9.8,
-            avgRating: 4.4
-        },
-        {
-            id: 10,
-            name: "Pet Supplies",
-            totalSales: 11700,
-            revenue: 340000,
-            products: 125,
-            icon: "🐕",
-            growth: 31.6,
-            avgRating: 4.9
-        }
-    ];
 
     // Function to render star rating
     function renderStars(rating) {
@@ -666,14 +558,15 @@ function getChartData(data) {
     }
 
     // Function to format currency
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(amount);
-    }
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount);
+}
+
 
     // Function to get growth color class
     function getGrowthColor(growth) {
@@ -686,6 +579,7 @@ function getChartData(data) {
     // Function to load categories
     function loadCategories() {
         const container = document.getElementById('categories-container');
+        container.innerHTML = "";
 
         data.topCategories.forEach((category, index) => {
             const categoryDiv = document.createElement('div');
@@ -714,7 +608,7 @@ function getChartData(data) {
                             </div>
                             <div>
                                 <div class="text-gray-600">Revenue</div>
-                                <div class="font-semibold text-green-600">${category.totalRevenue}</div>
+                                <div class="font-semibold text-green-600">Rs.${(category.totalRevenue.toFixed(2))}</div>
                             </div>
                             <div>
                                 <div class="text-gray-600">Products</div>
@@ -724,149 +618,13 @@ function getChartData(data) {
                     </div>
                 `;
 
-            // Add click event listener
-            categoryDiv.addEventListener('click', function () {
-                alert(`Clicked on ${category.name} - ${formatCurrency(category.revenue)} revenue`);
-            });
-
             container.appendChild(categoryDiv);
         });
     }
 
     // Load categories when page loads
     loadCategories();
-
-
-
-
-
-
-
-
-    // Mock data for top 10 brands
-    const brands = [
-        {
-            id: 1,
-            name: "Apple",
-            totalSales: 45200,
-            revenue: 2850000,
-            products: 85,
-            logo: "🍎",
-            brandColor: "bg-gray-900",
-            growth: 8.5,
-            avgRating: 4.8,
-            marketShare: 18.2
-        },
-        {
-            id: 2,
-            name: "Samsung",
-            totalSales: 38900,
-            revenue: 2100000,
-            products: 156,
-            logo: "📱",
-            brandColor: "bg-blue-600",
-            growth: 12.3,
-            avgRating: 4.6,
-            marketShare: 15.6
-        },
-        {
-            id: 3,
-            name: "Nike",
-            totalSales: 32500,
-            revenue: 1750000,
-            products: 220,
-            logo: "👟",
-            brandColor: "bg-orange-500",
-            growth: 15.8,
-            avgRating: 4.7,
-            marketShare: 13.1
-        },
-        {
-            id: 4,
-            name: "Sony",
-            totalSales: 28700,
-            revenue: 1620000,
-            products: 180,
-            logo: "🎧",
-            brandColor: "bg-black",
-            growth: 9.2,
-            avgRating: 4.5,
-            marketShare: 11.5
-        },
-        {
-            id: 5,
-            name: "Microsoft",
-            totalSales: 26800,
-            revenue: 1980000,
-            products: 95,
-            logo: "💻",
-            brandColor: "bg-blue-500",
-            growth: 18.4,
-            avgRating: 4.4,
-            marketShare: 10.8
-        },
-        {
-            id: 6,
-            name: "Adidas",
-            totalSales: 24200,
-            revenue: 1320000,
-            products: 285,
-            logo: "⚽",
-            brandColor: "bg-gray-800",
-            growth: 11.7,
-            avgRating: 4.6,
-            marketShare: 9.7
-        },
-        {
-            id: 7,
-            name: "Dell",
-            totalSales: 21500,
-            revenue: 1580000,
-            products: 120,
-            logo: "🖥️",
-            brandColor: "bg-blue-700",
-            growth: 6.9,
-            avgRating: 4.3,
-            marketShare: 8.6
-        },
-        {
-            id: 8,
-            name: "HP",
-            totalSales: 19800,
-            revenue: 1420000,
-            products: 145,
-            logo: "🖨️",
-            brandColor: "bg-indigo-600",
-            growth: 7.8,
-            avgRating: 4.2,
-            marketShare: 7.9
-        },
-        {
-            id: 9,
-            name: "Canon",
-            totalSales: 18600,
-            revenue: 1250000,
-            products: 95,
-            logo: "📷",
-            brandColor: "bg-red-600",
-            growth: 13.5,
-            avgRating: 4.7,
-            marketShare: 7.5
-        },
-        {
-            id: 10,
-            name: "Logitech",
-            totalSales: 16900,
-            revenue: 890000,
-            products: 165,
-            logo: "🖱️",
-            brandColor: "bg-green-600",
-            growth: 22.1,
-            avgRating: 4.4,
-            marketShare: 6.8
-        }
-    ];
-
+    
     // Function to render star rating
     function renderStars(rating) {
         const fullStars = Math.floor(rating);
@@ -911,23 +669,17 @@ function getChartData(data) {
     // Function to load brands
     function loadBrands() {
         const container = document.getElementById('brands-container');
+        container.innerHTML = "";
 
-        brands.forEach((brand, index) => {
+        data.topBrands.forEach((brand, index) => {
             const brandDiv = document.createElement('div');
             brandDiv.className = 'flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 border border-gray-200 cursor-pointer';
 
             brandDiv.innerHTML = `
                     <!-- Rank Badge -->
                     <div class="flex-shrink-0 mr-4">
-                        <div class="w-8 h-8 ${brand.brandColor} text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        <div class="w-8 h-8 text-white rounded-full flex items-center justify-center font-bold text-sm">
                             ${index + 1}
-                        </div>
-                    </div>
-
-                    <!-- Brand Logo -->
-                    <div class="flex-shrink-0 mr-4">
-                        <div class="w-16 h-16 bg-white rounded-lg border border-gray-200 flex items-center justify-center text-2xl shadow-sm">
-                            ${brand.logo}
                         </div>
                     </div>
 
@@ -935,58 +687,33 @@ function getChartData(data) {
                     <div class="flex-grow min-w-0">
                         <div class="flex items-start justify-between mb-2">
                             <h3 class="text-lg font-semibold text-gray-800 truncate">
-                                ${brand.name}
+                                ${brand.brand}
                             </h3>
-                            <div class="flex items-center space-x-2 ml-4">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full ${getGrowthColor(brand.growth)}">
-                                    +${brand.growth}%
-                                </span>
-                            </div>
+
                         </div>
                         
-                        <div class="flex items-center mb-3">
-                            <div class="flex mr-2">
-                                ${renderStars(brand.avgRating)}
-                            </div>
-                            <span class="text-sm text-gray-600">(${brand.avgRating})</span>
-                            <span class="text-sm text-gray-500 ml-3">${brand.marketShare}% market share</span>
-                        </div>
                         
                         <!-- Market Share Bar -->
-                        <div class="mb-3">
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="${brand.brandColor} h-2 rounded-full transition-all duration-300" style="width: ${getMarketShareWidth(brand.marketShare)}%"></div>
-                            </div>
-                        </div>
+
                         
                         <div class="grid grid-cols-3 gap-4 text-sm">
                             <div>
                                 <div class="text-gray-600">Sales</div>
-                                <div class="font-semibold text-gray-800">${brand.totalSales.toLocaleString()}</div>
+                                <div class="font-semibold text-gray-800">${brand.salesCount.toLocaleString()}</div>
                             </div>
                             <div>
                                 <div class="text-gray-600">Revenue</div>
-                                <div class="font-semibold text-green-600">${formatCurrency(brand.revenue)}</div>
+                                <div class="font-semibold text-green-600">Rs.${(brand.revenue).toFixed(2)}</div>
                             </div>
                             <div>
                                 <div class="text-gray-600">Products</div>
-                                <div class="font-semibold text-gray-800">${brand.products}</div>
+                                <div class="font-semibold text-gray-800">${brand.productCount}</div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Arrow Icon -->
-                    <div class="flex-shrink-0 ml-4">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </div>
                 `;
 
-            // Add click event listener
-            brandDiv.addEventListener('click', function () {
-                alert(`Clicked on ${brand.name} - ${formatCurrency(brand.revenue)} revenue • ${brand.marketShare}% market share`);
-            });
+
 
             container.appendChild(brandDiv);
         });
@@ -1008,7 +735,7 @@ function fetchSalesChartData() {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        console.log(data)
+
         renderSalesChart(data.labels, data.sales);
       } else {
         console.error("Sales data fetch failed");
@@ -1029,7 +756,7 @@ function renderSalesChart(labels, sales) {
   const chartData = {
     labels: labels,
     datasets: [{
-      label: 'Sales ($)',
+      label: '',
       data: sales,
       borderColor: '#3b82f6',
       backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -1067,7 +794,7 @@ function renderSalesChart(labels, sales) {
         displayColors: false,
         callbacks: {
           label: function (context) {
-            return 'Sales: $' + context.parsed.y.toLocaleString();
+            return 'Sales: Rs.' + context.parsed.y.toLocaleString();
           }
         }
       }
@@ -1083,7 +810,7 @@ function renderSalesChart(labels, sales) {
           color: '#6b7280',
           font: { size: 12 },
           callback: function (value) {
-            return '$' + value.toLocaleString();
+            return 'Rs.' + value.toLocaleString();
           }
         }
       }

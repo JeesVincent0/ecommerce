@@ -41,14 +41,18 @@ const cartAPI = {
           ...options.headers
         }
       });
-      console.log("jadlksfda", response)
+
+      
       if (!response.ok) {
-        throw new Error(`Request failed with status ${response.message}`);
+        
+        const responseBody = await response.json();
+
+
+        throw new Error(`Request failed with status ${responseBody.message}`);
       }
 
       return await response.json();
     } catch (error) {
-      console.error(`API Error (${url}):`, error);
       return { success: false, error: error.message };
     }
   },
@@ -218,7 +222,7 @@ const cartUI = {
   },
 
   renderOrderSummary(totalItems, totalPrice, grandTotal = totalPrice, coupons) {
-    console.log(coupons)
+
     const sideSection = domHelpers.accessSideSection();
 
     sideSection.innerHTML = `
@@ -734,12 +738,12 @@ const cartActions = {
 
   async incrementItem(productId) {
     const response = await cartAPI.addToCart(productId);
-    console.log(response)
 
     if (response.success) {
       this.loadCart();
     } else {
-      cartUI.showToast('Failed to update quantity', 'error');
+      
+      cartUI.showToast('Item maximum quantity reached', 'error');
     }
   },
 
@@ -749,8 +753,8 @@ const cartActions = {
     if (response.success) {
       this.loadCart();
     } else {
-      cartUI.showToast('Failed to update quantity', 'error');
-      console.log(response)
+      cartUI.showToast("Can't decrement item, only delete item", 'error');
+
     }
   },
 
@@ -780,7 +784,8 @@ const cartActions = {
         }
       }
     } else {
-      cartUI.showToast('Failed to proceed to checkout', 'error');
+
+      cartUI.showToast('Not enough stock, refresh the page and add items', 'error');
     }
   },
 
@@ -924,7 +929,6 @@ const cartActions = {
     const response = await cartAPI.placeOrder(paymentMethod, orderId);
 
     if (response.success) {
-      console.log(response)
       if (paymentMethod === 'cod') {
         // Cash on delivery - redirect to success page
         window.location.href = '/order-success';
@@ -1001,7 +1005,6 @@ function applyCoupon() {
 
   const couponCode = document.getElementById("couponCode");
   const code = couponCode.value.trim();
-  console.log("applied coupon - ", code);
 
   fetch("/checkcoupon", {
     method: "POST",

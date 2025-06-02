@@ -57,7 +57,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       return;
     }
-    console.log()
+
 
     //checking the entered two new passwords are equal or not
     if (newpassword !== repassword) {
@@ -76,7 +76,7 @@ window.addEventListener("DOMContentLoaded", () => {
     .then(res =>  res.json())
     .then(data => {
 
-      console.log("data.success")
+
       //checking entered email is taken or not
       if(!data.success) {
         document.getElementById('loaderOverlay').classList.add('hidden')
@@ -93,7 +93,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
     })
-    .catch(error => console.log('error: ', error))
+
 
   });
 });

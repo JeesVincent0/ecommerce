@@ -11,7 +11,6 @@
           <a href="/cart" class="text-white/90 hover:text-white transition-colors duration-200 hover:underline">Cart</a>
           <a href="/orders" class="text-white/90 hover:text-white transition-colors duration-200 hover:underline">Orders</a>
           <a href="/wishlist" class="text-white/90 hover:text-white transition-colors duration-200 hover:underline">Wishlist</a>
-          <button onclick="showAllProducts()" class="text-white/90 hover:text-white transition-colors duration-200 hover:underline bg-transparent border-none p-0 cursor-pointer">Shop</button>
         </nav>
       </div>
 
@@ -22,32 +21,7 @@
         </svg>
       </button>
 
-      <!-- Search Bar -->
-      <div class="hidden md:flex flex-1 max-w-xs lg:max-w-md mx-4">
-        <div class="relative w-full">
-          <input id="userSearch" type="text" placeholder="Search products..." oninput="toggleClearButtonProducts()"
-            class="w-full bg-white/10 backdrop-blur-sm border border-indigo-400/30 px-4 py-1.5 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all duration-200" />
-
-          <button id="clearSearchButton" onclick="clearSearchProduct()"
-            class="absolute right-16 top-1/2 -translate-y-1/2 text-indigo-200 hover:text-white hidden"
-            aria-label="Clear search">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clip-rule="evenodd" />
-            </svg>
-          </button>
-
-          <button onclick="productSearch()"
-            class="absolute right-0 top-0 h-full px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-r-lg transition-colors duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd"
-                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      
 
       <!-- Account Button -->
       <form action="/profile" method="GET">
@@ -61,33 +35,6 @@
       </form>
     </div>
 
-    <!-- Mobile Search (hidden on desktop) -->
-    <div class="md:hidden px-4 py-2 bg-indigo-800">
-      <div class="relative w-full">
-        <input id="userSearchMobile" type="text" placeholder="Search products..."
-          oninput="toggleClearButtonProducts()"
-          class="w-full bg-white/10 backdrop-blur-sm border border-indigo-400/30 px-4 py-1.5 rounded-lg text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all duration-200" />
-
-        <button id="clearSearchButtonMobile" onclick="clearSearchProduct()"
-          class="absolute right-16 top-1/2 -translate-y-1/2 text-indigo-200 hover:text-white hidden"
-          aria-label="Clear search">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clip-rule="evenodd" />
-          </svg>
-        </button>
-
-        <button onclick="productSearch()"
-          class="absolute right-0 top-0 h-full px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-r-lg transition-colors duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-              clip-rule="evenodd" />
-          </svg>
-        </button>
-      </div>
-    </div>
   </header>
 
   <!-- Wishlist Content Area -->
@@ -269,11 +216,6 @@
         .catch(err => console.error("Error:", err));
     }
 
-    // Mobile menu functionality
-    document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
-      // Implement mobile menu toggle functionality here
-      console.log('Mobile menu clicked');
-    });
   </script>
 </body>
 </html>

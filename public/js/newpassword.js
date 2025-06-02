@@ -34,5 +34,5 @@ document.getElementById('saveButton').addEventListener('click', (e) => {
     .then((data) => {
         if(data.success) window.location.href = data.redirectUrl
     })
-    .catch((error) => console.log(error.message))
+
 })

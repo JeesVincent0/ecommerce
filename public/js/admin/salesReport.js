@@ -16,6 +16,7 @@ function salesReport() {
     hideUserButton();
     hideOrderButton();
     hideProductButton();
+    accessDashBoardSection();
     renderSalesReport();
 
 
@@ -35,8 +36,6 @@ function getSalesReport(page = 1) {
     if (startDate) queryParams += `&startDate=${startDate}`;
     if (endDate) queryParams += `&endDate=${endDate}`;
 
-    console.log('Date sample - ', endDate)
-
     fetch(`/salesreport?${queryParams}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
@@ -44,7 +43,6 @@ function getSalesReport(page = 1) {
         .then((res) => res.json())
         .then((data) => {
             if (data.success) {
-                console.log(data.summary)
                 renderSalesTable(data.orders, data.summary, data.pagination)
             }
         })
@@ -178,7 +176,6 @@ function renderSalesTable(orders, summary, pagination) {
                     <th class="py-3 px-6 text-left">Dicount ₹ ⬍</th>
                     <th class="py-3 px-6 text-left">Coupon offer ₹ ⬍</th>
                     <th class="py-3 px-6 text-left">Final ₹ ⬍</th>
-                    <th class="py-3 px-6 text-left">Status</th>
                 </tr>
             </thead>
             <tbody id="salesReportTableBody" class="text-gray-700 text-sm">
@@ -211,7 +208,7 @@ function renderSalesTable(orders, summary, pagination) {
     </div>`;
     const salesReportTableBody = document.getElementById("salesReportTableBody");
     salesReportTableBody.innerHTML = "";
-    console.log(orders)
+
 
     orders.forEach(order => {
         const row = document.createElement("tr");
@@ -224,10 +221,9 @@ function renderSalesTable(orders, summary, pagination) {
             <td class="px-6 py-4 capitalize">${order.paymentMethod}</td>
             <td class="px-6 py-4">${order.totalItems}</td>
             <td class="px-6 py-4">₹${order.totalMRP}</td>
-            <td class="px-6 py-4 text-red-600">₹${order.totalMRP - order.totalAmount}</td>
-            <td class="px-6 py-4 text-red-600">₹${order.coupon?.discountAmount || 0}</td>
+            <td class="px-6 py-4 text-red-600">₹${(order.totalDiscount).toFixed(2)}</td>
+            <td class="px-6 py-4 text-red-600">₹${order.proportionalDiscount || 0}</td>
             <td class="px-6 py-4 font-semibold">₹${order.grandTotal}</td>
-            <td class="px-6 py-4 capitalize text-green-600">${order.orderStatus}</td>
             `;
 
         salesReportTableBody.appendChild(row);
@@ -244,10 +240,10 @@ function renderSalesTable(orders, summary, pagination) {
         <td class="px-6 py-4"></td>
         <td class="px-6 py-4 font-semibold">TOTAL</td>
         <td class="px-6 py-4">₹${summary.totalMRP}</td>
-        <td class="px-6 py-4 text-red-600">₹${summary.totalMRP - summary.finalAmount}</td>
-        <td class="px-6 py-4 text-red-600">₹${summary?.totalDiscount || 0}</td>
+        <td class="px-6 py-4 text-red-600">₹${(summary.totalOffer).toFixed(2)}</td>
+        <td class="px-6 py-4 text-red-600">₹${summary?.proportionalDiscount || 0}</td>
         <td class="px-6 py-4 font-semibold">₹${summary.finalAmount}</td>
-        <td class="px-6 py-4"></td>
+        
     `;
     salesReportTableBody.appendChild(summaryRow);
 

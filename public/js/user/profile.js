@@ -423,7 +423,6 @@ function setupReferralEventListeners() {
         }
 
         generateBtn.addEventListener('click', async function () {
-            console.log("triggered");
 
             // Show loading state
             generateBtn.disabled = true;
@@ -451,7 +450,7 @@ function setupReferralEventListeners() {
                     throw new Error('Failed to generate referral');
                 }
             } catch (error) {
-                console.log('Using mock URL for demo');
+
                 const mockUrl = `https://yourapp.com/signup?ref=${Math.random().toString(36).substring(7)}`;
                 if (referralUrl) referralUrl.textContent = mockUrl;
                 if (referralDiv) referralDiv.classList.remove('hidden');
@@ -891,7 +890,7 @@ function submitNewPassword() {
                 document.getElementById("otpLabel").style.color = "red"
             }
         })
-        .catch((error) => console.log(error.toString()))
+
 }
 
 function getOneAddress(userId) {
@@ -1020,7 +1019,7 @@ function submitAddress(event, userId) {
 
 
 function addNewAddress(userId) {
-    console.log(userId)
+
     const addressSection = accessAddressSection()
 
     addressSection.innerHTML = `

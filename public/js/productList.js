@@ -52,7 +52,7 @@ function getProduct(query) {
             const clearBtn = document.getElementById("clearSearchButton")
             clearBtn.classList.remove("hidden");
         })
-        .catch((error) => console.log(error.message));
+
 }
 
 function renderProducts(products) {
@@ -127,7 +127,7 @@ function addToCart(productId) {
         .then((data) => {
 
         })
-        .catch((error) => console.log(error.toString()));
+
 }
 function renderCategory() {
     const categoryOptionsUser = document.getElementById("categoryOptionsUser");
@@ -181,7 +181,7 @@ function clearSearchProduct() {
 
 
 function productPagination(totalPages, currentPage) {
-    console.log("pagination reached")
+
     const pagination = document.getElementById("paginationContainer");
     pagination.innerHTML = "";
     if (currentPage > 1) {
@@ -211,5 +211,5 @@ function toggleWishlist(productId) {
         .then((data) => {
 
         })
-        .catch((error) => console.log(error))
+
 }

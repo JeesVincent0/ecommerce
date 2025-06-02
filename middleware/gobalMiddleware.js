@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 
 //this middleware is used for track the end points. It will console the end points that we ivoked
 export const endPoints = (req, res, next) => {
-    console.log(`${req.method} ${req.originalUrl}`)
+    logger.error(`${req.method} ${req.originalUrl}`)
 
     next()
 }
@@ -13,7 +13,7 @@ export const showJWT = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
             if (err) {
                 if (err.name === "TokenExpiredError") {
-                    console.log("TokenExpiredError")
+                    logger.error("TokenExpiredError")
                 }
                 next()
             }

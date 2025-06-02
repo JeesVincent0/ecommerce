@@ -42,59 +42,53 @@ const userOrderController = {
                 return res.status(400).json({ success: false, message: 'Cannot cancel this item' });
             }
 
-            // Restore product stock
+            // 1. Restore stock
             const product = await Product.findById(productId);
             if (product) {
                 product.stock += item.quantity;
                 await product.save();
             }
 
-            // Mark item as cancelled
+            // 2. Cancel item
             item.orderStatus = 'cancelled';
 
-            // Step 1: Recalculate totalAmount based on all non-cancelled items
+            // 3. Recalculate totals from non-cancelled items
             const validItems = order.items.filter(i => i.orderStatus !== 'cancelled');
 
             const updatedTotalAmount = validItems.reduce((acc, i) => {
                 return acc + (i.priceAtPurchase * i.quantity);
             }, 0);
 
+            // 4. Reapply coupon if applicable
             let discountAmount = 0;
-
-            // Step 2: Reapply coupon if present
-            if (order.coupon && order.coupon.code) {
+            if (order.coupon?.code) {
                 const coupon = await Coupon.findOne({ code: order.coupon.code });
-
                 if (coupon) {
                     if (coupon.discountType === 'fixed') {
                         discountAmount = coupon.discountValue;
                     } else if (coupon.discountType === 'percentage') {
-                        const percentageDiscount = (coupon.discountValue / 100) * updatedTotalAmount;
+                        const percentDiscount = (coupon.discountValue / 100) * updatedTotalAmount;
                         discountAmount = coupon.maxDiscount
-                            ? Math.min(percentageDiscount, coupon.maxDiscount)
-                            : percentageDiscount;
+                            ? Math.min(percentDiscount, coupon.maxDiscount)
+                            : percentDiscount;
                     }
-
-                    // Ensure discount doesn't exceed total
                     if (discountAmount > updatedTotalAmount) {
                         discountAmount = updatedTotalAmount;
                     }
                 }
             }
 
-            // Step 3: Update order totals
+            // 5. Update totals
             const updatedGrandTotal = updatedTotalAmount - discountAmount;
             order.totalAmount = updatedTotalAmount;
             order.grandTotal = updatedGrandTotal;
             order.coupon.discountAmount = discountAmount;
 
-            // Step 4: Refund if Razorpay prepaid
+            // 6. Refund to wallet if prepaid via Razorpay
             if (order.paymentMethod === 'razorpay' && order.paymentStatus === 'paid') {
                 const refundAmount = item.priceAtPurchase * item.quantity;
-
                 if (!isNaN(refundAmount) && refundAmount > 0) {
                     let wallet = await Wallet.findOne({ userId: order.userId });
-
                     if (!wallet) {
                         wallet = new Wallet({
                             userId: order.userId,
@@ -116,11 +110,12 @@ const userOrderController = {
                 }
             }
 
+            // 7. Save updated order
             await order.save();
 
             return res.json({
                 success: true,
-                message: 'Item cancelled, totals adjusted and refund processed (if applicable)'
+                message: 'Item cancelled, stock restored, totals updated and refund (if Razorpay) processed'
             });
 
         } catch (err) {
@@ -210,13 +205,13 @@ const userOrderController = {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const email = decoded.userEmail;
             const user = await User.findOne({ email }).select("_id");
-    
+
             let cart = await Cart.findOne({ userId: user._id }).populate('items.productId');
-    
+
             if (!cart) {
                 return res.json({ success: true, cart: null });
             }
-    
+
             // Check each item for stock
             const updatedItems = [];
             for (const item of cart.items) {
@@ -225,20 +220,20 @@ const userOrderController = {
                     updatedItems.push(item); // Stock is enough
                 }
             }
-    
+
             // If items were removed
             if (updatedItems.length !== cart.items.length) {
                 cart.items = updatedItems;
                 await cart.save(); // Save updated cart
             }
-    
+
             // Populate productId again to return full product details
             cart = await Cart.findOne({ userId: user._id }).populate('items.productId');
             const coupons = await Coupon.find()
-    
-    
+
+
             res.json({ success: true, cart, coupons });
-    
+
         } catch (error) {
             logger.error(error.toString());
             res.json({ success: false });
@@ -252,20 +247,20 @@ const userOrderController = {
             const token = req.cookies.jwt;
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const email = decoded.userEmail;
-    
+
             const user = await User.findOne({ email }).select('_id');
             if (!user) {
                 return res.status(404).json({ success: false, message: 'User not found' });
             }
-    
+
             const cart = await Cart.findOne({ userId: user._id });
             if (!cart || !cart.items || cart.items.length === 0) {
                 return res.status(400).json({ success: false, message: 'Cart is empty' });
             }
-    
+
             const updatedItems = [];
             const removedProducts = [];
-    
+
             for (const item of cart.items) {
                 const product = await Product.findById(item.productId).select('stock product_name');
                 if (!product || product.stock < item.quantity) {
@@ -275,23 +270,23 @@ const userOrderController = {
                     updatedItems.push(item);
                 }
             }
-    
+
             // Update cart and throw error if items were removed
             if (removedProducts.length > 0) {
                 cart.items = updatedItems;
                 await cart.save();
-    
+
                 return res.status(400).json({
                     success: false,
                     message: 'Some products were removed from cart due to insufficient stock',
                     removedProducts,
                 });
             }
-    
+
             const address = await Address.find({ userId: user._id });
-    
+
             res.json({ success: true, address });
-    
+
         } catch (error) {
             logger.error(error.toString());
             res.status(500).json({ success: false, message: 'Server error' });
@@ -305,21 +300,21 @@ const userOrderController = {
             const token = req.cookies.jwt;
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const email = decoded.userEmail;
-    
+
             const user = await User.findOne({ email });
             if (!user) {
                 return res.status(404).json({ success: false, message: 'User not found' });
             }
-    
+
             const cart = await Cart.findOne({ userId: user._id }).populate('items.productId');
             if (!cart || cart.items.length === 0) {
                 return res.status(400).json({ success: false, message: 'Cart is empty' });
             }
-    
+
             // Check stock for each item
             const updatedItems = [];
             const removedItems = [];
-    
+
             for (const item of cart.items) {
                 const product = item.productId;
                 if (!product || product.stock < item.quantity) {
@@ -328,30 +323,30 @@ const userOrderController = {
                     updatedItems.push(item);
                 }
             }
-    
+
             // If any items were removed, update the cart and return error
             if (removedItems.length > 0) {
                 cart.items = updatedItems;
                 await cart.save();
-    
+
                 return res.status(400).json({
                     success: false,
                     message: 'Some products were removed from cart due to insufficient stock',
                     removedProducts: removedItems
                 });
             }
-    
+
             // Proceed if all items are in stock
             const { addressId } = req.body;
             const shippingAddress = await Address.findOne({ _id: addressId, userId: user._id });
             if (!shippingAddress) {
                 return res.status(400).json({ success: false, message: 'Shipping address not found' });
             }
-    
+
             const totalAmount = cart.items.reduce((sum, item) => {
                 return sum + (item.priceAtTime * item.quantity);
             }, 0);
-    
+
             const newOrder = new Order({
                 orderId: generateOrderId(),
                 userId: user._id,
@@ -375,15 +370,15 @@ const userOrderController = {
                 grandTotal: totalAmount,
                 orderStatus: 'failed'
             });
-    
+
             await newOrder.save();
-    
+
             res.status(200).json({
                 success: true,
                 orderId: newOrder._id,
                 message: 'Order created successfully'
             });
-    
+
         } catch (error) {
             logger.error(error.toString());
             res.status(500).json({ success: false, message: 'Something went wrong' });

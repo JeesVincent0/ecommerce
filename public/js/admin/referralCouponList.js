@@ -1,5 +1,6 @@
 function referralCouponList() {
     //hide other section
+    accessDashBoardSection();
     hideUserSection();
     hideCategoryList();
     hideEditCategorySection();
@@ -346,7 +347,6 @@ function editReferralCoupon(couponId) {
     })
     .then((res) => res.json())
     .then((data) => {
-        console.log(data)
         if(data.success) {
             renderReferralCouponEditForm(data.coupon);
         }

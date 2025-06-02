@@ -28,18 +28,15 @@ document.getElementById("login").addEventListener("click", () => {
   .then((data) => {
     if(!data.email && !data.block) {
       //If email wrong, it will change the email input field
-      console.log("email not matching")
       emailLabelField.innerText = "Wrong email";
       emailLabelField.style.color = "red";
       emailField.style.borderColor = "red";
     } else if(!data.pass) {
       //if password wrong it will change the password input field
-      console.log("password not matching")
       passLabelField.innerText = "Wrong password";
       passLabelField.style.color = "red";
       passwordField.style.borderColor = "red";
     } else if(data.block) {
-      console.log("email not matching")
       emailLabelField.innerText = "User blocked";
       emailLabelField.style.color = "red";
       emailField.style.borderColor = "red";
@@ -51,7 +48,6 @@ document.getElementById("login").addEventListener("click", () => {
     }
     
   })
-  .catch((error) => console.log("Error - ", error.message))
 
 })
 });

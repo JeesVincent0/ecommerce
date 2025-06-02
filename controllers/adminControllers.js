@@ -16,6 +16,7 @@ import PDFDocument from "pdfkit"
 import moment from "moment"
 import ExcelJS from "exceljs";
 import { salesReportData } from "../utils/getSalesReportData.js"
+import Brand from "../models/brandSchema.js"
 
 //@desc render admin login page
 //GET /adminlogin
@@ -47,7 +48,7 @@ export const verifyAdminLogin = async (req, res) => {
     res.json({ success: true, redirectUrl: "/adminhome", email: true, password: true })
 
   } catch (error) {
-    console.log(error.message)
+    logger.error(error.message)
     if (error.message === "Wrong email") {
       res.status(401).json({ email: false })
     } else if (error.message === "Wrong password") {
@@ -99,7 +100,7 @@ export const blockUser = async (req, res) => {
     const user = await User.updateOne({ email }, { $set: { isActive: false } })
     res.json({ success: true, message: "User blocked" })
   } catch (error) {
-    console.log(error.message)
+    logger.error(error.message)
     res.status(500).json({ success: false, message: "Something went wrong" })
   }
 }
@@ -117,7 +118,7 @@ export const unBlockUser = async (req, res) => {
     res.json({ success: true, message: "User unbloked" })
 
   } catch (error) {
-    console.log(error.message);
+    logger.error(error.message);
     res.status(500).json({ success: false, message: "Something went wrong" })
   }
 }
@@ -157,7 +158,7 @@ export const getUsersSearch = async (req, res) => {
 //GET /category
 export const getCategoryList = async (req, res) => {
   try {
-    console.log("reached");
+    logger.error("reached");
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
@@ -195,15 +196,13 @@ export const getCategoryList = async (req, res) => {
 export const getCategoryNames = async (req, res) => {
   try {
     const parentId = req.params.parentId
-    console.log(parentId)
 
     if (parentId === "null") {
       const category = await Category.find({ parentId: null }).select("slug")
       res.json({ categoryNames: category, parent: true })
     } else if (parentId) {
-      console.log("backend parentId", parentId)
       const category = await Category.find({ parentId: parentId }).select("slug")
-      console.log(category)
+     
       res.json({ categoryNames: category, parent: false, child: true })
     }
   } catch (error) {
@@ -217,14 +216,12 @@ export const getCategoryNames = async (req, res) => {
 export const createNewCategory = async (req, res) => {
   try {
     const { name, description, status, offer } = req.body
-    console.log(name, description, status, offer)
 
     //creating slug from name
     const slug = slugify(name, { lower: true, strict: true })
 
     //check if slug is already exists
     const existingCategory = await Category.findOne({ slug })
-    console.log(existingCategory)
     if (existingCategory) throw new ("Use another name")
 
     //creating new category
@@ -251,7 +248,6 @@ export const createNewCategory = async (req, res) => {
 //GET /category/search?key=data
 export const getCategorySearch = async (req, res) => {
 
-  console.log("reached search on category")
   //getting data from query params
   const keyword = req.query.key;
   const page = parseInt(req.query.page);
@@ -276,7 +272,6 @@ export const getCategorySearch = async (req, res) => {
 export const editCategoryForm = async (req, res) => {
   try {
     const slug = req.query.slug
-    console.log(slug)
     const category = await Category.findOne({ slug }).select("name slug description status -_id offers")
     res.json({ category })
 
@@ -339,11 +334,11 @@ export const editCategory = async (req, res) => {
 export const statusCategory = async (req, res) => {
   try {
     const slug = req.params.slug;
-    console.log(slug)
+
     const category = await Category.findOne({ slug });
 
     if (!category) {
-      console.log("daalskhgdkjasfgjbafji")
+
       return res.status(404).json({ status: false, message: "Category not found" });
     }
 
@@ -393,7 +388,7 @@ export const getProductsSearch = async (req, res) => {
   const page = parseInt(req.query.page) || 1
   const limit = parseInt(req.query.limit) || 2
 
-  console.log(keyword)
+
 
   //settup for get users
   const regxKey = new RegExp(keyword, 'i')
@@ -410,7 +405,7 @@ export const getProductsSearch = async (req, res) => {
   const totalProduct = await Product.countDocuments(filter)
   const totalPages = Math.ceil(totalProduct / limit)
 
-  console.log(product)
+
 
   res.json({ product, totalPages: totalPages, page })
 }
@@ -431,23 +426,43 @@ export const getChildCategory = async (req, res) => {
 export const addNewProduct = async (req, res) => {
   try {
 
-    console.log("add body", req.body);
-    console.log('add images', req.files)
 
-    const { product_name, description, brand, mrp, discount_price, stock, tags, category_slug } = req.body;
-
-    // Store file paths
-    const imagePaths = req.files.map(file => file.path);
-
-    const categoryId = await Category.findOne({ slug: category_slug }).select("_id")
-    const discount_percentage = Math.floor((discount_price / mrp) * 100);
-    const last_price = mrp - discount_price
-
-
-    const newProduct = new Product({
+    const {
       product_name,
       description,
       brand,
+      mrp,
+      discount_price,
+      stock,
+      tags,
+      category_slug
+    } = req.body;
+
+    // 1. Handle images
+    const imagePaths = req.files.map(file => file.path);
+
+    // 2. Find category ID
+    const categoryId = await Category.findOne({ slug: category_slug }).select("_id");
+
+    // 3. Calculate discount and last price
+    const discount_percentage = Math.floor((discount_price / mrp) * 100);
+    const last_price = mrp - discount_price;
+
+    // 4. Handle brand - check if brand exists
+    const brandSlug = slugify(brand, { lower: true });
+    let existingBrand = await Brand.findOne({ name: brandSlug });
+
+    // 5. If brand doesn't exist, create it
+    if (!existingBrand) {
+      existingBrand = new Brand({ name: brandSlug });
+      await existingBrand.save();
+    }
+
+    // 6. Create product
+    const newProduct = new Product({
+      product_name,
+      description,
+      brand: existingBrand.name, // or use brand ID if you store relation
       mrp,
       discount_price,
       discount_percentage,
@@ -456,15 +471,16 @@ export const addNewProduct = async (req, res) => {
       category_id: categoryId,
       images: imagePaths,
       last_price
-    })
+    });
 
-    await newProduct.save()
+    await newProduct.save();
 
-    res.json({ status: true })
+    res.json({ status: true });
   } catch (error) {
-    console.log(error.message)
+    logger.error(error.message);
+    res.status(500).json({ status: false, message: 'Internal server error' });
   }
-}
+};
 
 //@desc get product data for edit form
 //GET /product/:id
@@ -486,7 +502,7 @@ export const getProductData = async (req, res) => {
     res.json({ product })
 
   } catch (error) {
-    console.log(error.message)
+    logger.error(error.message)
   }
 }
 
@@ -541,7 +557,7 @@ export const editProduct = async (req, res) => {
       const fullPath = path.resolve(imgPath);
       fs.unlink(fullPath, err => {
         if (err) console.error(`Failed to delete ${imgPath}:`, err);
-        else console.log(`Deleted old image: ${imgPath}`);
+        else logger.error(`Deleted old image: ${imgPath}`);
       });
     });
 
@@ -578,12 +594,12 @@ export const editProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const _id = req.params.id
-    console.log("delete product _id reached - ", _id)
+
     const deleted = await Product.deleteOne({ _id })
     res.json({ success: true })
 
   } catch (error) {
-    console.log(error.message)
+    logger.error(error.message)
   }
 }
 
@@ -753,11 +769,9 @@ export const getUserDetailsAndOrders = async (req, res) => {
 
 
 export const toggleProductStatus = async (req, res) => {
-  console.log("dataslgjfgjafbg")
+
   const { id } = req.params;
   const { isActive } = req.body;
-
-  console.log(id, isActive)
 
   try {
     const product = await Product.findByIdAndUpdate(
@@ -825,7 +839,7 @@ export const getReferralCoupon = async (req, res) => {
     res.json({ success: true, coupon })
 
   } catch (error) {
-    console.log(error.toString())
+    logger.error(error.toString())
     res.status(500).json({ success: false, message: "Something went wrong" })
   }
 }
@@ -856,7 +870,7 @@ export const saveReferralCoupon = async (req, res) => {
 
     res.json({ success: true })
   } catch (error) {
-    console.log(error.toString())
+    logger.error(error.toString())
     res.status(500).json({ success: false, message: "Something went wrong" })
   }
 }
@@ -887,7 +901,7 @@ export const blockReferralCoupon = async (req, res) => {
       newStatus
     });
   } catch (error) {
-    console.log(error.toString());
+    logger.error(error.toString());
     res.status(500).json({ success: true, message: "Something went wrong" })
   }
 }
@@ -910,7 +924,7 @@ export const addReferralCoupon = async (req, res) => {
     res.json({ success: true })
 
   } catch (error) {
-    console.log(error.toString())
+    logger.error(error.toString())
   }
 }
 
@@ -971,7 +985,7 @@ export const searchReferralCoupons = async (req, res) => {
 
     res.json({ success: true, coupons });
   } catch (error) {
-    console.log(error.toString());
+    logger.error(error.toString());
     res.status(500).json({ success: true, message: "Something went wrong" })
   }
 }
@@ -994,7 +1008,7 @@ export const addCoupon = async (req, res) => {
     res.json({ success: true })
 
   } catch (error) {
-    console.log('error message', error.message)
+    logger.error('error message', error.message)
     if (error.message === "This coupon code is already taken") {
       res.status(500).json({ success: false, couponUsed: true });
     } else {
@@ -1008,7 +1022,7 @@ export const addCoupon = async (req, res) => {
 export const getCoupon = async (req, res) => {
   try {
     const couponId = req.query.couponId;
-    console.log(couponId)
+    
     const coupon = await Coupon.findOne({ _id: couponId })
     res.json({ success: true, coupon })
   } catch (error) {
@@ -1189,7 +1203,7 @@ export const approveRefund = async (req, res) => {
 
 
 // @desc Get Sales Report
-// @route GET /salesreport?page=1&limit=10
+// route GET /salesreport?page=1&limit=10
 export const getSalesReport = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -1221,7 +1235,7 @@ export const getSalesReport = async (req, res) => {
 };
 
 //@desc download salesreport in pdf
-//router /salesreport/pdf/download
+//router GET /salesreport/pdf/download
 export const getSalesReportPdf = async (req, res) => {
   try {
     const { startDate: startDateRaw, endDate: endDateRaw } = req.query;
@@ -1245,236 +1259,170 @@ export const getSalesReportPdf = async (req, res) => {
     });
     doc.pipe(res);
 
-    const colors = {
-      primary: "#2563eb",
-      secondary: "#64748b",
-      accent: "#10b981",
-      background: "#f8fafc",
-      text: "#1e293b",
-      border: "#e2e8f0",
-      warning: "#f59e0b"
-    };
-
     const pageWidth = doc.page.width - 100;
 
-    const drawLine = (x1, y1, x2, y2, color = colors.border, width = 1) => {
-      doc.strokeColor(color).lineWidth(width).moveTo(x1, y1).lineTo(x2, y2).stroke();
+    const drawLine = (x1, y1, x2, y2, width = 1) => {
+      doc.strokeColor("black").lineWidth(width).moveTo(x1, y1).lineTo(x2, y2).stroke();
     };
 
-    const drawBox = (x, y, width, height, fillColor, strokeColor = null) => {
+    const drawBox = (x, y, width, height, strokeColor = "black") => {
       doc.rect(x, y, width, height);
-      if (fillColor) doc.fillColor(fillColor).fill();
       if (strokeColor) doc.strokeColor(strokeColor).stroke();
     };
 
     // ===== HEADER =====
-    drawBox(50, 50, pageWidth, 80, colors.primary);
-    doc.fillColor("white").font("Helvetica-Bold").fontSize(24).text("SALES REPORT", 70, 75);
-    doc.font("Helvetica").fontSize(12).text(`Generated on ${moment().format("MMMM DD, YYYY")}`, 70, 105);
+    doc.fillColor("black").font("Helvetica-Bold").fontSize(20).text("SALES REPORT", 50, 50);
+    doc.font("Helvetica").fontSize(12).text("SHOPPI PVT LTD", 50, 75);
+    doc.font("Helvetica").fontSize(10).text(`Generated: ${moment().format("MMMM DD, YYYY")}`, 50, 95);
+    
+    drawLine(50, 115, pageWidth + 50, 115, 2);
 
-    // ===== SUMMARY CARDS =====
-    const cardY = 160;
-    const cardWidth = (pageWidth - 30) / 4; // Adjusted spacing
-    const cardHeight = 80;
+    // ===== SUMMARY SECTION =====
+    doc.y = 135;
+    doc.font("Helvetica-Bold").fontSize(14).text("SUMMARY", 50, doc.y);
+    doc.y += 25;
 
-    const summaryCards = [
-      {
-        label: "TOTAL ORDERS",
-        value: report.totalOrders.toLocaleString(),
-        color: colors.primary
-      },
-      {
-        label: "TOTAL MRP",
-        value: `₹${report.summary.totalMRP.toLocaleString()}`,
-        color: colors.secondary
-      },
-      {
-        label: "TOTAL DISCOUNT",
-        value: `₹${report.summary.totalDiscount.toLocaleString()}`,
-        color: colors.warning
-      },
-      {
-        label: "FINAL AMOUNT",
-        value: `₹${report.summary.finalAmount.toLocaleString()}`,
-        color: colors.accent
+    const summaryData = [
+      { label: "Total Orders:", value: report.totalOrders.toLocaleString() },
+      { label: "Total MRP:", value: `₹${report.summary.totalMRP.toLocaleString()}` },
+      { label: "Total Discount:", value: `₹${report.summary.totalDiscount.toLocaleString()}` },
+      { label: "Final Amount:", value: `₹${report.summary.finalAmount.toLocaleString()}` },
+      { 
+        label: "Average Order Value:", 
+        value: `₹${report.totalOrders ? (report.summary.finalAmount / report.totalOrders).toLocaleString("en-IN", { maximumFractionDigits: 2 }) : "0"}` 
       }
     ];
 
-    summaryCards.forEach((card, i) => {
-      const x = 50 + i * (cardWidth + 10);
-      drawBox(x, cardY, cardWidth, cardHeight, colors.background, colors.border);
-      doc.fillColor(colors.text).font("Helvetica-Bold").fontSize(10).text(card.label, x + 10, cardY + 15, {
-        width: cardWidth - 20,
-        align: "center"
-      });
-      doc.fillColor(card.color).fontSize(16).text(card.value, x + 10, cardY + 40, {
-        width: cardWidth - 20,
-        align: "center"
-      });
+    summaryData.forEach((item, i) => {
+      const itemY = doc.y + (i * 18);
+      doc.fillColor("black").font("Helvetica").fontSize(10);
+      doc.text(item.label, 50, itemY, { width: 150 });
+      doc.font("Helvetica-Bold");
+      doc.text(item.value, 220, itemY);
     });
 
     // ===== DATE RANGE =====
-    doc.y = cardY + cardHeight + 30;
+    doc.y += 120;
     const dateRange = report.dateRange !== "undefined - undefined"
       ? report.dateRange
       : `All time (as of ${moment().format("MMM DD, YYYY")})`;
-    doc.fillColor(colors.text).font("Helvetica").fontSize(12).text(`Report Period: ${dateRange}`, 50, doc.y);
+    doc.font("Helvetica").fontSize(10).text(`Report Period: ${dateRange}`, 50, doc.y);
 
-    // ===== TABLE HEADER =====
-    doc.y += 40;
-    doc.font("Helvetica-Bold").fontSize(16).text("Order Details", 50, doc.y);
-    doc.y += 25;
+    // ===== TABLE =====
+    doc.y += 35;
+    doc.font("Helvetica-Bold").fontSize(12).text("ORDER DETAILS", 50, doc.y);
+    doc.y += 20;
 
     const tableTop = doc.y;
 
-    // Define column positions and widths for better alignment
+    // FIXED: Define columns with proper widths that fit within page boundaries
     const columns = [
-      { header: "Order ID", x: 50, width: 85 },
-      { header: "Customer", x: 140, width: 100 },
-      { header: "Date", x: 245, width: 75 },
-      { header: "Payment", x: 325, width: 60 },
-      { header: "Items", x: 390, width: 40 },
-      { header: "MRP", x: 435, width: 60 },
-      { header: "Discount", x: 500, width: 60 },
-      { header: "Final", x: 565, width: 60 }
+      { header: "Order ID", x: 50, width: 80 },
+      { header: "Date", x: 135, width: 70 },
+      { header: "Payment", x: 210, width: 70 },
+      { header: "Items", x: 285, width: 45 },
+      { header: "MRP", x: 335, width: 70 },
+      { header: "Discount", x: 410, width: 70 },
+      { header: "Final", x: 485, width: 65 }  // Ends at 550, well within pageWidth (545)
     ];
 
     // Draw table header
-    drawBox(50, tableTop, pageWidth, 30, colors.primary);
-    doc.fillColor("white").font("Helvetica-Bold").fontSize(9);
+    drawBox(50, tableTop, pageWidth, 25);
+    doc.fillColor("black").font("Helvetica-Bold").fontSize(9);
 
     columns.forEach(col => {
-      doc.text(col.header, col.x + 5, tableTop + 10, {
+      const align = ["MRP", "Discount", "Final", "Items"].includes(col.header) ? "center" : "left";
+      doc.text(col.header, col.x + 5, tableTop + 8, {
         width: col.width - 10,
-        align: col.header.includes("MRP") || col.header.includes("Discount") || col.header.includes("Final") || col.header.includes("Items") ? "center" : "left"
+        align: align
       });
     });
 
     // ===== TABLE ROWS =====
-    let currentY = tableTop + 35;
-    const rowHeight = 30;
+    let currentY = tableTop + 30;
+    const rowHeight = 25;
 
     report.orders.forEach((order, index) => {
       // Check if we need a new page
-      if (currentY > doc.page.height - 120) {
+      if (currentY > doc.page.height - 100) {
         doc.addPage();
         currentY = 50;
 
         // Redraw header on new page
-        drawBox(50, currentY, pageWidth, 30, colors.primary);
-        doc.fillColor("white").font("Helvetica-Bold").fontSize(9);
+        drawBox(50, currentY, pageWidth, 25);
+        doc.fillColor("black").font("Helvetica-Bold").fontSize(9);
         columns.forEach(col => {
-          doc.text(col.header, col.x + 5, currentY + 10, {
+          const align = ["MRP", "Discount", "Final", "Items"].includes(col.header) ? "center" : "left";
+          doc.text(col.header, col.x + 5, currentY + 8, {
             width: col.width - 10,
-            align: col.header.includes("MRP") || col.header.includes("Discount") || col.header.includes("Final") || col.header.includes("Items") ? "center" : "left"
+            align: align
           });
         });
-        currentY += 35;
+        currentY += 30;
       }
 
-      // Alternate row colors
-      const rowColor = index % 2 === 0 ? "white" : colors.background;
-      drawBox(50, currentY - 5, pageWidth, rowHeight, rowColor, colors.border);
+      // Draw row border
+      drawBox(50, currentY - 2, pageWidth, rowHeight);
 
       // Prepare data
-      const customerName = order.userName?.length > 15 ? order.userName.slice(0, 12) + "..." : order.userName || "Unknown";
       const paymentMethod = order.paymentMethod?.toUpperCase() || "N/A";
-      const orderDate = moment(order.placedAt).format("MMM DD, YY");
+      const orderDate = moment(order.placedAt).format("DD/MM/YY");
       const discountAmount = order.coupon?.discountAmount || 0;
 
       // Draw row data
-      doc.fillColor(colors.text).font("Helvetica").fontSize(8);
+      doc.fillColor("black").font("Helvetica").fontSize(8);
 
-      // Order ID
-      doc.text(order.orderId || "N/A", columns[0].x + 5, currentY + 8, {
-        width: columns[0].width - 10
-      });
-
-      // Customer Name
-      doc.text(customerName, columns[1].x + 5, currentY + 8, {
-        width: columns[1].width - 10
+      // Order ID - truncate if too long
+      const orderId = order.orderId || "N/A";
+      const truncatedOrderId = orderId.length > 12 ? orderId.substring(0, 12) + "..." : orderId;
+      doc.text(truncatedOrderId, columns[0].x + 3, currentY + 6, {
+        width: columns[0].width - 6
       });
 
       // Date
-      doc.text(orderDate, columns[2].x + 5, currentY + 8, {
-        width: columns[2].width - 10
+      doc.text(orderDate, columns[1].x + 3, currentY + 6, {
+        width: columns[1].width - 6
       });
 
-      // Payment Method
-      doc.text(paymentMethod, columns[3].x + 5, currentY + 8, {
-        width: columns[3].width - 10
+      // Payment Method - truncate if needed
+      const truncatedPayment = paymentMethod.length > 8 ? paymentMethod.substring(0, 8) : paymentMethod;
+      doc.text(truncatedPayment, columns[2].x + 3, currentY + 6, {
+        width: columns[2].width - 6
       });
 
       // Items Count
-      doc.text(order.totalItems?.toString() || "0", columns[4].x + 5, currentY + 8, {
-        width: columns[4].width - 10,
+      doc.text(order.totalItems?.toString() || "0", columns[3].x + 3, currentY + 6, {
+        width: columns[3].width - 6,
         align: "center"
       });
 
-      // MRP (Total Amount before discount)
-      doc.fillColor(colors.secondary).font("Helvetica-Bold");
-      doc.text(`₹${order.totalMRP?.toLocaleString() || order.totalAmount?.toLocaleString() || "0"}`, columns[5].x + 5, currentY + 8, {
-        width: columns[5].width - 10,
+      // MRP
+      doc.text(`₹${order.totalMRP?.toLocaleString() || order.totalAmount?.toLocaleString() || "0"}`, columns[4].x + 3, currentY + 6, {
+        width: columns[4].width - 6,
         align: "right"
       });
 
       // Discount
-      doc.fillColor(discountAmount > 0 ? colors.warning : colors.secondary);
-      doc.text(`₹${discountAmount.toLocaleString()}`, columns[6].x + 5, currentY + 8, {
-        width: columns[6].width - 10,
+      doc.text(`₹${discountAmount.toLocaleString()}`, columns[5].x + 3, currentY + 6, {
+        width: columns[5].width - 6,
         align: "right"
       });
 
-      // Final Amount
-      doc.fillColor(colors.accent).font("Helvetica-Bold");
-      doc.text(`₹${order.grandTotal?.toLocaleString() || "0"}`, columns[7].x + 5, currentY + 8, {
-        width: columns[7].width - 10,
+      // Final Amount - this should now fit properly
+      doc.font("Helvetica-Bold");
+      doc.text(`₹${order.grandTotal?.toLocaleString() || "0"}`, columns[6].x + 3, currentY + 6, {
+        width: columns[6].width - 6,
         align: "right"
       });
 
       currentY += rowHeight;
     });
 
-    // ===== SUMMARY SECTION =====
-    if (currentY > doc.page.height - 200) {
-      doc.addPage();
-      currentY = 70;
-    } else {
-      currentY += 40;
-    }
-
-    // Summary box
-    const summaryBoxHeight = 140;
-    drawBox(50, currentY, pageWidth, summaryBoxHeight, colors.background, colors.border);
-
-    doc.fillColor(colors.text).font("Helvetica-Bold").fontSize(16).text("SUMMARY", 70, currentY + 20);
-
-    const summaryStartY = currentY + 50;
-    const summaryData = [
-      { label: "Total Orders:", value: report.totalOrders.toLocaleString(), color: colors.primary },
-      { label: "Total MRP:", value: `₹${report.summary.totalMRP.toLocaleString()}`, color: colors.secondary },
-      { label: "Total Discounts:", value: `₹${report.summary.totalDiscount.toLocaleString()}`, color: colors.warning },
-      { label: "Final Revenue:", value: `₹${report.summary.finalAmount.toLocaleString()}`, color: colors.accent },
-      {
-        label: "Average Order Value:",
-        value: `₹${report.totalOrders ? (report.summary.finalAmount / report.totalOrders).toLocaleString("en-IN", { maximumFractionDigits: 2 }) : "0"}`,
-        color: colors.primary
-      }
-    ];
-
-    summaryData.forEach((item, i) => {
-      const itemY = summaryStartY + (i * 15);
-      doc.fillColor(colors.text).font("Helvetica").fontSize(10);
-      doc.text(item.label, 70, itemY, { width: 150 });
-      doc.fillColor(item.color).font("Helvetica-Bold").fontSize(11);
-      doc.text(item.value, 250, itemY);
-    });
-
     // ===== FOOTER =====
-    const footerY = doc.page.height - 60;
-    drawLine(50, footerY - 10, pageWidth + 50, footerY - 10, colors.border);
-    doc.fontSize(8).fillColor(colors.secondary)
-      .text(`Generated by SHOPPI PVT LTD • ${moment().format("MMMM DD, YYYY [at] HH:mm")}`, 50, footerY, {
+    const footerY = doc.page.height - 50;
+    drawLine(50, footerY - 15, pageWidth + 50, footerY - 15);
+    doc.fontSize(8).fillColor("black").font("Helvetica")
+      .text(`SHOPPI PVT LTD • Generated on ${moment().format("DD/MM/YYYY [at] HH:mm")}`, 50, footerY, {
         width: pageWidth,
         align: "center"
       });
@@ -1483,7 +1431,7 @@ export const getSalesReportPdf = async (req, res) => {
     const totalPages = doc.bufferedPageRange().count;
     for (let i = 0; i < totalPages; i++) {
       doc.switchToPage(i);
-      doc.fontSize(8).fillColor(colors.secondary)
+      doc.fontSize(8).fillColor("black").font("Helvetica")
         .text(`Page ${i + 1} of ${totalPages}`, doc.page.width - 100, doc.page.height - 30, {
           align: "right"
         });
@@ -1502,7 +1450,7 @@ export const getSalesReportPdf = async (req, res) => {
 
 
 //@desc douwnload sales report in excel 
-//router /salesreport/excel/download
+//router GET /salesreport/excel/download
 export const downloadSalesReportExcel = async (req, res) => {
   try {
     const { startDate: startDateRaw, endDate: endDateRaw } = req.query;
@@ -1545,10 +1493,10 @@ export const downloadSalesReportExcel = async (req, res) => {
     sheet.getCell("A6").font = { bold: true };
 
     // Fixed: Separate rows for different discount types
-    sheet.getRow(7).values = [`Total Discount: ₹${((report.summary?.totalMRP - report.summary?.finalAmount) || 0).toLocaleString('en-IN')}`];
+    sheet.getRow(7).values = [`Total Discount: ₹${((report.summary?.totalDiscount) || 0).toLocaleString('en-IN')}`];
     sheet.getCell("A7").font = { bold: true };
 
-    sheet.getRow(8).values = [`Total Coupon Offer: ₹${(report.summary?.totalDiscount || 0).toLocaleString('en-IN')}`];
+    sheet.getRow(8).values = [`Total Coupon Offer: ₹${(report.summary?.proportionalDiscount || 0).toLocaleString('en-IN')}`];
     sheet.getCell("A8").font = { bold: true };
 
     sheet.getRow(9).values = [`Final Revenue: ₹${(report.summary?.finalAmount || 0).toLocaleString('en-IN')}`];
@@ -1648,7 +1596,7 @@ export const downloadSalesReportExcel = async (req, res) => {
 
     sheet.getCell(summaryStartRow + 2, 6).value = "Total Discount:";
     sheet.getCell(summaryStartRow + 2, 6).font = { bold: true };
-    sheet.getCell(summaryStartRow + 2, 8).value = ((report.summary?.totalMRP - report.summary?.finalAmount) || 0) + (report.summary?.totalDiscount || 0); // Fixed: Combined all discounts
+    sheet.getCell(summaryStartRow + 2, 8).value = ((report.summary?.totalDiscount ) || 0) + (report.summary?.proportionalDiscount || 0); // Fixed: Combined all discounts
     sheet.getCell(summaryStartRow + 2, 8).numFmt = '₹#,##0.00';
     sheet.getCell(summaryStartRow + 2, 8).font = { bold: true };
 
@@ -1680,7 +1628,7 @@ export const downloadSalesReportExcel = async (req, res) => {
 };
 
 //@desc get data for admin dashboard
-//rouer GET GET /dashboard?startDate=&endDate=
+//rouer GET /dashboard?startDate=&endDate=
 export const dashBoardData = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -1700,34 +1648,56 @@ export const dashBoardData = async (req, res) => {
     let returned = 0;
     let codCount = 0;
     let razorpayCount = 0;
+
     let totalMRP = 0;
-    let totalOffers = 0;
+    let totalRevenue = 0;
+    let productDiscount = 0;
+    let couponDiscount = 0;
+    let proportionalCouponDiscount = 0;
 
     for (const order of orders) {
-      if (order.orderStatus === 'delivered') delivered++;
-      if (order.orderStatus === 'returned') returned++;
       if (order.paymentMethod === 'cod') codCount++;
       if (order.paymentMethod === 'razorpay') razorpayCount++;
 
+      // Calculate total delivered revenue per order
+      const deliveredItems = order.items.filter(item => item.orderStatus === 'delivered');
+      const totalDeliveredRevenue = deliveredItems.reduce((sum, item) => (
+        sum + item.priceAtPurchase * item.quantity
+      ), 0);
+
       for (const item of order.items) {
-        const productMRP = item.productPrice * item.quantity;
-        const offerAmount = (item.productPrice - item.priceAtPurchase) * item.quantity;
-        totalMRP += productMRP;
-        totalOffers += offerAmount;
+        if (item.orderStatus === 'delivered') delivered++;
+        if (item.orderStatus === 'returned') returned++;
+
+        const itemMRP = item.productPrice * item.quantity;
+        const itemRevenue = item.priceAtPurchase * item.quantity;
+        const itemProductDiscount = (item.productPrice - item.priceAtPurchase) * item.quantity;
+
+        totalMRP += itemMRP;
+        totalRevenue += itemRevenue;
+        productDiscount += itemProductDiscount;
+
+        // Add proportional coupon discount only for delivered items
+        if (item.orderStatus === 'delivered' && order.coupon?.discountAmount && totalDeliveredRevenue > 0) {
+          const proportion = itemRevenue / totalDeliveredRevenue;
+          const proportionalDiscount = proportion * order.coupon.discountAmount;
+          proportionalCouponDiscount += proportionalDiscount;
+        }
       }
 
+      // Add full coupon discount to total discount
       if (order.coupon?.discountAmount) {
-        totalOffers += order.coupon.discountAmount;
+        couponDiscount += order.coupon.discountAmount;
       }
     }
 
-    const totalOrders = delivered + returned;
+    const totalItems = delivered + returned;
 
     const deliveryReturnRatio = {
       delivered,
       returned,
-      deliveredPercentage: totalOrders ? ((delivered / totalOrders) * 100).toFixed(2) : 0,
-      returnedPercentage: totalOrders ? ((returned / totalOrders) * 100).toFixed(2) : 0
+      deliveredPercentage: totalItems ? ((delivered / totalItems) * 100).toFixed(2) : 0,
+      returnedPercentage: totalItems ? ((returned / totalItems) * 100).toFixed(2) : 0
     };
 
     const paymentMethodRatio = {
@@ -1737,9 +1707,17 @@ export const dashBoardData = async (req, res) => {
       razorpayPercentage: (codCount + razorpayCount) ? ((razorpayCount / (codCount + razorpayCount)) * 100).toFixed(2) : 0
     };
 
+    const totalDiscount = productDiscount + couponDiscount;
+    const finalAmount = totalDiscount - proportionalCouponDiscount;
+
     const pricingStats = {
-      totalMRP,
-      totalOffers
+      totalMRP: +totalMRP.toFixed(2),
+      totalRevenue: +totalRevenue.toFixed(2),
+      productDiscount: +productDiscount.toFixed(2),
+      couponDiscount: +couponDiscount.toFixed(2),
+      totalDiscount: +totalDiscount.toFixed(2),
+      proportionalCouponDiscount: +proportionalCouponDiscount.toFixed(2),
+      finalAmount: +finalAmount.toFixed(2)
     };
 
     // Top 10 Best-Selling Products
@@ -1748,10 +1726,11 @@ export const dashBoardData = async (req, res) => {
         $match: {
           placedAt: { $gte: start, $lte: end },
           orderPlaced: true,
-          orderStatus: 'delivered'
+          'items.orderStatus': 'delivered'
         }
       },
       { $unwind: '$items' },
+      { $match: { 'items.orderStatus': 'delivered' } },
       {
         $group: {
           _id: '$items.productId',
@@ -1782,16 +1761,57 @@ export const dashBoardData = async (req, res) => {
       }
     ]);
 
-    // Get Top Categories with total revenue and sales count
+    // Top Brands
+    const topBrands = await Order.aggregate([
+      {
+        $match: {
+          placedAt: { $gte: start, $lte: end },
+          orderPlaced: true,
+          'items.orderStatus': 'delivered'
+        }
+      },
+      { $unwind: '$items' },
+      { $match: { 'items.orderStatus': 'delivered' } },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.productId',
+          foreignField: '_id',
+          as: 'productInfo'
+        }
+      },
+      { $unwind: '$productInfo' },
+      {
+        $group: {
+          _id: '$productInfo.brand',
+          salesCount: { $sum: '$items.quantity' },
+          productSet: { $addToSet: '$items.productId' },
+          revenue: { $sum: { $multiply: ['$items.priceAtPurchase', '$items.quantity'] } }
+        }
+      },
+      {
+        $project: {
+          brand: '$_id',
+          salesCount: 1,
+          productCount: { $size: '$productSet' },
+          revenue: 1
+        }
+      },
+      { $sort: { salesCount: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Top Categories
     const topCategoriesRaw = await Order.aggregate([
       {
         $match: {
           placedAt: { $gte: start, $lte: end },
           orderPlaced: true,
-          orderStatus: 'delivered'
+          'items.orderStatus': 'delivered'
         }
       },
       { $unwind: '$items' },
+      { $match: { 'items.orderStatus': 'delivered' } },
       {
         $lookup: {
           from: 'products',
@@ -1815,14 +1835,15 @@ export const dashBoardData = async (req, res) => {
           _id: '$categoryInfo._id',
           name: { $first: '$categoryInfo.name' },
           totalUnitsSold: { $sum: '$items.quantity' },
-          totalRevenue: { $sum: { $multiply: ['$items.priceAtPurchase', '$items.quantity'] } }
+          totalRevenue: {
+            $sum: { $multiply: ['$items.priceAtPurchase', '$items.quantity'] }
+          }
         }
       },
       { $sort: { totalUnitsSold: -1 } },
       { $limit: 10 }
     ]);
 
-    // Fetch total products for each category
     const topCategories = await Promise.all(
       topCategoriesRaw.map(async (cat) => {
         const productCount = await Product.countDocuments({ category_id: cat._id });
@@ -1842,7 +1863,8 @@ export const dashBoardData = async (req, res) => {
       paymentMethodRatio,
       pricingStats,
       topProducts,
-      topCategories
+      topCategories,
+      topBrands
     });
 
   } catch (error) {
@@ -1851,12 +1873,14 @@ export const dashBoardData = async (req, res) => {
   }
 };
 
+
 //@desc get sales data for admin dashboard
 //router GET /sales-chart-data
 export const getSalesChartData = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
+    // Set date range with proper UTC handling
     const start = startDate ? new Date(startDate) : new Date('2000-01-01');
     start.setUTCHours(0, 0, 0, 0);
 
@@ -1866,40 +1890,217 @@ export const getSalesChartData = async (req, res) => {
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    const groupBy = diffDays <= 7 ? { $dayOfMonth: "$placedAt" } :
-      diffDays <= 31 ? { $dayOfMonth: "$placedAt" } :
-        diffDays <= 365 ? { $month: "$placedAt" } :
-          { $year: "$placedAt" };
+    // Helper function to determine grouping strategy
+    const getGroupingStrategy = (diffDays) => {
+      if (diffDays <= 7) {
+        return {
+          groupBy: { $dayOfMonth: "$placedAt" },
+          dateFormat: "%Y-%m-%d"
+        };
+      } else if (diffDays <= 31) {
+        return {
+          groupBy: { $dayOfMonth: "$placedAt" },
+          dateFormat: "%Y-%m-%d"
+        };
+      } else if (diffDays <= 365) {
+        return {
+          groupBy: { $month: "$placedAt" },
+          dateFormat: "%Y-%m"
+        };
+      } else {
+        return {
+          groupBy: { $year: "$placedAt" },
+          dateFormat: "%Y"
+        };
+      }
+    };
 
-    const dateFormat = diffDays <= 7 ? "%Y-%m-%d" :
-      diffDays <= 31 ? "%Y-%m-%d" :
-        diffDays <= 365 ? "%Y-%m" : "%Y";
+    const { groupBy, dateFormat } = getGroupingStrategy(diffDays);
 
+    // Get sales data with proper item-level status checking
     const salesData = await Order.aggregate([
       {
         $match: {
           placedAt: { $gte: start, $lte: end },
-          orderStatus: 'delivered',
           orderPlaced: true
+        }
+      },
+      {
+        $unwind: "$items"
+      },
+      {
+        $match: {
+          "items.orderStatus": "delivered"
         }
       },
       {
         $group: {
           _id: { $dateToString: { format: dateFormat, date: "$placedAt" } },
-          totalSales: { $sum: "$grandTotal" }
+          totalSales: { 
+            $sum: { 
+              $multiply: ["$items.quantity", "$items.priceAtPurchase"] 
+            } 
+          },
+          orderCount: { $addToSet: "$_id" },
+          itemCount: { $sum: "$items.quantity" }
+        }
+      },
+      {
+        $addFields: {
+          orderCount: { $size: "$orderCount" }
         }
       },
       { $sort: { _id: 1 } }
     ]);
 
-    console.log(salesData)
+    // Helper function to fill missing periods with zero values
+    const fillMissingPeriods = (data, start, end, diffDays) => {
+      const filledData = [];
+      const dataMap = new Map(data.map(item => [item._id, item]));
+      
+      if (diffDays <= 31) {
+        // Fill daily data
+        const current = new Date(start);
+        while (current <= end) {
+          const dateStr = current.toISOString().split('T')[0];
+          filledData.push(dataMap.get(dateStr) || { 
+            _id: dateStr, 
+            totalSales: 0, 
+            orderCount: 0,
+            itemCount: 0
+          });
+          current.setDate(current.getDate() + 1);
+        }
+      } else if (diffDays <= 365) {
+        // Fill monthly data
+        const current = new Date(start.getFullYear(), start.getMonth(), 1);
+        const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+        
+        while (current <= endMonth) {
+          const monthStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+          filledData.push(dataMap.get(monthStr) || { 
+            _id: monthStr, 
+            totalSales: 0, 
+            orderCount: 0,
+            itemCount: 0
+          });
+          current.setMonth(current.getMonth() + 1);
+        }
+      } else {
+        // Fill yearly data
+        const startYear = start.getFullYear();
+        const endYear = end.getFullYear();
+        
+        for (let year = startYear; year <= endYear; year++) {
+          const yearStr = year.toString();
+          filledData.push(dataMap.get(yearStr) || { 
+            _id: yearStr, 
+            totalSales: 0, 
+            orderCount: 0,
+            itemCount: 0
+          });
+        }
+      }
+      
+      return filledData;
+    };
 
-    const labels = salesData.map(item => item._id);
-    const sales = salesData.map(item => item.totalSales);
+    // Helper function to format labels for display
+    const formatLabel = (dateStr, diffDays) => {
+      try {
+        if (diffDays <= 7) {
+          // Show day name for weekly view (e.g., "Mon, Jan 15")
+          const date = new Date(dateStr + 'T00:00:00.000Z');
+          return date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric',
+            timeZone: 'UTC'
+          });
+        } else if (diffDays <= 31) {
+          // Show month day for monthly view (e.g., "Jan 15")
+          const date = new Date(dateStr + 'T00:00:00.000Z');
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            timeZone: 'UTC'
+          });
+        } else if (diffDays <= 365) {
+          // Show month year for yearly view (e.g., "Jan 2024")
+          const [year, month] = dateStr.split('-');
+          const date = new Date(year, month - 1, 1);
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            year: 'numeric'
+          });
+        } else {
+          // Show year for multi-year view (e.g., "2024")
+          return dateStr;
+        }
+      } catch (error) {
+        console.error('Date formatting error:', error);
+        return dateStr; // fallback to raw string
+      }
+    };
 
-    res.json({ success: true, labels, sales });
+    // Helper function to get period type for summary
+    const getPeriodType = (diffDays) => {
+      if (diffDays <= 7) return 'daily-week';
+      if (diffDays <= 31) return 'daily-month';
+      if (diffDays <= 365) return 'monthly';
+      return 'yearly';
+    };
+
+    // Fill in missing dates/periods with zero values
+    const filledData = fillMissingPeriods(salesData, start, end, diffDays);
+
+    // Format data for chart
+    const labels = filledData.map(item => formatLabel(item._id, diffDays));
+    const sales = filledData.map(item => item.totalSales);
+
+    // Calculate summary statistics
+    const totalRevenue = sales.reduce((sum, amount) => sum + amount, 0);
+    const totalOrders = filledData.reduce((sum, item) => sum + (item.orderCount || 0), 0);
+    const totalItems = filledData.reduce((sum, item) => sum + (item.itemCount || 0), 0);
+    const averageSale = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    // Return data in your preferred format
+    res.json({ 
+      success: true, 
+      labels, 
+      sales,
+      // Additional data for enhanced functionality
+      summary: {
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        totalOrders,
+        totalItems,
+        averageSale: Math.round(averageSale * 100) / 100,
+        dateRange: { 
+          start: start.toISOString().split('T')[0], 
+          end: end.toISOString().split('T')[0] 
+        },
+        period: getPeriodType(diffDays)
+      },
+      chartData: filledData
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error('Sales Chart Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Server error'
+    });
   }
 };
+
+//@desc get all brands for edit or add products form
+//router GET /product/brands
+export const getBrands = async (req, res) => {
+  try {
+    const brands = await Brand.find()
+    res.json({ success: true, brands })
+  } catch (error) {
+    logger.error(error.toString());
+    res.status(500).json({ success: false, message: "Something went wrong" })
+  }
+}
