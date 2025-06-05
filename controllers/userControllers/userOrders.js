@@ -6,6 +6,13 @@ import Order from "../../models/ordersSchema.js";
 import Product from "../../models/productSchema.js";
 import User from "../../models/userSchema.js";
 import Wallet from "../../models/walletSchema.js";
+import process from 'process'
+import fs from "fs"
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 //importing other files
@@ -14,6 +21,7 @@ import { generateOrderId } from "../../utils/generateOrderId.js";
 
 //importing installed files
 import jwt from 'jsonwebtoken';
+import generateInvoice from "../../utils/generateInvoice.js";
 
 const userOrderController = {
 
@@ -197,49 +205,6 @@ const userOrderController = {
         }
     },
 
-    //@desc get cart details 
-    //GET /get-cart
-    getCartDetails: async (req, res) => {
-        try {
-            const token = req.cookies.jwt;
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const email = decoded.userEmail;
-            const user = await User.findOne({ email }).select("_id");
-
-            let cart = await Cart.findOne({ userId: user._id }).populate('items.productId');
-
-            if (!cart) {
-                return res.json({ success: true, cart: null });
-            }
-
-            // Check each item for stock
-            const updatedItems = [];
-            for (const item of cart.items) {
-                const product = item.productId;
-                if (product && product.stock >= item.quantity) {
-                    updatedItems.push(item); // Stock is enough
-                }
-            }
-
-            // If items were removed
-            if (updatedItems.length !== cart.items.length) {
-                cart.items = updatedItems;
-                await cart.save(); // Save updated cart
-            }
-
-            // Populate productId again to return full product details
-            cart = await Cart.findOne({ userId: user._id }).populate('items.productId');
-            const coupons = await Coupon.find()
-
-
-            res.json({ success: true, cart, coupons });
-
-        } catch (error) {
-            logger.error(error.toString());
-            res.json({ success: false });
-        }
-    },
-
     //@desc checkout from cart
     //GET /checkout
     checkOut: async (req, res) => {
@@ -382,6 +347,91 @@ const userOrderController = {
         } catch (error) {
             logger.error(error.toString());
             res.status(500).json({ success: false, message: 'Something went wrong' });
+        }
+    },
+
+    //router PATCH /order/item/cancel
+    cancelOrderItemController: async (req, res) => {
+        try {
+            const { orderId, itemId } = req.body;
+
+            if (!orderId || !itemId) {
+                return res.status(400).json({ success: false, message: 'Missing orderId or itemId.' });
+            }
+
+            const order = await Order.findById(orderId);
+
+            if (!order) {
+                return res.status(404).json({ success: false, message: 'Order not found.' });
+            }
+
+            const itemIndex = order.items.findIndex(item => item._id.toString() === itemId);
+
+            if (itemIndex === -1) {
+                return res.status(404).json({ success: false, message: 'Item not found in order.' });
+            }
+
+            // Add status to the item if not exists
+            if (!order.items[itemIndex].status || order.items[itemIndex].status !== 'cancelled') {
+                order.items[itemIndex].status = 'cancelled';
+                await order.save();
+            }
+
+            res.json({ success: true, message: 'Item cancelled successfully.' });
+
+        } catch (error) {
+            logger.error(error);
+            res.status(500).json({ success: false, message: 'Server error.' });
+        }
+    },
+
+    //@desc Invoice for delivered products
+    //router GET /orders/:id/invoice
+    getInvoice: async (req, res) => {
+        try {
+            const order = await Order.findById(req.params.id).populate('items.productId');
+            if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+            const invoicePath = path.join(__dirname, '..', 'invoices', `${order._id}.pdf`);
+
+            // Check if invoice already exists, otherwise generate
+            if (!fs.existsSync(invoicePath)) {
+                generateInvoice(order, invoicePath);
+            }
+
+            // Wait a little for file to be ready
+            setTimeout(() => {
+                res.set({
+                    'Content-Type': 'application/pdf',
+                    'Content-Disposition': `attachment; filename=invoice-${order._id}.pdf`
+                });
+                res.sendFile(invoicePath);
+            }, 500);
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ success: false, message: "Server error" });
+        }
+    },
+
+    //@desc render success page after payment success
+    //router GET /order-success
+    renderSuccess: (req, res) => {
+        try {
+            res.render("user/placedSuccess")
+        } catch (error) {
+            logger.error(error.toString());
+        }
+    },
+
+    //@desc render order failed page
+    //GET /order-failed
+    renderFailed: (req, res) => {
+        try {
+            res.render("user/placedFailed")
+        } catch (error) {
+            logger.error(error.toString())
+            res.status(500).json({ success: false, message: "Something went wrong" })
         }
     },
 }

@@ -1167,7 +1167,7 @@ function saveAddress(event, userId) {
 
 
 function getWallet() {
-    fetch("get-wallet", {
+    fetch("/get-wallet", {
         method: "GET"
     })
         .then((res) => res.json())

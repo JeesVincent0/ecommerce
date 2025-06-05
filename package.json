@@ -5,13 +5,17 @@
   "type": "module",
   "scripts": {
     "start": "node --watch --env-file=.env app.js",
-    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./public/css/output.css --watch"
+    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./public/css/output.css --watch",
+    "lint" : "eslint . --ignore-pattern public/"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@eslint/js": "^9.28.0",
     "autoprefixer": "^10.4.21",
+    "eslint": "^9.28.0",
+    "globals": "^16.2.0",
     "postcss-cli": "^11.0.1",
     "tailwindcss": "^4.1.4"
   },

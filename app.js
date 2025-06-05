@@ -2,7 +2,6 @@
 import { fileURLToPath } from 'url';
 import path from 'path';
 
-import { productImageUpload } from './middleware/routerMiddleware.js';
 
 //importing third-party modules
 import express from 'express'
@@ -17,10 +16,10 @@ import { connectDB } from './config/dbConnection.js';
 import { endPoints, showJWT } from './middleware/gobalMiddleware.js';
 import './config/passport.js'
 import logger from './utils/logger.js';
+import process from 'process';
 
 //main variable setting
 const app = express()
-const router = express.Router()
 const port = process.env.PORT || 3000
 const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/ecommerce'
 

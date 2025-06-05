@@ -905,7 +905,8 @@ const cartActions = {
     if (response.success) {
       cartUI.renderPaymentOptions(response.orderId);
     } else {
-      cartUI.showToast('Failed to proceed with selected address', 'error');
+
+      cartUI.showToast(`cart is empty refresh the page`, `error`);
     }
   },
 

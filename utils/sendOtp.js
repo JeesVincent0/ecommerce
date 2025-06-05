@@ -4,6 +4,7 @@ import ejs from 'ejs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import logger from './logger.js';
+import process from 'process';
 
 //setting path for render .ejs file for email
 const __filename = fileURLToPath(import.meta.url)
@@ -36,12 +37,12 @@ export const sendOtp = async (email, otp) => {
         }
 
         //sending send otp to user email
-        const result = await transporter.sendMail(emailOptions);
+        await transporter.sendMail(emailOptions);
         logger.info(`OTP sended to email - [OTP - ${otp}] [email - ${email}]`)
         return true;
 
     } catch (error) {
-        logger.error(`Error sending OTP - [email - ${email}] - [OTP - ${otp}]`)
+        logger.error(`Error sending OTP - [email - ${email}] - [OTP - ${otp}] - [Error - ${error}]`)
         return false;
     }
 }

@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken"
+import process from "process"
 
 export const createToken = (email, time) => {
-    logger.error("new password", email, time)
+    
     const payload = {
         userEmail: email
     }

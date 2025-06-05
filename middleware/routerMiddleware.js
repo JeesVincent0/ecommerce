@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import jwt from "jsonwebtoken"
 import crypto from "crypto";
+import process from "process";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -64,7 +65,7 @@ export const redirectIfAuthenticated = (req, res, next) => {
     return next(); // No token → proceed to login page
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err) => {
     if (err) {
       return next(); // Invalid token → proceed to login
     }
@@ -98,7 +99,7 @@ export const redirectIfAuthenticatedAdmin = (req, res, next) => {
     return next(); // No token → proceed to login page
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err) => {
     if (err) {
       return next(); // Invalid token → proceed to login
     }
