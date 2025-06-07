@@ -71,7 +71,7 @@ function renderProducts(products) {
             <div onclick="goToProduct('${product._id}')" class="w-full max-w-sm bg-white rounded-xl shadow-md overflow-hidden aspect-[1/1.03] flex flex-col">
     <!-- Image -->
     <div class="h-2/4 w-full relative">
-        <img src="http://localhost:3000/${product.images && product.images[0] ? product.images[0] : 'default.jpg'}"
+        <img src="/${product.images && product.images[0] ? product.images[0] : 'default.jpg'}"
             alt="Product Image" class="w-full h-full object-cover">
         <!-- Wishlist button (positioned absolutely on the image) -->
         <button onclick="event.stopPropagation(); toggleWishlist('${product._id}')" 

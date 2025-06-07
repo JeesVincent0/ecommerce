@@ -113,13 +113,13 @@
                     <div class="bg-white rounded-xl shadow-md p-6">
                         <!-- Main Image -->
                         <div class="relative overflow-hidden rounded-lg mb-4">
-                            <img id="mainImage" src="http://localhost:3000/<%= product.images[0] %>" class="w-full h-96 object-cover transition-transform duration-300" />
+                            <img id="mainImage" src="/<%= product.images[0] %>" class="w-full h-96 object-cover transition-transform duration-300" />
                         </div>
                         
                         <!-- Thumbnails -->
                         <div class="grid grid-cols-5 gap-3 mt-4">
                             <% for(let image of product.images) {%>
-                            <img src="http://localhost:3000/<%= image %>" class="w-full aspect-square object-cover cursor-pointer border-2 rounded-md border-gray-300 hover:border-indigo-500 transition-colors" onclick="changeMainImage(this.src)" />
+                            <img src="/<%= image %>" class="w-full aspect-square object-cover cursor-pointer border-2 rounded-md border-gray-300 hover:border-indigo-500 transition-colors" onclick="changeMainImage(this.src)" />
                             <%}%>
                         </div>
                         
@@ -272,7 +272,7 @@
                         <!-- Image -->
                         <div class="h-56 overflow-hidden">
                             <img 
-                                src="http://localhost:3000/<%= product.images && product.images[0] ? product.images[0] : 'default.jpg' %>" 
+                                src="/<%= product.images && product.images[0] ? product.images[0] : 'default.jpg' %>" 
                                 alt="<%= product.product_name %>" 
                                 class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                             >

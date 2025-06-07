@@ -154,7 +154,7 @@ const cartUI = {
       cartSection.innerHTML += `
         <div class="flex items-center gap-4 p-4 border rounded-md shadow-sm bg-white mb-4 max-w-3xl mx-auto transform transition-all duration-200 hover:shadow-md">
           <!-- Product Image -->
-          <img src="http://localhost:3000/${item.productId.images[0]}" alt="${item.productId.product_name}" 
+          <img src="/${item.productId.images[0]}" alt="${item.productId.product_name}" 
                class="w-24 h-24 object-cover rounded-md" />
 
           <!-- Product Info -->

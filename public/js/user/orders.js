@@ -193,7 +193,7 @@ function renderOrderItem(item, orderId) {
   return `
     <div class="flex items-center gap-4 border-b pb-4">
       <div class="w-24 h-24">
-        <img src="http://localhost:3000/${image}" 
+        <img src="/${image}" 
              alt="${item.productId.product_name}" 
              class="w-full h-full object-cover rounded-xl">
       </div>

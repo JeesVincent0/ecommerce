@@ -298,7 +298,7 @@ function renderUserDetails(details) {
             <!-- Profile Image -->
             <div class="flex justify-center">
                 <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-300">
-                    <img src="http://localhost:3000/user/${user.email}/profile-pic" 
+                    <img src="/user/${user.email}/profile-pic" 
                          alt="Profile" 
                          class="w-full h-full object-cover" />
                 </div>

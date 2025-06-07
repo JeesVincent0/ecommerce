@@ -677,7 +677,7 @@ function formatAmount(amount) {
  */
 function getProductImage(product) {
   if (product && product.images && Array.isArray(product.images) && product.images.length > 0) {
-    return `http://localhost:3000/${product.images[0]}`;
+    return `/${product.images[0]}`;
   }
   return '/images/default-product.jpg';
 }

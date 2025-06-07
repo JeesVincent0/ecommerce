@@ -117,7 +117,7 @@ function renderMyProfile(user, coupons) {
                 <div class="relative">
                     <div class="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 p-1">
                         <div class="w-full h-full rounded-full overflow-hidden bg-white">
-                            <img src="http://localhost:3000/user/${user.email}/profile-pic" 
+                            <img src="/user/${user.email}/profile-pic" 
                                  alt="Profile" 
                                  class="w-full h-full object-cover" />
                         </div>
@@ -520,7 +520,7 @@ function renderEditProfile(user) {
                 <div class="flex flex-col items-center space-y-4">
                     <div class="relative group">
                         <img id="previewImage" 
-                             src="http://localhost:3000/user/${user.email}/profile-pic" 
+                             src="/user/${user.email}/profile-pic" 
                              alt="Profile" 
                              class="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover ring-4 ring-white shadow-lg transition-transform group-hover:scale-105">
                         <div class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

@@ -9,6 +9,7 @@ passport.use( new googleStratergy({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: '/auth/google/callback'
 },
+
 async (accessToken, refreshToken, profile, done) => {
 
         const referalCode = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
