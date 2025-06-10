@@ -71,6 +71,7 @@ app.use(endPoints)
 app.use(showJWT)
 
 //routes setup
+app.get('/', (req, res) => { res.redirect('/login'); });
 app.use('/', userRoutes)
 app.use('/', adminRoutes)
 

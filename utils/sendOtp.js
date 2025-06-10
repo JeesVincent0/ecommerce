@@ -38,7 +38,6 @@ export const sendOtp = async (email, otp) => {
 
         //sending send otp to user email
         await transporter.sendMail(emailOptions);
-        logger.info(`OTP sended to email - [OTP - ${otp}] [email - ${email}]`)
         return true;
 
     } catch (error) {

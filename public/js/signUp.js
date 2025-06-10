@@ -3,12 +3,36 @@ window.addEventListener("DOMContentLoaded", () => {
   const passwordField = document.getElementById("newpassword");
   const repassword = document.getElementById("repassword");
 
-  repassword.addEventListener("input", () => {
-    if (passwordField.value === repassword.value) {
+  // Function to check password strength
+  function isStrongPassword(password) {
+    const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return strongPasswordPattern.test(password);
+  }
+
+  // Check password strength when typing
+  passwordField.addEventListener("input", () => {
+    if (isStrongPassword(passwordField.value)) {
       passwordField.style.borderColor = "green";
-      repassword.style.borderColor = "green";
     } else {
       passwordField.style.borderColor = "red";
+    }
+
+    // Also check for match
+    if (repassword.value !== "") {
+      if (passwordField.value === repassword.value) {
+        repassword.style.borderColor = "green";
+      } else {
+        repassword.style.borderColor = "red";
+      }
+    }
+  });
+
+  // Check password match
+  repassword.addEventListener("input", () => {
+    if (passwordField.value === repassword.value) {
+      passwordField.style.borderColor = isStrongPassword(passwordField.value) ? "green" : "red";
+      repassword.style.borderColor = "green";
+    } else {
       repassword.style.borderColor = "red";
     }
   });

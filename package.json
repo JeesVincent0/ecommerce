@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node --watch --env-file=.env app.js",
+    "start": "nodemon --ignore 'logs/*' --env-file=.env app.js",
     "build": "npx @tailwindcss/cli -i ./src/input.css -o ./public/css/output.css --watch",
     "lint" : "eslint . --ignore-pattern public/"
   },

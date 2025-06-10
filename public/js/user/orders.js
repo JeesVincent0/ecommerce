@@ -158,7 +158,7 @@ function renderOrderDetails(order) {
             ${order.shippingAddress.housename}<br>
             ${order.shippingAddress.street}<br>
             ${order.shippingAddress.city}, ${order.shippingAddress.state}, ${order.shippingAddress.postalCode}<br>
-            Phone: ${order.shippingAddress.phone}
+            Phone: ${order.shippingAddress.phone || "Not provided"}
           </p>
         </div>
         <div class="bg-white shadow rounded-2xl p-6">
