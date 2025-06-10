@@ -305,7 +305,8 @@ const userOrderController = {
             const { addressId } = req.body;
             const shippingAddress = await Address.findOne({ _id: addressId, userId: user._id });
             if (!shippingAddress) {
-                return res.status(400).json({ success: false, message: 'Shipping address not found' });
+
+                return res.json({ success: false, message: 'Shipping address not found this is throwed now' });
             }
 
             const totalAmount = cart.items.reduce((sum, item) => {

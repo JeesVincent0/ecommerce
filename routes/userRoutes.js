@@ -132,6 +132,8 @@ router.post("/update-address/:id", profileController.updateAddress);
 //create new address
 router.post("/save-address/:id", profileController.createAddress);
 
+router.post("/save-address", profileController.createAddress);
+
 //render wallet page show transaction
 router.get("/get-wallet", profileController.getWallet);
 

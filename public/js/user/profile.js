@@ -90,11 +90,11 @@ function accessHeading() {
 }
 
 const formatDate = (isoString) => {
-  const date = new Date(isoString);
-  const day = String(date.getDate()).padStart(2, '0');      // dd
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // mm
-  const year = String(date.getFullYear()).slice(2);         // yy
-  return `${day}-${month}-${year}`;
+    const date = new Date(isoString);
+    const day = String(date.getDate()).padStart(2, '0');      // dd
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // mm
+    const year = String(date.getFullYear()).slice(2);         // yy
+    return `${day}-${month}-${year}`;
 };
 
 //this function is for render user details in my profile section
@@ -540,8 +540,8 @@ function renderEditProfile(user) {
                                 Change Photo
                             </span>
                         </label>
-                        <input type="file" id="profilePic" name="profilePic" accept="image/*" class="hidden" />
-                        <p class="text-xs text-gray-500">JPG, PNG or GIF (max. 5MB)</p>
+                        <input type="file" id="profilePic" name="profilePic" accept=".jpeg,.jpg" class="hidden" />
+                        <p class="text-xs text-gray-500">JPG (max. 2MB)</p>
                     </div>
                 </div>
 
@@ -595,7 +595,7 @@ function renderEditProfile(user) {
                         <input type="tel" 
                                name="phone" 
                                id="phone" 
-                               placeholder="${user.phone}"
+                               placeholder="${user.phone || "Add new number"}"
                                class="w-full px-4 py-3 bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 hover:bg-white/90" />
                     </div>
                 </div>
@@ -665,7 +665,7 @@ function renderEditProfile(user) {
         const newEmail = e.target.value.trim();
         const passwordSection = document.getElementById('passwordSection');
         const passwordField = document.getElementById('password');
-        
+
         if (newEmail && newEmail !== originalEmail) {
             // Show password field if email is being changed
             passwordSection.classList.remove('hidden');
@@ -685,7 +685,7 @@ function renderEditProfile(user) {
         const form = e.target;
         const formData = new FormData(form);
         const newEmail = formData.get('email');
-        
+
         // Check if email is being changed and password is required
         if (newEmail && newEmail !== originalEmail) {
             const password = formData.get('password');
@@ -726,6 +726,16 @@ function renderEditProfile(user) {
 }
 
 function editImagePreview() {
+    document.getElementById('profilePic').addEventListener('change', function () {
+        const file = this.files[0];
+        if (file) {
+            const allowedTypes = ['image/jpeg'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Only JPEG images (.jpg or .jpeg) are allowed.');
+                this.value = ''; // Clear the input
+            }
+        }
+    });
     // Image preview functionality
     document.getElementById('profilePic').addEventListener('change', function (e) {
         const file = e.target.files[0];
@@ -1547,7 +1557,7 @@ function filterAllTransactions(type) {
 
 
 function deleteAddress(addressId) {
-    if(confirm("Are you sure to delete this addrees")) {
+    if (confirm("Are you sure to delete this addrees")) {
 
         fetch(`/address/${addressId}`, {
             method: "DELETE"

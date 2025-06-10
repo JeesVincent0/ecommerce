@@ -412,3 +412,10 @@
 [2025-06-05T18:03:40.304Z] ERROR: reached
 [2025-06-05T18:04:02.558Z] ERROR: reached
 [2025-06-05T18:04:19.248Z] ERROR: TokenExpiredError: jwt expired
+[2025-06-09T10:50:25.968Z] ERROR: TokenExpiredError: jwt expired
+[2025-06-10T01:13:26.471Z] INFO: $2b$10$i3EDveT209YkiNVFbwvzPuEzXtW/jioKSU3gojPVDjPiastxTbAuW
+[2025-06-10T01:15:05.193Z] INFO: $2b$10$i3EDveT209YkiNVFbwvzPuEzXtW/jioKSU3gojPVDjPiastxTbAuW
+[2025-06-10T01:58:44.009Z] ERROR: ValidationError: userId: Path `userId` is required.
+[2025-06-10T05:45:11.879Z] ERROR: TokenExpiredError: jwt expired
+[2025-06-10T05:45:37.779Z] ERROR: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+[2025-06-10T05:45:40.887Z] ERROR: reached

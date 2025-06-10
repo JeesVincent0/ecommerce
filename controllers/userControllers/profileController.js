@@ -87,9 +87,6 @@ const profileController = {
     editProfile: async (req, res) => {
         try {
             const { name, email, phone, password } = req.body;
-            const imageBuffer = req.file?.buffer;
-            const contentType = req.file?.mimetype;
-
             const token = req.cookies.jwt;
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const currentUserEmail = decoded.userEmail;
@@ -103,9 +100,7 @@ const profileController = {
             // Check if email is being changed
             const isEmailChanging = email && email !== currentUserEmail;
 
-            // If email is being changed, verify password
             if (isEmailChanging) {
-                // Check if user has a password (not a Google user)
                 if (!currentUser.hashPassword) {
                     return res.status(400).json({
                         success: false,
@@ -113,7 +108,6 @@ const profileController = {
                     });
                 }
 
-                // Verify password is provided
                 if (!password) {
                     return res.status(400).json({
                         success: false,
@@ -121,7 +115,6 @@ const profileController = {
                     });
                 }
 
-                // Verify password is correct
                 const isPasswordValid = await bcrypt.compare(password, currentUser.hashPassword);
                 if (!isPasswordValid) {
                     return res.status(400).json({
@@ -130,12 +123,31 @@ const profileController = {
                     });
                 }
 
-                // Check if new email already exists
                 const existingUser = await User.findOne({ email: email });
                 if (existingUser && existingUser._id.toString() !== currentUser._id.toString()) {
                     return res.status(400).json({
                         success: false,
                         error: "Email address is already in use"
+                    });
+                }
+            }
+
+            // Image validation
+            if (req.file) {
+                const validTypes = ['image/jpeg', 'image/jpg'];
+                const maxSize = 2 * 1024 * 1024; // 2MB
+
+                if (!validTypes.includes(req.file.mimetype)) {
+                    return res.status(400).json({
+                        success: false,
+                        error: "Only JPEG images are allowed"
+                    });
+                }
+
+                if (req.file.size > maxSize) {
+                    return res.status(400).json({
+                        success: false,
+                        error: "Image size should be less than 2MB"
                     });
                 }
             }
@@ -146,15 +158,13 @@ const profileController = {
             if (phone && phone.trim()) updateData.phone = phone.trim();
             if (email && email.trim()) updateData.email = email.trim();
 
-            // Handle profile image
             if (req.file) {
                 updateData.profileImage = {
-                    data: imageBuffer,
-                    contentType,
+                    data: req.file.buffer,
+                    contentType: req.file.mimetype,
                 };
             }
 
-            // Update user
             const updatedUser = await User.findOneAndUpdate(
                 { email: currentUserEmail },
                 updateData,
@@ -165,7 +175,6 @@ const profileController = {
                 return res.status(404).json({ success: false, error: "Failed to update user" });
             }
 
-            // If email was changed, create new JWT token with new email
             if (isEmailChanging) {
                 const newToken = createToken(email, '1h');
                 res.cookie("jwt", newToken, {
@@ -175,9 +184,7 @@ const profileController = {
                 });
             }
 
-            // Return success response (exclude sensitive data)
             const { hashPassword, ...userWithoutPassword } = updatedUser.toObject();
-            logger.info(hashPassword)
 
             res.json({
                 success: true,
@@ -188,7 +195,6 @@ const profileController = {
         } catch (error) {
             console.error("Edit Profile Error:", error);
 
-            // Handle specific MongoDB errors
             if (error.code === 11000) {
                 return res.status(400).json({
                     success: false,
@@ -312,7 +318,14 @@ const profileController = {
     //POST /save-address/:id
     createAddress: async (req, res) => {
         try {
-            const userId = req.params.id;
+            let userId = req.params.id;
+            if (!userId) {
+                const token = req.cookies.jwt;
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                const email = decoded.userEmail;
+                const user = await User.findOne({ email });
+                userId = user._id;
+            }
             const { housename, city, street, state, postalCode, label } = req.body;
 
             // Create new address document
@@ -325,7 +338,7 @@ const profileController = {
                 $push: { addresses: savedAddress._id }
             });
 
-            res.json({ success: true })
+            res.json({ success: true, userId })
         } catch (error) {
             logger.error(error.toString())
             res.json({ success: false })

@@ -773,7 +773,7 @@ const cartActions = {
     const response = await cartAPI.proceedToCheckout();
 
     if (response.success) {
-      if (response.address && response.address.length > 0) {
+      if (response.address || response.address.length === 0) {
         cartUI.renderAddressList(response.address);
       } else {
         // No addresses found, show add new address form
@@ -904,6 +904,7 @@ const cartActions = {
 
     if (response.success) {
       cartUI.renderPaymentOptions(response.orderId);
+      
     } else {
 
       cartUI.showToast(`cart is empty refresh the page`, `error`);

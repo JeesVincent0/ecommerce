@@ -37,7 +37,7 @@ function generateInvoice(order, outputPath) {
   doc.fontSize(14).text('Payment Method:', { underline: true });
   doc.fontSize(12).text(order.paymentMethod);
   doc.moveDown();
-
+// D:\Brototype\8th week\e commerce\utils\generateInvoice.js
   // Filter only delivered items
   const deliveredItems = order.items.filter(item => item.orderStatus === "delivered");
 

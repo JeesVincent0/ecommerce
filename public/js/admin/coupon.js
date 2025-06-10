@@ -23,7 +23,7 @@ function couponList() {
 
 function getCoupon(page = 1) {
     const limit = 6;
-    
+
     fetch(`/coupon?page=${page}&limit=${limit}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
@@ -112,11 +112,11 @@ function renderCouponTable(coupons, pagination) {
 
     const couponTableBody = document.getElementById("couponTableBody");
     couponTableBody.innerHTML = "";
-    
+
     coupons.forEach(coupon => {
         const row = document.createElement("tr");
         row.className = "border-b border-gray-200 hover:bg-gray-100";
-        
+
         row.innerHTML = `
             <td class="px-6 py-4">${coupon.code}</td>
             <td class="px-6 py-4">${coupon.discountType}</td>
@@ -143,7 +143,7 @@ function renderCouponTable(coupons, pagination) {
                 </div>
             </td>
         `;
-        
+
         couponTableBody.appendChild(row);
     });
 }
@@ -152,28 +152,28 @@ function generatePaginationButtons(pagination) {
     let buttons = '';
     const currentPage = pagination.currentPage;
     const totalPages = pagination.totalPages;
-    
+
     // Always show first page
     buttons += `<button onclick="getCoupon(1)" class="px-3 py-1 rounded ${currentPage === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}">1</button>`;
-    
+
     // If there are many pages, use ellipsis
     if (totalPages > 7) {
         if (currentPage > 3) {
             buttons += `<span class="px-2 py-1">...</span>`;
         }
-        
+
         // Show pages around current page
         const startPage = Math.max(2, currentPage - 1);
         const endPage = Math.min(totalPages - 1, currentPage + 1);
-        
+
         for (let i = startPage; i <= endPage; i++) {
             buttons += `<button onclick="getCoupon(${i})" class="px-3 py-1 rounded ${currentPage === i ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}">${i}</button>`;
         }
-        
+
         if (currentPage < totalPages - 2) {
             buttons += `<span class="px-2 py-1">...</span>`;
         }
-        
+
         // Always show last page if not already included
         if (totalPages > 1) {
             buttons += `<button onclick="getCoupon(${totalPages})" class="px-3 py-1 rounded ${currentPage === totalPages ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}">${totalPages}</button>`;
@@ -184,7 +184,7 @@ function generatePaginationButtons(pagination) {
             buttons += `<button onclick="getCoupon(${i})" class="px-3 py-1 rounded ${currentPage === i ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}">${i}</button>`;
         }
     }
-    
+
     return buttons;
 }
 
@@ -192,7 +192,7 @@ function generatePaginationButtons(pagination) {
 function toggleClearButtonCoupon() {
     const searchInput = document.getElementById('searchInputCoupon');
     const clearButton = document.getElementById('clearSearchButtonCoupon');
-    
+
     if (searchInput.value) {
         clearButton.classList.remove('hidden');
     } else {
@@ -209,42 +209,42 @@ function clearSearchCoupon() {
 
 function couponSearch() {
     const searchQuery = document.getElementById('searchInputCoupon').value.trim();
-    
+
     if (!searchQuery) {
         getCoupon(1);
         return;
     }
-    
+
     fetch(`/coupon/search?query=${encodeURIComponent(searchQuery)}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            // For search results, we don't use pagination
-            renderCouponTable(data.coupons, {
-                totalCoupons: data.coupons.length,
-                totalPages: 1,
-                currentPage: 1,
-                hasNextPage: false,
-                hasPrevPage: false
-            });
-        }
-    })
-    .catch(error => {
-        console.error("Error searching coupons:", error);
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // For search results, we don't use pagination
+                renderCouponTable(data.coupons, {
+                    totalCoupons: data.coupons.length,
+                    totalPages: 1,
+                    currentPage: 1,
+                    hasNextPage: false,
+                    hasPrevPage: false
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error searching coupons:", error);
+        });
 }
 
 // Date validation functions
 function validateCouponDates(startDate, expiryDate) {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
-    
+
     const start = new Date(startDate);
     const expiry = new Date(expiryDate);
-    
+
     // Check if start date is in the future
     if (start > today) {
         return {
@@ -252,7 +252,7 @@ function validateCouponDates(startDate, expiryDate) {
             message: "Start date cannot be a future date"
         };
     }
-    
+
     // Check if expiry date is before start date
     if (expiry <= start) {
         return {
@@ -260,7 +260,7 @@ function validateCouponDates(startDate, expiryDate) {
             message: "End date must be after start date"
         };
     }
-    
+
     return {
         isValid: true,
         message: ""
@@ -270,21 +270,21 @@ function validateCouponDates(startDate, expiryDate) {
 function showValidationError(fieldName, message) {
     // Remove any existing error messages
     clearValidationErrors();
-    
+
     // Find the field and add error styling
     const field = document.querySelector(`input[name="${fieldName}"]`);
     const label = field.previousElementSibling;
-    
+
     // Add error styling to field
     field.classList.add('border-red-500', 'focus:ring-red-500');
     field.classList.remove('focus:ring-blue-500');
-    
+
     // Create and show error message
     const errorDiv = document.createElement('div');
     errorDiv.className = 'text-red-500 text-sm mt-1 validation-error';
     errorDiv.textContent = message;
     field.parentNode.appendChild(errorDiv);
-    
+
     // Optionally change label color
     if (label) {
         label.classList.add('text-red-500');
@@ -295,13 +295,13 @@ function clearValidationErrors() {
     // Remove all error messages
     const errorElements = document.querySelectorAll('.validation-error');
     errorElements.forEach(element => element.remove());
-    
+
     // Reset field styling
     const fields = document.querySelectorAll('input[name="startDate"], input[name="expiryDate"]');
     fields.forEach(field => {
         field.classList.remove('border-red-500', 'focus:ring-red-500');
         field.classList.add('focus:ring-blue-500');
-        
+
         const label = field.previousElementSibling;
         if (label) {
             label.classList.remove('text-red-500');
@@ -313,9 +313,9 @@ function clearValidationErrors() {
 function addDateInputListeners() {
     const startDateInput = document.querySelector('input[name="startDate"]');
     const expiryDateInput = document.querySelector('input[name="expiryDate"]');
-    
+
     if (startDateInput && expiryDateInput) {
-        startDateInput.addEventListener('change', function() {
+        startDateInput.addEventListener('change', function () {
             clearValidationErrors();
             if (this.value && expiryDateInput.value) {
                 const validation = validateCouponDates(this.value, expiryDateInput.value);
@@ -328,8 +328,8 @@ function addDateInputListeners() {
                 }
             }
         });
-        
-        expiryDateInput.addEventListener('change', function() {
+
+        expiryDateInput.addEventListener('change', function () {
             clearValidationErrors();
             if (startDateInput.value && this.value) {
                 const validation = validateCouponDates(startDateInput.value, this.value);
@@ -393,14 +393,16 @@ function createCoupon() {
 
         <div>
             <label class="block text-sm font-medium text-gray-700">Start Date</label>
-            <input type="date" name="startDate"
-            class="mt-2 border rounded-lg py-2 pl-3 pr-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            <input type="date" name="startDate" id="startDate1"
+                class="mt-2 border rounded-lg py-2 pl-3 pr-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            <p id="startDateError1" class="text-red-500 text-sm mt-1 hidden"></p>
         </div>
 
-        <div>
+        <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
-            <input type="date" name="expiryDate"
-            class="mt-2 border rounded-lg py-2 pl-3 pr-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            <input type="date" name="expiryDate" id="expiryDate1"
+                class="mt-2 border rounded-lg py-2 pl-3 pr-10 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            <p id="expiryDateError1" class="text-red-500 text-sm mt-1 hidden"></p>
         </div>
 
         <div>
@@ -425,10 +427,49 @@ function createCoupon() {
     </form>
     </div>
     `;
-    
+
     // Add date input listeners after form is rendered
     setTimeout(() => addDateInputListeners(), 100);
 }
+
+const startDateInput = document.getElementById('startDate1');
+const expiryDateInput = document.getElementById('expiryDate1');
+const startDateError = document.getElementById('startDateError1');
+const expiryDateError = document.getElementById('expiryDateError1');
+
+function validateDates() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const startDate = new Date(startDateInput.value);
+    const expiryDate = new Date(expiryDateInput.value);
+
+    let startValid = true;
+    let expiryValid = true;
+
+    // Reset error messages
+    startDateError.classList.add('hidden');
+    expiryDateError.classList.add('hidden');
+
+    // Start date should not be in the future
+    if (startDateInput.value && startDate > today) {
+        startDateError.textContent = 'Start date cannot be in the future.';
+        startDateError.classList.remove('hidden');
+        startValid = false;
+    }
+
+    // Expiry date should not be before start date
+    if (startDateInput.value && expiryDateInput.value && expiryDate < startDate) {
+        expiryDateError.textContent = 'Expiry date cannot be before start date.';
+        expiryDateError.classList.remove('hidden');
+        expiryValid = false;
+    }
+
+    return startValid && expiryValid;
+}
+
+startDateInput.addEventListener('change', validateDates);
+expiryDateInput.addEventListener('change', validateDates);
 
 function handleDiscountTypeChange(select) {
     const maxDiscountInput = document.querySelector('input[name="maxDiscount"]');
@@ -446,16 +487,16 @@ function handleDiscountTypeChange(select) {
 function saveCoupon() {
     const form = document.getElementById("addCouponForm");
     const formData = new FormData(form);
-    
+
     const startDate = formData.get('startDate');
     const expiryDate = formData.get('expiryDate');
-    
+
     // Clear previous validation errors
     clearValidationErrors();
-    
+
     // Validate dates
     const validation = validateCouponDates(startDate, expiryDate);
-    
+
     if (!validation.isValid) {
         // Determine which field to highlight based on the error
         if (validation.message.includes("Start date")) {
@@ -470,19 +511,19 @@ function saveCoupon() {
         method: "POST",
         body: formData
     })
-    .then((res) => res.json())
-    .then((data) => {
-        if(data.success) {
-            couponList();
-        } else if(!data.success && data.couponUsed) {
-            const codeLabel = document.getElementById("codeLabel");
-            codeLabel.innerText = "Coupon Code already used, use another code";
-            codeLabel.style.color = "red";
-        }
-    })
-    .catch(error => {
-        console.error("Error saving coupon:", error);
-    });
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                couponList();
+            } else if (!data.success && data.couponUsed) {
+                const codeLabel = document.getElementById("codeLabel");
+                codeLabel.innerText = "Coupon Code already used, use another code";
+                codeLabel.style.color = "red";
+            }
+        })
+        .catch(error => {
+            console.error("Error saving coupon:", error);
+        });
 }
 
 function editCoupon(couponId) {
@@ -490,15 +531,15 @@ function editCoupon(couponId) {
         method: "GET",
         headers: { "Content-Type": "application/json" }
     })
-    .then((res) => res.json())
-    .then((data) => {
-        if(data.success) {
-            renderCouponEditForm(data.coupon);
-        }
-    })
-    .catch(error => {
-        console.error("Error fetching coupon for edit:", error);
-    });
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                renderCouponEditForm(data.coupon);
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching coupon for edit:", error);
+        });
 }
 
 function renderCouponEditForm(coupon) {
@@ -601,7 +642,7 @@ function renderCouponEditForm(coupon) {
     </form>
     </div>
     `;
-    
+
     // Add date input listeners after form is rendered
     setTimeout(() => addDateInputListeners(), 100);
 }
@@ -609,16 +650,16 @@ function renderCouponEditForm(coupon) {
 function saveEditedCoupon() {
     const form = document.getElementById("editCouponForm");
     const formData = new FormData(form);
-    
+
     const startDate = formData.get('startDate');
     const expiryDate = formData.get('expiryDate');
-    
+
     // Clear previous validation errors
     clearValidationErrors();
-    
+
     // Validate dates
     const validation = validateCouponDates(startDate, expiryDate);
-    
+
     if (!validation.isValid) {
         // Determine which field to highlight based on the error
         if (validation.message.includes("Start date")) {
@@ -633,15 +674,15 @@ function saveEditedCoupon() {
         method: "PATCH",
         body: formData
     })
-    .then((res) => res.json())
-    .then((data) => {
-        if(data.success) {
-            couponList();
-        }
-    })
-    .catch(error => {
-        console.error("Error saving edited coupon:", error);
-    });
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                couponList();
+            }
+        })
+        .catch(error => {
+            console.error("Error saving edited coupon:", error);
+        });
 }
 
 function blockCoupon(couponId) {
@@ -650,13 +691,13 @@ function blockCoupon(couponId) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ couponId })
     })
-    .then(res => res.json())
-    .then((data) => {
-        if(data.success) {
-            couponList();
-        }
-    })
-    .catch(error => {
-        console.error("Error blocking/unblocking coupon:", error);
-    });
+        .then(res => res.json())
+        .then((data) => {
+            if (data.success) {
+                couponList();
+            }
+        })
+        .catch(error => {
+            console.error("Error blocking/unblocking coupon:", error);
+        });
 }

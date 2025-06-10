@@ -62,11 +62,13 @@ export const redirectIfAuthenticated = (req, res, next) => {
   const token = req.cookies?.jwt
 
   if (!token) {
+    res.clearCookie('jwt', { httpOnly: true, secure: true, sameSite: 'strict' })
     return next(); // No token → proceed to login page
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err) => {
     if (err) {
+      res.clearCookie('jwt', { httpOnly: true, secure: true, sameSite: 'strict' })
       return next(); // Invalid token → proceed to login
     }
 
@@ -79,11 +81,13 @@ export const verifyAdminJWT = (req, res, next) => {
   const token = req.cookies?.jwt // assuming token is stored in cookies
 
   if (!token) {
+    res.clearCookie('jwt', { httpOnly: true, secure: true, sameSite: 'strict' })
     return res.redirect('/adminlogin');
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
+      res.clearCookie('jwt', { httpOnly: true, secure: true, sameSite: 'strict' })
       return res.redirect('/adminlogin');
     }
 

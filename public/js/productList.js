@@ -118,6 +118,49 @@ function renderProducts(products) {
     });
 }
 
+
+function showToast(message, type = 'success') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col items-end space-y-2';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `px-4 py-2 rounded-lg shadow-lg flex items-center ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        } transform transition-all duration-300 opacity-0 translate-x-8`;
+
+    const icon = document.createElement('span');
+    icon.className = 'mr-2';
+    icon.innerHTML = type === 'success' ? '✓' : '✗';
+
+    const text = document.createElement('span');
+    text.textContent = message;
+
+    toast.appendChild(icon);
+    toast.appendChild(text);
+    toastContainer.appendChild(toast);
+
+    // Animate in
+    setTimeout(() => {
+        toast.classList.remove('opacity-0', 'translate-x-8');
+    }, 10);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-8');
+        setTimeout(() => {
+            toastContainer.removeChild(toast);
+        }, 300);
+    }, 3000);
+}
+
+
+
 function addToCart(productId) {
     fetch(`/add-to-cart/${productId}`, {
         method: "POST",
@@ -125,7 +168,12 @@ function addToCart(productId) {
     })
         .then((res) => res.json())
         .then((data) => {
+            if (data.success) {
 
+                showToast('Product added to cart');
+            } else {
+                showToast(data.message, "error")
+            }
         })
 
 }
