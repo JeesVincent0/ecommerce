@@ -8,7 +8,7 @@ passport.use(new googleStratergy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: process.env.NODE_ENV === 'production'
-        ? 'https://yourdomain.com/auth/google/callback'
+        ? 'https://shoppi.fun/auth/google/callback'
         : 'http://localhost:8000/auth/google/callback'
 },
 

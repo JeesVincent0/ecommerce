@@ -143,12 +143,11 @@ const authController = {
             const userSaved = await newUser.save()
 
             const referalCode1 = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
-            const referralUrl = process.env.NODE_ENV === 'production'
-                ? 'https://shoppi.fun/auth/google/callback'
-                : 'http://localhost:8000/auth/google/callback' + referalCode
+            const referralUrl = 'http://localhost:8000/auth/google/callback' + referalCode1
             await User.findOneAndUpdate({ _id: userSaved._id }, { $set: { referralUrl, referalCode: referalCode1 } }, { new: true })
-
+            
             const availableCoupons = await referralCoupon.aggregate([{ $match: { status: 'active', totalUsageLimit: { $gt: 0 } } }, { $sample: { size: 1 } }]);
+            
             const referalCode = tempUser.referralUrl;
             const user = await User.findOne({ referalCode })
 
