@@ -45,7 +45,6 @@ const salesReportController = {
             const { startDate: startDateRaw, endDate: endDateRaw } = req.query;
 
             const report = await salesReportData(startDateRaw, endDateRaw);
-            logger.info(report);
 
             res.setHeader("Content-Type", "application/pdf");
             res.setHeader("Content-Disposition", `attachment; filename=sales-report-${moment().format("YYYY-MM-DD")}.pdf`);
@@ -119,15 +118,15 @@ const salesReportController = {
 
             const tableTop = doc.y;
 
-            // FIXED: Define columns with proper widths that fit within page boundaries
+            // FIXED: Adjusted column widths to fit within page boundaries (total width = 495)
             const columns = [
-                { header: "Order ID", x: 50, width: 80 },
-                { header: "Date", x: 135, width: 70 },
-                { header: "Payment", x: 210, width: 70 },
-                { header: "Items", x: 285, width: 45 },
-                { header: "MRP", x: 335, width: 70 },
-                { header: "Discount", x: 410, width: 70 },
-                { header: "Final", x: 485, width: 65 }  // Ends at 550, well within pageWidth (545)
+                { header: "Order ID", x: 50, width: 75 },      // Start at 50, width 75
+                { header: "Date", x: 125, width: 65 },         // Start at 125, width 65  
+                { header: "Payment", x: 190, width: 65 },      // Start at 190, width 65
+                { header: "Items", x: 255, width: 40 },        // Start at 255, width 40
+                { header: "MRP", x: 295, width: 65 },          // Start at 295, width 65
+                { header: "Discount", x: 360, width: 65 },     // Start at 360, width 65
+                { header: "Final", x: 425, width: 70 }         // Start at 425, width 70 (ends at 495)
             ];
 
             // Draw table header
@@ -178,7 +177,7 @@ const salesReportController = {
 
                 // Order ID - truncate if too long
                 const orderId = order.orderId || "N/A";
-                const truncatedOrderId = orderId.length > 12 ? orderId.substring(0, 12) + "..." : orderId;
+                const truncatedOrderId = orderId.length > 11 ? orderId.substring(0, 11) + "..." : orderId;
                 doc.text(truncatedOrderId, columns[0].x + 3, currentY + 6, {
                     width: columns[0].width - 6
                 });
@@ -189,7 +188,7 @@ const salesReportController = {
                 });
 
                 // Payment Method - truncate if needed
-                const truncatedPayment = paymentMethod.length > 8 ? paymentMethod.substring(0, 8) : paymentMethod;
+                const truncatedPayment = paymentMethod.length > 7 ? paymentMethod.substring(0, 7) : paymentMethod;
                 doc.text(truncatedPayment, columns[2].x + 3, currentY + 6, {
                     width: columns[2].width - 6
                 });
@@ -212,7 +211,7 @@ const salesReportController = {
                     align: "right"
                 });
 
-                // Final Amount - this should now fit properly
+                // Final Amount - Now properly fits within boundaries
                 doc.font("Helvetica-Bold");
                 doc.text(`₹${order.grandTotal?.toLocaleString() || "0"}`, columns[6].x + 3, currentY + 6, {
                     width: columns[6].width - 6,

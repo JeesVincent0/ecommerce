@@ -399,7 +399,9 @@ const profileController = {
             const userId = user._id;
 
             const referalCode = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
-            const referralUrl = "http://localhost:3000/signup?ref=" + referalCode;
+            const referralUrl = process.env.NODE_ENV === 'production'
+                ? 'https://shoppi.fun/auth/google/callback'
+                : 'http://localhost:8000/auth/google/callback' + referalCode;
 
             await User.findOneAndUpdate({ _id: userId }, { $set: { referralUrl, referalCode } }, { new: true })
 
